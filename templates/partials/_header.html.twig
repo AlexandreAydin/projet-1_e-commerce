@@ -1,0 +1,91 @@
+<nav class="navbar navbar-expand-lg ">
+	<div class="container-fluid ">
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse d-flex justify-content-around mt-4" id="navbarColor01">
+			<ul class="navbar-nav me-auto">
+				<li class="nav-item">
+					<a class="nav-link active" href="#">Accueil
+						<span class="visually-hidden"></span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#">Produits
+					</a>
+				</li> 
+			
+					<li class="nav-item">
+						<a class="nav-link" href="#">Nouveauté 
+						</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">Contact
+						</a>
+					</li>
+				
+			</ul>
+			<div class="d-flex">
+				<ul class="navbar-nav me-auto">
+					
+						<li class="nav-item dropdown" style="margin-right: 5rem;">
+							<a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Nom</a>
+							<div class="dropdown-menu bg-light">
+								<a class="dropdown-item" href="#">Modifier mes informations</a>
+								<a class="dropdown-item" href="#">Modifier mon mot de passe</a>
+								<div class="dropdown-divider"></div>
+								
+									<a class="dropdown-item" href="#">Administration</a>
+									<div class="dropdown-divider"></div>
+								
+								<a class="dropdown-item" href="#">Déconnexion</a>
+							</div>
+						</li>
+					
+						<li class="nav-item">
+							<a class="nav-link" href="#">Connexion
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="{{path('app_register')}}">Inscription
+							</a>
+						</li>
+					
+				</ul>
+                 <ul class="navbar-nav attr-nav align-items-center">
+                    <li><a href="javascript:void(0);" class="nav-link search_trigger"><i class="linearicons-magnifier"></i></a>
+                        <div class="search_wrap">
+                            <span class="close-search"><i class="ion-ios-close-empty"></i></span>
+                            <form>
+                                <input type="text" placeholder="Search" class="form-control" id="search_input">
+                                <button type="submit" class="search_icon"><i class="ion-ios-search-strong"></i></button>
+                            </form>
+                        </div><div class="search_overlay"></div>
+                    </li>
+                    <li class="dropdown cart_dropdown"><a class="nav-link cart_trigger" href="#" data-toggle="dropdown"><i class="linearicons-cart"></i><span class="cart_count">2</span></a>
+                        <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
+                            <ul class="cart_list">
+                                <li>
+                                    <a href="#" class="item_remove"><i class="ion-close"></i></a>
+                                    <a href="#"><img src="https://placehold.it/300" alt="cart_thumb1">Variable product 001</a>
+                                    <span class="cart_quantity"> 1 x <span class="cart_amount"> <span class="price_symbole">$</span></span>78.00</span>
+                                </li>
+                                <li>
+                                    <a href="#" class="item_remove"><i class="ion-close"></i></a>
+                                    <a href="#"><img src="https://placehold.it/300" alt="cart_thumb1">Variable product 001</a>
+                                    <span class="cart_quantity"> 1 x <span class="cart_amount"> <span class="price_symbole">$</span></span>78.00</span>
+                                </li>
+                                
+                            </ul>
+                            <div class="cart_footer">
+                                <p class="cart_total"><strong>Subtotal:</strong> <span class="cart_price"> <span class="price_symbole">$</span></span>159.00</p>
+                                <p class="cart_buttons"><a href="#" class="btn btn-fill-line rounded-0 view-cart">View Cart</a><a href="#" class="btn btn-fill-out rounded-0 checkout">Checkout</a></p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+			</div>
+		</div>
+	</div>
+</nav> 
+
