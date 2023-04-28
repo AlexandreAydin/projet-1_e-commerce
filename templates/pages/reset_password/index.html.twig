@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} Mot de passe oublié   - Amonoz{% endblock %}
+
+{% block body %}
+ 
+
+   {{  include ("partials/_title_section.html.twig", {'name':'Réinitialiser le mot de passe'}) }}
+
+
+
+    <div class="login_register_wrap section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-6 col-md-10">
+                    <div class="login_wrap">
+                        <div class="padding_eight_all bg-white">
+                         <form method="post">
+                           {% for message in app.flashes('notice') %}
+                                <div class="alert alert-info">{{ message }}</div>
+                            {% endfor %}
+                            <div class="heading_s1">
+                                <h3>Réinitialiser le mot de passe </h3>
+                            </div>
+                                <div>
+                                    <label for="inputEmail"> Votre email </label>
+                                    <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Votre adresse email" required autofocus>
+                                    <small>
+                                        entrez votre adresse email nous vous enverrons
+                                        un lien pour réinitialiser votre mot de passe
+                                    </small>
+                            
+                                    <button class="btn btn-fill-out btn-block mt-4 " type="submit">
+                                            Réinitialiser le mot de passe
+                                    </button>
+                                </div>
+                            <div class="form-note text-center">Vous n'avez pas de compte ? <a href="{{ path('app_register')}}">S'inscrire</a></div>
+                        </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> 
+
+{% endblock %}

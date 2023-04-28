@@ -14,8 +14,11 @@
 
         <title>AMANOZ - SHOPPING</title>
         <link rel="shortcut icon" type="image/x-icon" href="assets/images/favicon.png">
+{# 
+        <link rel="stylesheet" href="assets/style.css"> #}
 
-        <link rel="stylesheet" href="assets/style.css">
+        <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+        
         
 
         {% block stylesheets %}
@@ -36,19 +39,22 @@
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
 
-        <script src="assets/js/jquery-1.12.4.min.js"></script> 
-        <script src="assets/js/popper.min.js"></script>
-        <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-        <script src="assets/owlcarousel/js/owl.carousel.min.js"></script>
-        <script src="assets/js/magnific-popup.min.js"></script>
-        <script src="assets/js/waypoints.min.js"></script> 
-        <script src="assets/js/parallax.js"></script> 
-        <script src="assets/js/jquery.countdown.min.js"></script> 
-        <script src="assets/js/imagesloaded.pkgd.min.js"></script>
-        <script src="assets/js/isotope.min.js"></script>
-        <script src="assets/js/jquery.dd.min.js"></script>
-        <script src="assets/js/slick.min.js"></script>
-        <script src="assets/js/jquery.elevatezoom.js"></script>
-        <script src="assets/js/scripts.js"></script>
+    
+
+<script src="{{ asset('assets/js/jquery-1.12.4.min.js') }}"></script>
+<script src="{{ asset('assets/js/popper.min.js') }}"></script>
+<script src="{{ asset('assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ asset('assets/owlcarousel/js/owl.carousel.min.js') }}"></script>
+<script src="{{ asset('assets/js/magnific-popup.min.js') }}"></script>
+<script src="{{ asset('assets/js/waypoints.min.js') }}"></script>
+<script src="{{ asset('assets/js/parallax.js') }}"></script>
+<script src="{{ asset('assets/js/jquery.countdown.min.js') }}"></script>
+<script src="{{ asset('assets/js/imagesloaded.pkgd.min.js') }}"></script>
+<script src="{{ asset('assets/js/isotope.min.js') }}"></script>
+<script src="{{ asset('assets/js/jquery.dd.min.js') }}"></script>
+<script src="{{ asset('assets/js/slick.min.js') }}"></script>
+<script src="{{ asset('assets/js/jquery.elevatezoom.js') }}"></script>
+<script src="{{ asset('assets/js/scripts.js') }}"></script>
+
     </body>
 </html>
