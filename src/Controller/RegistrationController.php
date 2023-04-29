@@ -22,7 +22,7 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 class RegistrationController extends AbstractController
 {
  
-    #[Route('/register', name: 'app_register')]
+    #[Route('/inscription', name: 'app_register')]
     public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator): Response
     {
         $user = new User();
@@ -66,7 +66,7 @@ class RegistrationController extends AbstractController
 
 
 
-    #[Route('/verify/email', name: 'app_verify_email')]
+    #[Route('/verifier-email', name: 'app_verify_email')]
     public function verifyUserEmail(Request $request,
     EntityManagerInterface $entityManager,
      UserRepository $userRepository): Response

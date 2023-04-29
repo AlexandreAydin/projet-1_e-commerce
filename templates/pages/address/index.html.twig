@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Address index{% endblock %}
+
+{% block body %}
+    <h1>Address index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>FullName</th>
+                <th>Campany</th>
+                <th>Address</th>
+                <th>Complement</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>CodePostal</th>
+                <th>Country</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for address in addresses %}
+            <tr>
+                <td>{{ address.id }}</td>
+                <td>{{ address.fullName }}</td>
+                <td>{{ address.campany }}</td>
+                <td>{{ address.address }}</td>
+                <td>{{ address.complement }}</td>
+                <td>{{ address.phone }}</td>
+                <td>{{ address.city }}</td>
+                <td>{{ address.codePostal }}</td>
+                <td>{{ address.country }}</td>
+                <td>
+                    <a class="btn btn-border-fill" href="{{ path('app_address_edit', {'id': address.id}) }}">Modifier</a>
+                    <a class="btn btn-border-fill" href="{{ path('app_account', {'id': address.id}) }}">Retour</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="10">Aucun enregistrement n'a été trouvé</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a class="btn btn-border-fill btn mt-2" href="{{ path('app_address_new') }}">Ajouter une nouvelle adresse</a>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle adresse{% endblock %}
+
+{% block body %}
+
+
+    {{ include("partials/_title_section.html.twig", {'name':'Créer une nouvelle adresse'}) }}
+    <div class="login_register_wrap section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-6 col-md-10">
+                    <div class="login_wrap">
+                        <div class="padding_eight_all bg-white">
+                            <div class="heading_s1">
+                                <h3>Ajouter l'adresse</h3>
+                            </div>
+                            <div class="content">
+                                {{ include('pages/address/_form.html.twig') }}
+                                <a class="btn btn-border-fill btn-block mt-2" href="{{ path('app_account') }}">Retourner sur votre compte</a>
+                            </div>                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
