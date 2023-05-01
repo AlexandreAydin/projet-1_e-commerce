@@ -47,6 +47,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Address::class, orphanRemoval: true)]
     private Collection $addresses;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: RewiewsProduct::class)]
+    private Collection $rewiewsProducts;
+
     public function __toString(): string
     {
         return $this->username;
@@ -55,6 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->addresses = new ArrayCollection();
+        $this->rewiewsProducts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -199,6 +203,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($address->getUser() === $this) {
                 $address->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, RewiewsProduct>
+     */
+    public function getRewiewsProducts(): Collection
+    {
+        return $this->rewiewsProducts;
+    }
+
+    public function addRewiewsProduct(RewiewsProduct $rewiewsProduct): self
+    {
+        if (!$this->rewiewsProducts->contains($rewiewsProduct)) {
+            $this->rewiewsProducts->add($rewiewsProduct);
+            $rewiewsProduct->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRewiewsProduct(RewiewsProduct $rewiewsProduct): self
+    {
+        if ($this->rewiewsProducts->removeElement($rewiewsProduct)) {
+            // set the owning side to null (unless already changed)
+            if ($rewiewsProduct->getUser() === $this) {
+                $rewiewsProduct->setUser(null);
             }
         }
 
