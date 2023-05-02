@@ -79,10 +79,6 @@ class Product
     #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductImage::class, cascade: ['persist'],orphanRemoval: true,)]
     private Collection $images;
 
-//     #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductImage::class, cascade: ['persist', 'remove'])]
-// private Collection $images;
-    
-
 
         public function __construct()
         {

@@ -32,4 +32,18 @@ class HomeController extends AbstractController
 
         ]);
     }
+
+    #[Route('/produit/{slug}', name: 'app_single_product')]
+    public function single_product(?Product $product):Response {
+
+        if(!$product){
+            return $this->redirect('/app_home');
+        }
+
+        return $this->render('pages/home/single_product.html.twig',[
+            'product' => $product   
+        ]);
+
+
+    }
 }

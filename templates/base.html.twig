@@ -14,6 +14,14 @@
 
         <title>AMANOZ - SHOPPING</title>
         <link rel="shortcut icon" type="image/x-icon" href="assets/images/favicon.png">
+        <script>
+     
+</script>
+
+
+       
+        </script>
+    
 {# 
         <link rel="stylesheet" href="assets/style.css"> #}
 
@@ -22,6 +30,16 @@
         
 
         {% block stylesheets %}
+        <style>
+            .thumbnail {
+                height: 100px;
+                width: auto;
+                object-fit: contain;
+            }
+
+
+        </style>
+       
             {{ encore_entry_link_tags('app') }}
         {% endblock %}
 
@@ -36,6 +54,38 @@
         {% block body %}{% endblock %}
 
         {% block javascripts %}
+    <script>
+    function initElevateZoom() {
+        $('#main_product_img').elevateZoom({
+            zoomType: "inner",
+            cursor: "crosshair"
+        });
+        
+        {% for image in product.images %}
+            $('#thumbnail_{{ loop.index }}').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair"
+            });
+        {% endfor %}
+    }
+
+    function changeMainImage(thumbnail) {
+        const mainImage = $('#main_product_img');
+        const largeSrc = thumbnail.getAttribute('data-large-src');
+        mainImage.attr('src', largeSrc);
+        mainImage.data('zoom-image', largeSrc);
+
+        mainImage.removeData('elevateZoom');
+        $('.zoomContainer').remove();
+        initElevateZoom();
+    }
+
+    $(window).on('load', function () {
+        initElevateZoom();
+    });
+</script>
+
+
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
 
