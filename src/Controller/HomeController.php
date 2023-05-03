@@ -44,6 +44,5 @@ class HomeController extends AbstractController
             'product' => $product   
         ]);
 
-
     }
 }
