@@ -20,3 +20,5 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+ # Update the CartService definition to remove the $session argument
+    App\Service\CartService: ~

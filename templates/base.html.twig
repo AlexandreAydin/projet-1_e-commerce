@@ -54,38 +54,7 @@
         {% block body %}{% endblock %}
 
         {% block javascripts %}
-    <script>
-    function initElevateZoom() {
-        $('#main_product_img').elevateZoom({
-            zoomType: "inner",
-            cursor: "crosshair"
-        });
-        
-        {% for image in product.images %}
-            $('#thumbnail_{{ loop.index }}').elevateZoom({
-                zoomType: "inner",
-                cursor: "crosshair"
-            });
-        {% endfor %}
-    }
-
-    function changeMainImage(thumbnail) {
-        const mainImage = $('#main_product_img');
-        const largeSrc = thumbnail.getAttribute('data-large-src');
-        mainImage.attr('src', largeSrc);
-        mainImage.data('zoom-image', largeSrc);
-
-        mainImage.removeData('elevateZoom');
-        $('.zoomContainer').remove();
-        initElevateZoom();
-    }
-
-    $(window).on('load', function () {
-        initElevateZoom();
-    });
-</script>
-
-
+    
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
 
