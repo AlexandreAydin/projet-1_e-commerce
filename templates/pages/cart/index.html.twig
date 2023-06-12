@@ -19,22 +19,34 @@
                                 <th class="product-price">Prix</th>
                                 <th class="product-quantity">Quantité</th>
                                 <th class="product-subtotal">Total</th>
-                                <th class="product-remove">Suppri</th>
+                                <th class="product-remove">Supprimer</th>
                             </tr>
                         </thead>
                         <tbody>
+                        {% set subTotal = 0 %}                        
                         {% for element in cart %}
                         	<tr>
-                            	<td class="product-thumbnail"><a href="#"><img src="http://placehold.it/300" alt="product1"></a></td>
+                            <td class="product-thumbnail">
+                            <a href="#">
+                                {% set subTotal = subTotal + (element.quantity * element.product.price/100) %}  
+  
+                                {% if element.product.getImages()|first %}
+                                    <img src="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" data-zoom-image="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" alt="{{ element.product.getName() }}">
+                                {% else %}
+                                    <img src="{{ asset('images/placeholder-image.jpg') }}" alt="Placeholder Image">
+                                {% endif %}
+                            </a>
+                            </td>
                                 <td class="product-name" data-title="Product"><a href="#">{{element.product.name}}</a></td>
                                 <td class="product-price" data-title="Price">{{element.product.price/100}}</td>
                                 <td class="product-quantity" data-title="Quantity"><div class="quantity">
-                                <input type="button" value="-" class="minus">
+                                <a href="{{path('app_delete_to_cart',{'id': element.product.id})}}" type="button" value="-" class="minus"> - </a>
                                 <input type="text" name="quantity" value="{{element.quantity}}" title="Qty" class="qty" size="4">
-                                <input type="button" value="+" class="plus">
-                              </div></td>
+                                <a href="{{path('app_add_to_cart',{'id': element.product.id})}}" type="button" value="+" class="plus"> + </a>
+                                </td>
                               	<td class="product-subtotal" data-title="Total">{{element.quantity * element.product.price/100}}</td>
-                                <td class="product-remove" data-title="Remove"><a href="{{ path ('app_cart_delete_all', {'id'}: element.product.id)}}"><i class="ti-close"></i></a></td>
+                               <td class="product-remove" data-title="Remove"><a href="{{ path('app_cart_delete_all', {'id': element.product.id}) }}"><i class="ti-close"></i></a></td>
+
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -74,15 +86,15 @@
                             <tbody>
                                 <tr>
                                     <td class="cart_total_label">Cart Subtotal</td>
-                                    <td class="cart_total_amount">$349.00</td>
+                                    <td class="cart_total_amount">${{subTotal}}</td>
                                 </tr>
                                 <tr>
-                                    <td class="cart_total_label">Shipping</td>
-                                    <td class="cart_total_amount"></td>
+                                    <td class="cart_total_label">Taxe (20%)</td>
+                                    <td class="cart_total_amount">${{subTotal * 0.2}}</td>
                                 </tr>
                                 <tr>
                                     <td class="cart_total_label">Total</td>
-                                    <td class="cart_total_amount"><strong>$349.00</strong></td>
+                                    <td class="cart_total_amount"><strong>${{subTotal * 1.2}}</strong></td>
                                 </tr>
                             </tbody>
                         </table>

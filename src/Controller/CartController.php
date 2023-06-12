@@ -38,7 +38,7 @@ class CartController extends AbstractController
 
     }
 
-    #[Route('/mon-panier/{id}/diminuer', name: 'app_deleteFromcart')]
+    #[Route('/mon-panier/{id}/diminuer', name: 'app_delete_to_cart')]
     public function deletFromCart($id): Response
     {
         $this->cartServices->deleteFromCart($id);
