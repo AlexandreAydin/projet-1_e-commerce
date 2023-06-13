@@ -4,8 +4,9 @@
 
 {% block body %}
 
- {{  include ("partials/_title_section.html.twig", {'name':"Mon Panier"}) }}
 
+
+{{  include ("partials/_title_section.html.twig", {'name':"Mon Panier"}) }}
 <div class="section">
 	<div class="container">
         <div class="row">
@@ -29,7 +30,6 @@
                             <td class="product-thumbnail">
                             <a href="#">
                                 {% set subTotal = subTotal + (element.quantity * element.product.price/100) %}  
-  
                                 {% if element.product.getImages()|first %}
                                     <img src="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" data-zoom-image="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" alt="{{ element.product.getName() }}">
                                 {% else %}
@@ -46,18 +46,17 @@
                                 </td>
                               	<td class="product-subtotal" data-title="Total">{{element.quantity * element.product.price/100}}</td>
                                <td class="product-remove" data-title="Remove"><a href="{{ path('app_cart_delete_all', {'id': element.product.id}) }}"><i class="ti-close"></i></a></td>
-
                             </tr>
                         {% endfor %}
                         </tbody>
                         <tfoot>
                           <tr>
                             	<th class="product-thumbnail">&nbsp;</th>
-                                <th class="product-name">Product</th>
-                                <th class="product-price">Price</th>
-                                <th class="product-quantity">Quantity</th>
+                                <th class="product-name">Produit</th>
+                                <th class="product-price">Prix</th>
+                                <th class="product-quantity">Quantité</th>
                                 <th class="product-subtotal">Total</th>
-                                <th class="product-remove">Remove</th>
+                                <th class="product-remove">Supprimer</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -90,11 +89,11 @@
                                 </tr>
                                 <tr>
                                     <td class="cart_total_label">Taxe (20%)</td>
-                                    <td class="cart_total_amount">${{subTotal * 0.2}}</td>
+                                   <td class="cart_total_amount">${{(subTotal * 0.2) | number_format(2, '.', ',') }}</td>
                                 </tr>
                                 <tr>
                                     <td class="cart_total_label">Total</td>
-                                    <td class="cart_total_amount"><strong>${{subTotal * 1.2}}</strong></td>
+                                    <td class="cart_total_amount"><strong>${{(subTotal * 1.2) | number_format(2, '.', ',')}}</strong></td>
                                 </tr>
                             </tbody>
                         </table>

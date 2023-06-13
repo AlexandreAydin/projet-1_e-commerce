@@ -21,9 +21,11 @@ class CartController extends AbstractController
     public function index(): Response
     {
         $cart= $this->cartServices->getFullCart();
-
+        if(!$cart){
+            return $this->redirectToRoute("app_home");
+        }
         
-
+    
         return $this->render('pages/cart/index.html.twig', [
             'cart'=>$cart
         ]);
@@ -47,12 +49,21 @@ class CartController extends AbstractController
     }
 
     
-    #[Route('/mon-panier/{id}/supprimer', name: 'app_cart_delete_all')]
+    #[Route('/mon-panier/{id}/supprimer', name: 'app_cart_delete')]
     public function cart_delete_all($id): Response
     {
         $this->cartServices->deleteFromCart($id);
         return $this ->redirectToRoute('app_cart');
     }
+
+    #[Route('/mon-panier/{id}/tout-supprimer', name: 'app_cart_delete_all')]
+    public function deletAllToCart($id): Response
+    {
+        $this->cartServices->deleteAllFromCart($id);
+        return $this ->redirectToRoute('app_cart');
+    }
+
+
 
 
 }

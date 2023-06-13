@@ -22,97 +22,94 @@
                         </a>
                     </div> #}
 
-
-
-
               {% if product.images|length > 0 %}
-    {% set firstImage = product.images|first %}
-    <div class="main_image_container">
-        <div class="product_img_box mb-3" style="height: 300px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
-            <img id="main_product_img" src="{{ asset('images/products/' ~ firstImage.imageName) }}" data-zoom-image="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" class="img-fluid" style="height: 300px; width: auto; object-fit: cover;" />
-            <a href="#" class="product_img_zoom position-absolute bottom-0 end-0 bg-secondary text-white p-1">
-                <span class="linearicons-zoom-in"></span>
-            </a>
+                {% set firstImage = product.images|first %}
+                <div class="main_image_container">
+                    <div class="product_img_box mb-3" style="height: 300px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                        <img id="main_product_img" src="{{ asset('images/products/' ~ firstImage.imageName) }}" data-zoom-image="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" class="img-fluid" style="height: 300px; width: auto; object-fit: cover;" />
+                        <a href="#" class="product_img_zoom position-absolute bottom-0 end-0 bg-secondary text-white p-1">
+                            <span class="linearicons-zoom-in"></span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {% for image in product.images %}
+                        <div class="col-4 col-md-3 col-lg-2 mb-3">
+                            <div class="thumbnail_img_box">
+                                <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" data-large-src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" />
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </div>
-
-    <div class="row">
-        {% for image in product.images %}
-            <div class="col-4 col-md-3 col-lg-2 mb-3">
-                <div class="thumbnail_img_box">
-                    <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" data-large-src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" />
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
-                </div>
-            </div>
-            <div class="col-lg-6 col-md-6">
-                <div class="pr_detail">
-                    <div class="product_description">
-                        <h4 class="product_title"><a href="#">{{product.name}}</a></h4>
-                        <div class="product_price">
-                            <span class="price">{{product.price/100}}</span>
-                            <del>{{product.price *1.35/100}}</del>
-                            <div class="on_sale">
-                                <span>35% Off</span>
-                            </div>
-                        </div>
-                        <div class="rating_wrap">
-                                <div class="rating">
-                                    <div class="product_rate" style="width:80%"></div>
-                                </div>
-                                <span class="rating_num">(21)</span>
-                            </div>
-                            <br>
-                        <div>
-                            <p >{{product.description | raw}}</p>
-                        </div>
-                   
-                        <div class="product_sort_info">
-                            <ul>
-                                <li><i class="linearicons-shield-check"></i> 1 Year AL Jazeera Brand Warranty</li>
-                                <li><i class="linearicons-sync"></i> 30 Day Return Policy</li>
-                                <li><i class="linearicons-bag-dollar"></i> Cash on Delivery available</li>
-                            </ul>
-                        </div>
+    <div class="col-lg-6 col-md-6">
+        <div class="pr_detail">
+            <div class="product_description">
+                <h4 class="product_title"><a href="#">{{product.name}}</a></h4>
+                <div class="product_price">
+                    <span class="price">{{product.price/100}}</span>
+                    <del>{{product.price *1.35/100}}</del>
+                    <div class="on_sale">
+                        <span>35% Off</span>
                     </div>
-                    <hr />
-                    <div class="cart_extra">
-                    {# a faire plus tart pour front end #}
-                        {# <div class="cart-product-quantity">
-                            <div class="quantity">
-                                <input type="button" value="-" class="minus">
-                                <input type="text" name="quantity" value="1" title="Qty" class="qty" size="4">
-                                <input type="button" value="+" class="plus">
-                            </div>
-                        </div> #}
-                        <div class="cart_btn">
-                            <a href="{{ path ('app_add_to_cart',{'id':product.id})}}" class="btn btn-fill-out btn-addtocart" type="button"><i class="icon-basket-loaded"></i> Add to cart</a>
-                            <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
-                            <a class="add_wishlist" href="#"><i class="icon-heart"></i></a>
+                </div>
+                <div class="rating_wrap">
+                        <div class="rating">
+                            <div class="product_rate" style="width:80%"></div>
                         </div>
+                        <span class="rating_num">(21)</span>
                     </div>
-                    <hr />
-                    <ul class="product-meta">
-                        <li>Category: <a href="#">{{product.categorie.name}}</a></li>
-                        <li>Tags: {{product.tags}}</li>
+                    <br>
+                <div>
+                    <p >{{product.description | raw}}</p>
+                </div>
+            
+                <div class="product_sort_info">
+                    <ul>
+                        <li><i class="linearicons-shield-check"></i> 1 Year AL Jazeera Brand Warranty</li>
+                        <li><i class="linearicons-sync"></i> 30 Day Return Policy</li>
+                        <li><i class="linearicons-bag-dollar"></i> Cash on Delivery available</li>
                     </ul>
-
-                    <div class="product_share">
-                        <span>Share:</span>
-                        <ul class="social_icons">
-                            <li><a href="#"><i class="ion-social-facebook"></i></a></li>
-                            <li><a href="#"><i class="ion-social-twitter"></i></a></li>
-                            <li><a href="#"><i class="ion-social-googleplus"></i></a></li>
-                            <li><a href="#"><i class="ion-social-youtube-outline"></i></a></li>
-                            <li><a href="#"><i class="ion-social-instagram-outline"></i></a></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
+                    <hr />
+            <div class="cart_extra">
+            {# a faire plus tart pour front end #}
+                {# <div class="cart-product-quantity">
+                    <div class="quantity">
+                        <input type="button" value="-" class="minus">
+                        <input type="text" name="quantity" value="1" title="Qty" class="qty" size="4">
+                        <input type="button" value="+" class="plus">
+                    </div>
+                </div> #}
+                <div class="cart_btn">
+                    <a href="{{ path ('app_add_to_cart',{'id':product.id})}}" class="btn btn-fill-out btn-addtocart" type="button"><i class="icon-basket-loaded"></i> Add to cart</a>
+                    <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
+                    <a class="add_wishlist" href="#"><i class="icon-heart"></i></a>
+                </div>
+            </div>
+            <hr />
+            <ul class="product-meta">
+                <li>Category: <a href="#">{{product.categorie.name}}</a></li>
+                <li>Tags: {{product.tags}}</li>
+            </ul>
+
+            <div class="product_share">
+                <span>Share:</span>
+                <ul class="social_icons">
+                    <li><a href="#"><i class="ion-social-facebook"></i></a></li>
+                    <li><a href="#"><i class="ion-social-twitter"></i></a></li>
+                    <li><a href="#"><i class="ion-social-googleplus"></i></a></li>
+                    <li><a href="#"><i class="ion-social-youtube-outline"></i></a></li>
+                    <li><a href="#"><i class="ion-social-instagram-outline"></i></a></li>
+                </ul>
+            </div>
+            </div>
         </div>
+    </div>
         <div class="row">
         	<div class="col-12">
             	<div class="large_divider clearfix"></div>
