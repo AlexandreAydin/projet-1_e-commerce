@@ -25,11 +25,10 @@
                         </thead>
                         <tbody>
                         {% set subTotal = 0 %}                        
-                        {% for element in cart %}
+                        {% for element in cart.products %}
                         	<tr>
                             <td class="product-thumbnail">
                             <a href="#">
-                                {% set subTotal = subTotal + (element.quantity * element.product.price/100) %}  
                                 {% if element.product.getImages()|first %}
                                     <img src="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" data-zoom-image="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" alt="{{ element.product.getName() }}">
                                 {% else %}
@@ -44,7 +43,7 @@
                                 <input type="text" name="quantity" value="{{element.quantity}}" title="Qty" class="qty" size="4">
                                 <a href="{{path('app_add_to_cart',{'id': element.product.id})}}" type="button" value="+" class="plus"> + </a>
                                 </td>
-                              	<td class="product-subtotal" data-title="Total">{{element.quantity * element.product.price/100}}</td>
+                              	<td class="product-subtotal" data-title="Total">{{element.quantity * element.product.price/100 }}</td>
                                <td class="product-remove" data-title="Remove"><a href="{{ path('app_cart_delete_all', {'id': element.product.id}) }}"><i class="ti-close"></i></a></td>
                             </tr>
                         {% endfor %}
@@ -85,15 +84,15 @@
                             <tbody>
                                 <tr>
                                     <td class="cart_total_label">Cart Subtotal</td>
-                                    <td class="cart_total_amount">${{subTotal}}</td>
+                                    <td class="cart_total_amount">${{cart.data.subTotalHT | number_format(2, '.', ',')}}</td>
                                 </tr>
                                 <tr>
                                     <td class="cart_total_label">Taxe (20%)</td>
-                                   <td class="cart_total_amount">${{(subTotal * 0.2) | number_format(2, '.', ',') }}</td>
+                                   <td class="cart_total_amount">${{cart.data.Taxe | number_format(2, '.', ',')}} </td>
                                 </tr>
                                 <tr>
                                     <td class="cart_total_label">Total</td>
-                                    <td class="cart_total_amount"><strong>${{(subTotal * 1.2) | number_format(2, '.', ',')}}</strong></td>
+                                    <td class="cart_total_amount"><strong>${{cart.data.subTotalTTC | number_format(2, '.', ',')}}</strong></td>
                                 </tr>
                             </tbody>
                         </table>
