@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Amanoz Caisse{% endblock %}
+
+
+{% block body %}
+    {{  include ("partials/_title_section.html.twig", {'name':'Caisse'}) }}
+<div class="section">
+	<div class="container">
+        <div class="row">
+        	<div class="col-md-6">
+                <div class="heading_s1">
+                        <h4>Your delivery Address</h4>
+                        <div class="content">
+
+                        </div>
+                </div>
+                <div class="heading_s1">
+                    <h4>Your carrier</h4>
+                    <div class="content">
+
+
+                    </div>
+                </div>
+                <div class="heading_s1">
+                    <h4>Additional information</h4>
+                    <div class="form-group mb-0">
+                        <textarea name="name" rows="8" cols="50"></textarea>
+                    </div>
+                </div>
+          </div>
+
+          <div class="col-md-6">
+                <div class="order_review">
+                    <div class="heading_s1">
+                        <h4>Your Orders</h4>
+                    </div>
+                    <div class="table-responsive order_table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td> Product Name <span class="product-qty">x 1</span></td>
+                                        <td>$ 50</td>
+                                    </tr>
+                                    <tr>
+                                        <td> Product Name <span class="product-qty">x 1</span></td>
+                                        <td>$ 50</td>
+                                    </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>SubTotal HT</th>
+                                    <td class="product-subtotal">$100</td>
+                                </tr>
+                                <tr>
+                                    <th>Taxe</th>
+                                    <td class="product-subtotal">$20</td>
+                                </tr>
+                                <tr>
+                                    <th>Total</th>
+                                    <td class="product-subtotal">$120</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="payment_method">
+                        <div class="heading_s1">
+                            <h4>Payment</h4>
+                        </div>
+
+                    </div>
+                    <button type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Place Order</button>
+                </div>
+          </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

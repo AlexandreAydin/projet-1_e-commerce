@@ -42,6 +42,21 @@ class Address
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
+    public function __toString()
+    {
+        $result= $this->fullName. "<br>";
+        if($this->getCampany()){
+            $result= $this->campany. "<br>";
+        }
+        $result .= $this->address. "<br>";
+        $result .= $this->complement. "<br>";
+        $result .= $this->codePostal. "<br>";
+        $result .= $this->country."<br>";
+
+        return $result;
+
+    }
+
     public function getId(): ?int
     {
         return $this->id;

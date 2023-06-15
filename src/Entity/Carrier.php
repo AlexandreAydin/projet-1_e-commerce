@@ -34,6 +34,16 @@ class Carrier
         $this->createdAt = new \DateTimeImmutable();        
     }
 
+    public function __toString()
+    {       
+        $result = $this->name. "<br>";
+        $result .= $this->description. "<br>";
+        $result .= "Price: $".$this->price. "<br>";
+        
+        return $result;
+
+    }
+
 
     public function getId(): ?int
     {

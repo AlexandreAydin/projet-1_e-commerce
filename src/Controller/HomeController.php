@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Classe\Mail;
 use App\Entity\Product;
 use App\Repository\ProductRepository;
+use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -34,14 +35,16 @@ class HomeController extends AbstractController
     }
 
     #[Route('/produit/{slug}', name: 'app_single_product')]
-    public function single_product(?Product $product):Response {
+    public function single_product(?Product $product,CartService $cartService):Response {
 
         if(!$product){
             return $this->redirect('/app_home');
         }
 
         return $this->render('pages/home/single_product.html.twig',[
-            'product' => $product   
+            'product' => $product,   
+            'cart'=> $cartService->getFullCart()
+            
         ]);
 
     }

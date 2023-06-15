@@ -66,7 +66,7 @@
     </li>
 
 
-	<li class="dropdown cart_dropdown">
+	{# <li class="dropdown cart_dropdown">
     <a class="nav-link cart_trigger" href="#" data-toggle="dropdown">
         <i class="linearicons-cart"></i>
         <span class="cart_count">
@@ -108,11 +108,11 @@
         {% if cartData.data is defined %}
             <div class="cart_footer">
                 <p class="cart_total text-dark"><strong>Sous Total HT:</strong> <span class="cart_price"> <span class="price_symbole">$</span></span>{{subTotal}}</p>
-                <p class="cart_buttons"><a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a><a href="#" class="btn btn-fill-out rounded-0 checkout">Checkout</a></p>
+                <p class="cart_buttons"><a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a><a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">Checkout</a></p>
             </div>
         {% endif %}
     </div>
-</li>
+</li> #}
 
 
 

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Address;
 use App\Form\AddressType;
 use App\Repository\AddressRepository;
+use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +23,7 @@ class AddressController extends AbstractController
     }
 
     #[Route('/nouvelle-adresse', name: 'app_address_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, AddressRepository $addressRepository): Response
+    public function new(Request $request, AddressRepository $addressRepository, CartService $cartService): Response
     {
         $address = new Address();
         $form = $this->createForm(AddressType::class, $address);
@@ -33,6 +34,9 @@ class AddressController extends AbstractController
             $address->setUser($user);
             $addressRepository->save($address, true);
             
+            if($cartService->getFullCart()){
+                return $this->redirectToRoute("app_checkout");
+            }
 
             $this->addFlash('address_message','votre adresse a été enregistrée');
 
