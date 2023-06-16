@@ -36,9 +36,9 @@ class Carrier
 
     public function __toString()
     {       
-        $result = $this->name. "<br>";
-        $result .= $this->description. "<br>";
-        $result .= "Price: $".$this->price. "<br>";
+        $result = $this->name. "[spr]";
+        $result .= $this->description. "[spr]";
+        $result .= "Price: $".($this->price/100). "[spr]";
         
         return $result;
 

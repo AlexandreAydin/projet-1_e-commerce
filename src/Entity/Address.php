@@ -44,16 +44,17 @@ class Address
 
     public function __toString()
     {
-        $result= $this->fullName. "<br>";
+        $result= $this->fullName. "[spr]";
         if($this->getCampany()){
-            $result= $this->campany. "<br>";
+            $result= $this->campany. "[spr]";
         }
-        $result .= $this->address. "<br>";
-        $result .= $this->complement. "<br>";
-        $result .= $this->codePostal. "<br>";
-        $result .= $this->country."<br>";
+        $result .= $this->address. "[spr]";
+        $result .= $this->complement. "[spr]";
+        $result .= $this->codePostal. "[spr]";
+        $result .= $this->country."[spr]";
 
         return $result;
+
 
     }
 

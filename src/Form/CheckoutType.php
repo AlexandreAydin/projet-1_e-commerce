@@ -6,6 +6,7 @@ use App\Entity\Carrier;
 use App\Entity\Address;  // Make sure you import your Address entity too.
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;  // Correct EntityType import
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -29,7 +30,9 @@ class CheckoutType extends AbstractType
                 'multiple'=>false,
                 'expanded'=>true,
             ])
-            ->add('information')
+            ->add('information', TextareaType::class,[
+                'required'=>false,
+            ])
         ;
     }
 
@@ -37,8 +40,8 @@ class CheckoutType extends AbstractType
     {
         $resolver->setDefaults([
             // Configure your form options here
+            'user' => array()
         ]);
 
-        $resolver->setRequired('user');
     }
 }

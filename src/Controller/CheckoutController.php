@@ -22,6 +22,10 @@ class CheckoutController extends AbstractController
         }
         
         if(!$user->getAddresses()->getValues()){
+            $this->addFlash(
+                'checkout_message',
+                "Merci d'ajouter votre adressse avant de continuer"
+            );
             return $this->redirectToRoute("app_address_new");
         }
 
@@ -29,7 +33,7 @@ class CheckoutController extends AbstractController
 
         $form->handleRequest($request);
 
-        return $this->render('checkout/index.html.twig',[
+        return $this->render('pages/checkout/index.html.twig',[
             'cart'=> $cart,
             'checkout'=> $form->createView()
         ]);
