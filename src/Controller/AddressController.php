@@ -9,6 +9,7 @@ use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/adresse')]
@@ -51,14 +52,20 @@ class AddressController extends AbstractController
 
 
     #[Route('/{id}/modifier', name: 'app_address_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Address $address, AddressRepository $addressRepository): Response
+    public function edit(Request $request, Address $address, AddressRepository $addressRepository,SessionInterface $session): Response
     {
         $form = $this->createForm(AddressType::class, $address);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $addressRepository->save($address, true);
-
+            // Pour envoyé au chekout si l'utilisateur décide de modifierl'adresse au dernier moments
+            if($session->get('checkout_data')){
+                $data= $session->get('checkout_data');
+                $data['address']=$address;
+                $session->set('checkout_data',$data);
+                return $this->redirectToRoute("app_checkout_confirm");
+            }
             $this->addFlash('address_message','votre adresse a été modifier');
             return $this->redirectToRoute('app_account', [], Response::HTTP_SEE_OTHER);
         }

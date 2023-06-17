@@ -7,13 +7,13 @@
     {{  include ("partials/_title_section.html.twig", {'name':'Caisse'}) }}
 <div class="section">
 	<div class="container">
-        {{form_start(checkout)}}
+        {{form_start(checkout,{action: path('app_checkout_confirm')})}}
         <div class="row">
         	<div class="col-md-6">
                 <div class="heading_s1">
                         <h4>Votre Adresse de Livraison</h4>
                         <div class="content">
-                            {{form_widget(checkout.adress) | replace({'[spr]':'<br>'})| raw}}
+                            {{form_widget(checkout.address) | replace({'[spr]':'<br>'})| raw}}
                         </div>
                         <a href="{{ path('app_address_new')}}" class="btn btn-fill-out btn-block mt-1">Ajouter une nouvelle adresse</a>
                 </div>
@@ -45,27 +45,25 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                    <tr>
-                                        <td> Product Name <span class="product-qty">x 1</span></td>
-                                        <td>$ 50</td>
+                                    {% for element in cart.products %}
+                                        <tr>
+                                            <td> {{element.product.name}} <span class="product-qty"> x {{element.quantity}}</span></td>
+                                        <td>$ {{element.product.price/100 | number_format(2, '.', ',')}}</td>
                                     </tr>
-                                    <tr>
-                                        <td> Product Name <span class="product-qty">x 1</span></td>
-                                        <td>$ 50</td>
-                                    </tr>
+                                    {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th>SubTotal HT</th>
-                                    <td class="product-subtotal">$100</td>
+                                    <td class="product-subtotal">$ {{cart.data.subTotalHT | number_format(2, '.', ',')}}</td>
                                 </tr>
                                 <tr>
                                     <th>Taxe</th>
-                                    <td class="product-subtotal">$20</td>
+                                    <td class="product-subtotal">$ {{cart.data.Taxe | number_format(2, '.', ',')}}</td>
                                 </tr>
                                 <tr>
                                     <th>Total</th>
-                                    <td class="product-subtotal">$120</td>
+                                    <td class="product-subtotal">$  {{cart.data.subTotalTTC | number_format(2, '.', ',')}}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -76,7 +74,7 @@
                         </div>
 
                     </div>
-                    <button type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Place Order</button>
+                    <button type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Confirmer la commande</button>
                 </div>
           </div>
         </div>

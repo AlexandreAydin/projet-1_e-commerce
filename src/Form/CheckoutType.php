@@ -17,7 +17,7 @@ class CheckoutType extends AbstractType
         $user = $options['user'];
 
         $builder
-            ->add('adress', EntityType::class,[
+            ->add('address', EntityType::class,[
                 'class'=> Address::class,
                 'required'=>true,
                 'choices'=>$user->getAddresses(),
