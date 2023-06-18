@@ -22,3 +22,4 @@ services:
 
  # Update the CartService definition to remove the $session argument
     App\Service\CartService: ~
+    App\Classe\OrderServices: ~

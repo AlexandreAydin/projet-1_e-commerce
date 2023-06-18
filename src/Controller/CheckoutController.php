@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Classe\OrderServices;
 use App\Form\CheckoutType;
 use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,7 +46,12 @@ class CheckoutController extends AbstractController
     }
 
     #[Route('/caisse/confirmer', name:'app_checkout_confirm')]
-    public function checkout_confirm(CartService $cartService, Request $request,SessionInterface $session): Response
+    public function checkout_confirm(
+    CartService $cartService,
+    Request $request,
+    SessionInterface $session,
+    OrderServices $orderServices
+    ): Response
     {
         //on récupére le panier de l'utilisateur
         $user = $this->getUser();
@@ -80,6 +86,11 @@ class CheckoutController extends AbstractController
             $address = $data['address'];
             $carrier = $data['carrier'];
             $information=$data['information'];
+
+            // sauvegarder le panier 
+            $cart['checkout']= $data;
+            $reference = $orderServices->saveCart($cart,$user);
+      
             
 
 
