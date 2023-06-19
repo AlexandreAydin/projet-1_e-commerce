@@ -2,6 +2,11 @@
 
 {% block title %}Amanoz Caisse{% endblock %}
 
+{% block scriptStripe %}
+ <script src="https://js.stripe.com/v3/"></script>
+
+{% endblock %}
+
 {% block body %}
     {{ include('partials/_title_section.html.twig', {'name': 'Caisse'}) }}
     <div class="section">
@@ -76,7 +81,8 @@
                         <div class="payment_method">
                             <div class="heading_s1">
                                 <h4>Payment</h4>
-                                <button type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Payer | $ {{ cart.data.subTotalTTC + carrier.price/100 | number_format(2, '.', ',')}}</button>
+                               <a href="{{ path ('app_create_checkout_session', {'reference': reference}) }}" type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Payer | $ {{ cart.data.subTotalTTC + carrier.price/100 | number_format(2, '.', ',')}}</a>
+                                  {# <a href="{{ path ('app_stripe_create_session', {'reference': reference}) }}" class="btn btn-success btn-block mt-3" id="checkout-button">Payer | {{ ((total / 100) + (carrier.price / 100))|number_format(2, ',', '.') }} €</a> #}
                             </div>
                         </div>
                     </div>
@@ -84,4 +90,34 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+     <script type="text/javascript">
+        var stripe = Stripe('sk_test_51NKYgcB8m10ZC3XdC8i88ZoKozHjY1TFeTlxl2Tlue2EZ1fdnoe1j9naP5XXiXDcblZlP4xQSatmNtCyyaXgh6fd00DW3fvzF8');
+    
+        var checkoutButton = document.getElementById("checkout-button");
+        checkoutButton.addEventListener("click", function () {
+                fetch("/commande/creation-session", {
+                    method: "POST",
+                })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (session) {
+                        return stripe.redirectToCheckout({ sessionId: session.id });        
+                })
+                .then(function (result) {
+                    // If redirectToCheckout fails due to a browser or network
+                    // error, you should display the localized error message to your
+                    // customer using error.message.
+                    if (result.error) {
+                        alert(result.error.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+        });
+    </script>
 {% endblock %}

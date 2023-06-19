@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Cart;
 
 use App\Classe\OrderServices;
 use App\Form\CheckoutType;

@@ -8,14 +8,19 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class CartService
 {
-    private $session;
+    private $requestStack;
     private $repoProduct;
     private $tva = 0.2;
 
     public function __construct(RequestStack $requestStack, ProductRepository $repoProduct)
     {
-        $this->session = $requestStack->getSession();
+        $this->requestStack = $requestStack;
         $this->repoProduct = $repoProduct;
+    }
+
+    private function getSession() // nouvelle méthode pour obtenir la session
+    {
+        return $this->requestStack->getSession();
     }
 
     public function addToCart($id)
@@ -65,13 +70,13 @@ class CartService
 
     public function updateCart($cart)
     {
-        $this->session->set('cart', $cart);
-        $this->session->set('cartData', $this->getFullCart());
+        $this->getSession()->set('cart', $cart); // utilisé $this->getSession() au lieu de $this->session
+        $this->getSession()->set('cartData', $this->getFullCart()); // utilisé $this->getSession() au lieu de $this->session
     }
 
     public function getCart()
     {
-        return $this->session->get('cart', []);
+        return $this->getSession()->get('cart', []); // utilisé $this->getSession() au lieu de $this->session
     }
     
 

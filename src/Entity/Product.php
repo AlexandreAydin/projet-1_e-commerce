@@ -91,6 +91,7 @@ class Product
         public function __toString(): string
     {
         return $this->name;
+        return $this->getId();
     }
   
 
