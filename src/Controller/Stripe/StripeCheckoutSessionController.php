@@ -2,10 +2,8 @@
 
 namespace App\Controller\Stripe;
 
-use App\Entity\Order;
-use App\Entity\Product;
-use App\Service\CartService;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Classe\OrderServices;
+use App\Entity\Cart;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -14,104 +12,31 @@ use Stripe\Checkout\Session;
 
 class StripeCheckoutSessionController extends AbstractController
 {
-    // #[Route('/commande/creation-session', name: 'app_create_checkout_session')]
-    // public function index(CartService $cartService): JsonResponse
-    // { 
-    //     $cart =$cartService->getFullCart();
-    //     $YOUR_DOMAIN = 'http://127.0.0.1:8000';
-    //     Stripe::setApiKey('sk_test_51NKYgcB8m10ZC3XdC8i88ZoKozHjY1TFeTlxl2Tlue2EZ1fdnoe1j9naP5XXiXDcblZlP4xQSatmNtCyyaXgh6fd00DW3fvzF8');
-
-    //     $line_items=[];
-    //     foreach ($cart['products'] as $data_product){
-    //         $product=$data_product['product'];
-    //         $line_items[] = [
-    //                 'price_data' => [
-    //                     'currency' => 'eur',
-    //                     'unit_amount' => $product->getPrice(),
-    //                     'product_data' => [
-    //                         'name' => $product->getName(),
-    //                         'images' => [$YOUR_DOMAIN. "/uploads/products/".$product->getImages()[0]->getImageName()],
-    //                     ],
-    //                 ],
-    //                 'quantity' => $product->getQuantity(),
-    //             ];
-    //     }
-
-    //     $checkout_session = Session::create([
-    //         "payment_method_types" => ["card"],
-    //         "line_items"=> $line_items,
-    //         'mode'=> 'payment',
-    //         'success_url'=>  $YOUR_DOMAIN .'/stripe-payment-succes',
-    //         'cancel_url'=> $YOUR_DOMAIN .'/stripe-payment-annule',
-    //     ]);
-
-
-    //     return $this->json(['id'=>$checkout_session->id]);
-    // }
-
-
     #[Route('/commande/creation-session/{reference}', name: 'app_create_checkout_session')]
-    public function index(EntityManagerInterface $entityManager,$reference)
-    {
-        // $user-=$this->getUser();
-        $products_for_stripe = [];
+    public function index(?Cart $cart, OrderServices $orderServices): JsonResponse
+    { 
+        $stripeSecretKey = 'sk_test_51NKYgcB8m10ZC3XdC8i88ZoKozHjY1TFeTlxl2Tlue2EZ1fdnoe1j9naP5XXiXDcblZlP4xQSatmNtCyyaXgh6fd00DW3fvzF8';
         $YOUR_DOMAIN = 'http://127.0.0.1:8000';
+        $orderServices->createOrder($cart);
+        Stripe::setApiKey($stripeSecretKey);
 
-
-        $order = $entityManager->getRepository(Order::class)->findOneBy(['reference' => $reference]);   
-
-         if (!$order) {
-            new JsonResponse(['error' => 'order']);
+        $user = $this->getUser();
+        if(!$cart){
+            return $this->redirectToRoute('app_home');
         }
-
-        foreach ($order->getOrderDetails()->getValues() as $product) {
-            $product_object = $entityManager->getRepository(Product::class)->findOneBy(['name' => $product->getProduct()]);
-            $products_for_stripe[] = [
-                'price_data' => [
-                    'currency' => 'eur',
-                    'unit_amount' => $product->getPrice(),
-                    'product_data' => [
-                        'name' => $product->getProduct(),
-                        'images' => [$YOUR_DOMAIN."/uploads/".$product_object->getIllustration()],
-                    ],
-                ],
-                'quantity' => $product->getQuantity(),
-            ];
-        }
-
-
-        $products_for_stripe[] = [
-            'price_data' => [
-                'currency' => 'eur',
-                'unit_amount' => $order->getCarrierPrice(),
-                'product_data' => [
-                    'name' => $order->getCarrierName(),
-                    'images' => [$YOUR_DOMAIN],
-                ],
-            ],
-            'quantity' => 1,
-        ];
-       
-        Stripe::setApiKey($_ENV['SP_APIKEY_PRIVATE']);
 
         $checkout_session = Session::create([
-            // 'customer_email' => $this->getUser()->getEmail(),
-             'payment_method_types' => ['card'],
-            'line_items' => [
-                $products_for_stripe
-            ],
-            'mode' => 'payment',
-            'success_url' => $YOUR_DOMAIN . '/commande/merci/{CHECKOUT_SESSION_ID}',
-            'cancel_url' => $YOUR_DOMAIN . '/commande/erreur/{CHECKOUT_SESSION_ID}',
+            "customer_email"=> $user->getEmail(),
+            "payment_method_types" => ["card"],
+            "line_items"=> $orderServices->getLineItems($cart),
+            'mode'=> 'payment',
+            'success_url'=>  $YOUR_DOMAIN .'/stripe-payment-succes',
+            'cancel_url'=> $YOUR_DOMAIN .'/stripe-payment-annule',
         ]);
 
-        $order->setStripeSessionId($checkout_session->id);
-        $entityManager->flush();
 
-        $response = new JsonResponse(['id' => $checkout_session->id]);
-        return $response;
-
-       return $this->redirect($checkout_session->url); 
-     
+        return $this->json(['id'=>$checkout_session->id]);
     }
+
+
 }

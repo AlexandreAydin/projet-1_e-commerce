@@ -99,6 +99,7 @@ class CheckoutController extends AbstractController
                 'address'=>$address,
                 'carrier'=>$carrier,
                 'information'=>$information,
+                'reference' => $reference,
                 'checkout'=> $form->createView()
             ]);
         }

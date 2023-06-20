@@ -6,15 +6,18 @@ use App\Entity\Cart;
 use App\Entity\CartDetails;
 use App\Entity\Order;
 use App\Entity\OrderDetails;
+use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class OrderServices{
 
     private $manager;
+    private $repoProduct;
 
-    public function __construct(EntityManagerInterface $manager)
+    public function __construct(EntityManagerInterface $manager, ProductRepository $repoProduct)
     {   
         $this->manager = $manager;
+        $this->repoProduct = $repoProduct;
     }
 
     public function createOrder($cart)
@@ -55,6 +58,57 @@ class OrderServices{
         return $order;
 
     }
+
+    public  function getLineItems($cart){
+        $cartDetails = $cart->getCartDetails();
+        $YOUR_DOMAIN = 'http://127.0.0.1:8000';
+        $line_items = [];
+
+        foreach ($cartDetails as $details){
+            $product = $this->repoProduct->findOneByName($details->getProductName());
+            $line_items[] = [
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'unit_amount' => $product->getPrice(),
+                        'product_data' => [
+                            'name' => $product->getName(),
+                            'images' => [$YOUR_DOMAIN. "/uploads/products/".$product->getImages()[0]->getImageName()],
+                        ],
+                    ],
+                    'quantity' => $details->getQuantity(),
+                ];
+        }
+
+
+
+            //carrier
+            $line_items[] = [
+                'price_data' => [
+                    'currency' => 'eur',
+                    'unit_amount' => $cart->getCarrierPrice()*100,
+                    'product_data' => [
+                        'name' => 'Carrier ( '.$cart->getCarrierName().' )',
+                        'images' => [$YOUR_DOMAIN. "/uploads/products/"],
+                    ],
+                ],
+                'quantity' => 1,
+            ];
+
+        //Taxe
+            $line_items[] = [
+                'price_data' => [
+                    'currency' => 'eur',
+                    'unit_amount' => $cart->getTaxe()*100,
+                    'product_data' => [
+                        'name' => 'TVA(20%)',
+                        'images' => [$YOUR_DOMAIN. "/uploads/products/"],
+                    ],
+                ],
+                'quantity' => 1,
+            ];
+
+            return $line_items;
+    }  
 
     public function saveCart($data, $user)
     {

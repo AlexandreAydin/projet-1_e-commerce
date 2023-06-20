@@ -4,7 +4,6 @@
 
 {% block scriptStripe %}
  <script src="https://js.stripe.com/v3/"></script>
-
 {% endblock %}
 
 {% block body %}
@@ -81,8 +80,11 @@
                         <div class="payment_method">
                             <div class="heading_s1">
                                 <h4>Payment</h4>
-                               <a href="{{ path ('app_create_checkout_session', {'reference': reference}) }}" type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Payer | $ {{ cart.data.subTotalTTC + carrier.price/100 | number_format(2, '.', ',')}}</a>
                                   {# <a href="{{ path ('app_stripe_create_session', {'reference': reference}) }}" class="btn btn-success btn-block mt-3" id="checkout-button">Payer | {{ ((total / 100) + (carrier.price / 100))|number_format(2, ',', '.') }} €</a> #}
+                                <button type="button" id="checkout-button" class="btn btn-fill-out btn-block">
+                                    Payer | $ {{ cart.data.subTotalTTC + carrier.price/100 | number_format(2, '.', ',')}}
+                                </button>
+
                             </div>
                         </div>
                     </div>
@@ -94,11 +96,10 @@
 
 {% block javascripts %}
      <script type="text/javascript">
-        var stripe = Stripe('sk_test_51NKYgcB8m10ZC3XdC8i88ZoKozHjY1TFeTlxl2Tlue2EZ1fdnoe1j9naP5XXiXDcblZlP4xQSatmNtCyyaXgh6fd00DW3fvzF8');
-    
+       var stripe = Stripe('pk_test_51NKYgcB8m10ZC3XdY1MjpOVXjljPmAVUSImix36u8UK01qfX3BeoXf2hfqAXmdOWYiHv5U9ioFEz8DlzejFfjWhg00dg4lqGOe');
         var checkoutButton = document.getElementById("checkout-button");
         checkoutButton.addEventListener("click", function () {
-                fetch("/commande/creation-session", {
+                fetch("/commande/creation-session/{{reference}}", {
                     method: "POST",
                 })
                 .then(function (response) {
