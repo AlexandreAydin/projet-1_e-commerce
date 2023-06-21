@@ -25,7 +25,7 @@ class OrderServices{
         $order = new Order();
 
         $order->setReference($cart->getReference())
-                ->setCarrierName($cart->geCarrierName())
+                ->setCarrierName($cart->getCarrierName())
                 ->setCarrierPrice($cart->getCarrierPrice())
                 ->setFullName($cart->getFullName()) 
                 ->setDeliveryAddress($cart->getDeliveryAddress())
@@ -34,7 +34,7 @@ class OrderServices{
                 ->setSubTotalHT($cart->getSubTotalHT())
                 ->setTaxe($cart->getTaxe())
                 ->setSubTotalTTC($cart->getSubTotalTTC())
-                ->setuser($cart->getUser())
+                ->setUser($cart->getUser())
                 ->setCreatedAt($cart->getCreatedAt());
         $this->manager->persist($order);
 
@@ -44,8 +44,8 @@ class OrderServices{
         {
             $orderDetails = new OrderDetails();
             $orderDetails->setOrders($order)    
-                        ->setProductName($cart_product->getName())
-                        ->setProductPrice($cart_product->getPrice()/100)
+                        ->setProductName($cart_product->getProductName())
+                        ->setProductPrice($cart_product->getProductPrice()/100)
                         ->setQuantity($cart_product->getQuantity())
                         ->setSubTotalHT($cart_product->getSubTotalHT())
                         ->setTaxe($cart_product->getTaxe())
@@ -59,11 +59,11 @@ class OrderServices{
 
     }
 
-    public  function getLineItems($cart){
+    public function getLineItems($cart){
         $cartDetails = $cart->getCartDetails();
         $YOUR_DOMAIN = 'http://127.0.0.1:8000';
+        
         $line_items = [];
-
         foreach ($cartDetails as $details){
             $product = $this->repoProduct->findOneByName($details->getProductName());
             $line_items[] = [

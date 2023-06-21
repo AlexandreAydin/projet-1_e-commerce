@@ -1,20 +1,34 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello StripeSuccessPayementController!{% endblock %}
+{% block title %}commande complète{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
-
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code><a href="{{ 'C:/Users/yilma/Desktop/100 days of code/Backend/projet-1_e-commerce/src/Controller/Stripe/StripeSuccessPayementController.php'|file_link(0) }}">src/Controller/Stripe/StripeSuccessPayementController.php</a></code></li>
-        <li>Your template at <code><a href="{{ 'C:/Users/yilma/Desktop/100 days of code/Backend/projet-1_e-commerce/templates/stripe/stripe_success_payement/index.html.twig'|file_link(0) }}">templates/stripe/stripe_success_payement/index.html.twig</a></code></li>
-    </ul>
+<div class="section checkout">
+	<div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="text-center order_complete">
+                	<i class="fas fa-check-circle"></i>
+                    <div class="heading_s1">
+                      <h3>Merci de votre achat. Le paiement a été effectué avec succès!</h3>
+                      <div class="">
+                        <div>Le paiement du numéro de commande <strong>{{order.reference}}</strong> a été accepté.</div>
+                        <div>Votre paiement est actuellement "en attente de vérification".
+                            Les paiements sont généralement vérifiés dans un délai d'une heure.
+                            Après vérification, le vendeur commence à traiter votre commande.
+                            Pendant ce laps de temps, vous ne pourrez pas modifier votre commande.</div>
+                        <div>
+                          <div>Merci pour votre commande ! Votre commande est en cours de traitement et sera terminée dans les 3 à 6 heures. Vous recevrez un e-mail de confirmation lorsque votre commande sera terminée.</div>
+                          <a href="{{path('app_home')}}" class="btn btn-fill-out">Continuer votre achat</a>
+                        </div>
+                      </div>
+                      <div >
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
 {% endblock %}
