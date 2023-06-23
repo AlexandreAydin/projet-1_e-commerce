@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Amanoz Caisse{% endblock %}
+
+
+{% block body %}
+    {{  include ("partials/_title_section.html.twig", {'name':'Détails de la commande'}) }}
+
+
+<div class="section">
+	<div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="table-responsive shop_cart_table">
+                	<table class="table">
+                    	<thead>
+                        	<tr>
+                            	<th class="product-thumbnail">&nbsp;</th>
+                                <th class="product-name">Nom du Produit</th>
+                                <th class="product-price">Prix</th>
+                                <th class="product-quantity">Quantité</th>
+                                <th class="product-subtotal">Sous Total HT</th>
+                                <th class="product-subtotal">TVA</th>
+                                <th class="product-subtotal">Total TTC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% set subTotal = 0 %}                        
+                        {% for element in order.orderDetails %}
+                        	<tr>
+                            <td class="product-thumbnail">{{element.id}}</td>
+                                <td class="product-name" data-title="Product"><a href="#">{{element.productName}}</a></td>
+                                <td class="product-price" data-title="Price">{{element.productPrice}}</td>
+                                <td class="product-quantity" data-title="Quantity">{{element.quantity}}</td>
+                                <td class="product-subtotal" data-title="Total">{{element.subtotalHT }}</td>
+                                <td class="product-subtotal" data-title="Total">{{element.taxe | number_format(2, '.', ',')}}</td>
+                                <td class="product-subtotal" data-title="Total">{{element.subTotalTTC | number_format(2, '.', ',')}}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            	<th class="product-thumbnail">&nbsp;</th>
+                                <th class="product-name">Nom du Produit</th>
+                                <th class="product-price">Prix</th>
+                                <th class="product-quantity">Quantité</th>
+                                <th class="product-subtotal">Sous Total HT</th>
+                                <th class="product-subtotal">TVA</th>
+                                <th class="product-subtotal">Total TTC</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+            	<div class="medium_divider"></div>
+            	<div class="divider center_icon"><i class="ti-shopping-cart-full"></i></div>
+            	<div class="medium_divider"></div>
+            </div>
+        </div>
+        <div class="row">
+        	  <div class="col-md-6">
+
+
+            </div>
+            <div class="col-md-6">
+            	<div class="border p-3 p-md-4">
+                    <div class="heading_s1 mb-3">
+                        <h6>Commande Total</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td class="cart_total_label">Commande Sous total</td>
+                                    <td class="cart_total_amount">${{order.subTotalHT/100 | number_format(2, '.', ',')}}</td>
+                                </tr>
+                                <tr>
+                                    <td class="cart_total_label">Taxe</td>
+                                    <td class="cart_total_amount">${{ (order.taxe/100) | number_format(2, '.', ',') }}</td>
+                                </tr> 
+                                <tr>
+                                    <td class="cart_total_label">Livraison avec ({{order.carrierName}})</td>
+                                    <td class="cart_total_amount">${{order.carrierPrice/100 | number_format(2, '.', ',')}} </td>
+                                </tr>
+                                <tr>
+                                    <td class="cart_total_label">Total</td>
+                                    <td class="cart_total_amount"><strong>${{(order.subTotalTTC/100) | number_format(2, '.', ',')}}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ path('app_account')}}" class="btn btn-fill-out">Retourner a votre espace personelle</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

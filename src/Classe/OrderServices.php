@@ -127,7 +127,7 @@ class OrderServices{
             ->setQuantity($data['data']['quantity_cart'])
             ->setSubTotalHT($data['data']['subTotalHT'])
             ->setTaxe($data['data']['Taxe'])
-            ->setSubTotalTTC(round(($data['data']['subTotalTTC']+$carrier->getPrice()/100)))
+            ->setSubTotalTTC(number_format(round(($data['data']['subTotalTTC'] + $carrier->getPrice()) / 100, 2), 2))
             ->setuser($user)
             ->setCreatedAt(new \DateTimeImmutable());
 
