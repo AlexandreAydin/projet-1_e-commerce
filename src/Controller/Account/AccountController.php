@@ -28,7 +28,11 @@ class AccountController extends AbstractController
     public function show(Order $order): Response
     {
         if(!$order || $order->getUser() !== $this->getUser()){
-            return $this->redirectToRoute('home');
+            return $this->redirectToRoute('app_home');
+        }
+
+        if(!$order->getIsPaid()){
+            return $this->redirectToRoute('app_account');
         }
 
         return $this->render('pages/account/detail_order.html.twig',[
