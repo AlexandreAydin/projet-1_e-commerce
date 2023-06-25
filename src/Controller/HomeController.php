@@ -48,4 +48,15 @@ class HomeController extends AbstractController
         ]);
 
     }
+
+
+    #[Route('/boutique', name: 'app_shop')]
+    public function shop(ProductRepository $repoProduct): Response
+    {
+        $products = $repoProduct->findAll();
+
+        return $this->render('pages/home/shop.html.twig', [
+            'products' => $products, 
+        ]);
+    }
 }
