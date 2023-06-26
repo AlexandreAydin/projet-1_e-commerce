@@ -4,9 +4,12 @@ namespace App\Controller;
 
 use App\Classe\Mail;
 use App\Entity\Product;
+use App\Entity\SearchProduct;
+use App\Form\SearchProductType;
 use App\Repository\ProductRepository;
 use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -51,12 +54,24 @@ class HomeController extends AbstractController
 
 
     #[Route('/boutique', name: 'app_shop')]
-    public function shop(ProductRepository $repoProduct): Response
+    public function shop(ProductRepository $repoProduct,Request $request): Response
     {
         $products = $repoProduct->findAll();
 
+        $search = new SearchProduct();
+        $form = $this->createForm(SearchProductType::class,$search);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+       
+            $products= $repoProduct->findWithSearch($search);
+            
+        }
+        
+
         return $this->render('pages/home/shop.html.twig', [
             'products' => $products, 
+            'search' => $form->createView()
         ]);
     }
 }
