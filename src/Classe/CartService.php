@@ -4,7 +4,7 @@ namespace App\Service;
 
 use App\Repository\ProductRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+
 
 class CartService
 {
@@ -92,6 +92,11 @@ class CartService
             $product = $this->repoProduct->find($id);
             if ($product) {
                 // produit récupéré avec succès
+                if($quantity > $product->getQuantity()){
+                    $quantity = $product->getQuantity();
+                    $cart[$id]= $quantity;
+                    $this->updateCart($cart);
+                }
                 $fullCart["products"][] = [
                     'product' => $product,
                     'quantity' => $quantity,
