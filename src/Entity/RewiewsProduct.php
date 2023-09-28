@@ -14,9 +14,9 @@ class RewiewsProduct
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable:true)]
     private ?int $note = null;
-
+    
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $comment = null;
 
@@ -28,6 +28,19 @@ class RewiewsProduct
     #[ORM\JoinColumn(nullable: false)]
     private ?Product $product = null;
 
+    public function __construct()
+{
+    $this->createdAt = new \DateTimeImmutable();
+    $this->updatedAt = new \DateTimeImmutable();
+}
+
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $updatedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -37,11 +50,10 @@ class RewiewsProduct
     {
         return $this->note;
     }
-
-    public function setNote(int $note): self
+    
+    public function setNote(?int $note): self
     {
         $this->note = $note;
-
         return $this;
     }
 
@@ -77,6 +89,30 @@ class RewiewsProduct
     public function setProduct(?Product $product): self
     {
         $this->product = $product;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
 
         return $this;
     }

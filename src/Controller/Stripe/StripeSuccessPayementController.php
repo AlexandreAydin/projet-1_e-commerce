@@ -31,6 +31,15 @@ class StripeSuccessPayementController extends AbstractController
             $manager->flush();
             $cartServices->deleteCart();
         }
+
+        if($order->getState()==0){
+            // Commande payer
+            $order->setState(1);
+            //déstockage
+            $stockManager->deStock($order);
+            $manager->flush();
+            $cartServices->deleteCart();
+        }
         
         return $this->render('stripe/stripe_success_payement/index.html.twig', [
             'controller_name' => 'StripeSuccessPayementController',

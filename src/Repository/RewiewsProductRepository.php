@@ -39,6 +39,15 @@ class RewiewsProductRepository extends ServiceEntityRepository
         }
     }
 
+    public function getAverageRatingForProduct($product)
+    {
+        $reviews = $this->findBy(['product' => $product]);
+        $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
+        $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
+
+        return $averageRating;
+    }
+
 //    /**
 //     * @return RewiewsProduct[] Returns an array of RewiewsProduct objects
 //     */

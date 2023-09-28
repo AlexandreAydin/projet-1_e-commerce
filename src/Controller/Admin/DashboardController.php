@@ -9,6 +9,7 @@ use App\Entity\Contact;
 use App\Entity\Order;
 use App\Entity\Product;
 use App\Entity\ProductImage;
+use App\Entity\RewiewsProduct;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -42,7 +43,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Image de Produit', 'fas fa-image', ProductImage::class);
         yield MenuItem::linkToCrud('Catégorie', 'fas fa-list', Categorie::class);
         yield MenuItem::linkToCrud('Livraison', 'fas fa-truck', Carrier::class);
-        yield MenuItem::linkToCrud('Contact', 'fas fa-envolope', Contact::class);
+        yield MenuItem::linkToCrud('Contact', 'fas fa-user', Contact::class);
+        yield MenuItem::linkToCrud('Commentaire', 'fas fa-user', RewiewsProduct::class);
 
     }
 }

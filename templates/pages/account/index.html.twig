@@ -80,7 +80,16 @@
                                                     <tr>
                                                         <td>{{order.id}}</td> 
                                                         <td>{{order.createdAt | date('d/m/Y')}}</td>
-                                                        <td>Processing</td>
+                                                        <td> 
+                                                            {% if order.state == 1 %}
+                                                                Paiement accepté 
+                                                            {% elseif order.state == 2 %}
+                                                                Préparation en cours 
+                                                            {% elseif order.state == 3 %}
+                                                                Livraison en cours 
+                                                            {% elseif order.state == 4 %}
+                                                                Livré 
+                                                            {% endif %} </td>
                                                         <td>{{order.subTotalTTC/ 100}} € pour {{order.quantity}} article</td>
                                                         <td><a href="{{ path('app_account_show',{'id':order.id})}}" class="btn btn-fill-out btn-sm">View</a></td>
                                                     </tr>

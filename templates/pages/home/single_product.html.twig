@@ -12,11 +12,10 @@
                     <div class="product-image">
                         {% if product.images|length > 0 %}
                             {% set firstImage = product.images|first %}
-                            <div class="main_image_container">
-                                <div class="product_img_box mb-3" style="height: 300px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
-                                    <img id="main_product_img" src="{{ asset('images/products/' ~ firstImage.imageName) }}" data-zoom-image="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" class="img-fluid" style="height: 100%; width: 100%; object-fit: cover;" />
-                                    <a href="#" class="product_img_zoom position-absolute bottom-0 end-0 bg-secondary text-white p-1">
-                                        <span class="linearicons-zoom-in"></span>
+                            <div class="main_image_containe">
+                                <div class="mb-3" style="width: 100%; height:600px">
+                                    <a href="{{ asset('images/products/' ~ firstImage.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
+                                        <img id="main_product_img" src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" style="height:100% ;width: 100%; object-fit: cover;" />
                                     </a>
                                 </div>
                             </div>
@@ -25,31 +24,39 @@
                                 {% for image in product.images %}
                                     <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
                                         <div class="thumbnail_img_box" style="width: 100px; height: 100px;">
-                                            <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" data-large-src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
+                                            {% if loop.index == 1 %}
+                                                <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
+                                            {% else %}
+                                                <a href="{{ asset('images/products/' ~ image.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
+                                                    <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" data-large-src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
+                                                </a>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
-                        {% endif %}
-                    </div>
-                </div>
 
+                        {% endif %}
+                    </div>   
+                </div>
                 <div class="col-lg-6 col-md-6">
                     <div class="pr_detail">
                         <div class="product_description">
                             <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
                             <div class="product_price">
-                                <span class="price">{{ product.price/100 }}</span>
-                                <del>{{ product.price * 1.35/100 }}</del>
+                                <span class="price">{{ (product.price / 100)|number_format(2, ',', '.') }} €</span>
+                                <del>{{ (product.price * 1.35/100) |number_format(2, ',', '.') }} €</del>
                                 <div class="on_sale">
                                     <span>35% Off</span>
                                 </div>
                             </div>
+                            
                             <div class="rating_wrap">
                                 <div class="rating">
-                                    <div class="product_rate" style="width: 80%"></div>
+                                    <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
                                 </div>
-                                <span class="rating_num">(21)</span>
+                                <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
+                                {# <span class="average_rating">{{ averageRating | round(1, 'floor') }}</span> #}
                             </div>
                             <br>
                             <br>
@@ -108,7 +115,7 @@
                                 <a class="nav-link active" id="Description-tab" data-toggle="tab" href="#Description" role="tab" aria-controls="Description" aria-selected="true">Description</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="Reviews-tab" data-toggle="tab" href="#Reviews" role="tab" aria-controls="Reviews" aria-selected="false">Reviews (2)</a>
+                                <a class="nav-link" id="Reviews-tab" data-toggle="tab" href="#Reviews" role="tab" aria-controls="Reviews" aria-selected="false">Commentaire ({{ reviewCount }})</a>
                             </li>
                         </ul>
                         <div class="tab-content shop_info_tab">
@@ -118,74 +125,122 @@
 
                             <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
                                 <div class="comments">
-                                    <h5 class="product_tab_title">2 Review For <span>Blue Dress For Woman</span></h5>
+                                  
+                                    <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
+                                        <div class="a-row">
+                                            <h2>Commentaires client</h2>
+                                        </div>
+                                        <div class="rating_wrap mb-2">
+                                            <div class="rating">
+                                                <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
+                                            </div>
+                                                 <span class="average_rating">{{ averageRating | round(1, 'floor') }} sur 5</span>
+                                        </div>
+                                        
+                                        <!-- Display Histogram of Ratings -->
+                                        {% for review in reviews %}
+                                        {% set note = review.note %}
+                                            {# {% if note >= 1 and note <= 5 %}
+                                            
+                                            {% endif %} #}
+                                        {% endfor %}
+                                        <div class="a-fixed-left-grid a-spacing-none">
+                                            <div class="a-fixed-left-grid-inner">
+                                                <div class="a-fixed-left-grid-col a-col-left">
+                                                    <table id="histogramTable" class="a-normal a-align-center a-spacing-base">
+                                                        <tbody>
+                                                        <div class="a-row a-spacing-medium averageStarRatingNumerical mb-2">
+                                                            <span class="a-size-base a-color-secondary">{{ totalReviews }}&nbsp;évaluations globales et {{ reviewCount }} avis</span>
+                                                        </div>
+                                                        {% for star in [5, 4, 3, 2, 1] %}
+                                                        {% set percentage = totalReviews > 0 ? (starCounts[star]/totalReviews)*100 : 0 %}
+                                                        <tr class="a-histogram-row a-align-center">
+                                                            <td class="aok-nowrap a-nowrap">
+                                                                <a class="a-size-base a-link-normal">{{ star }} étoiles</a>
+                                                            </td>
+                                                            <td class="a-span10">
+                                                                <div class="a-meter" role="progressbar" aria-valuenow="{{ percentage }}">
+                                                                    <div class="a-meter-bar" style="width:{{ percentage }}%"></div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="a-text-right a-nowrap a-nowrap">
+                                                                <a class="a-size-base a-link-normal">{{ percentage | round(0, 'floor') }}%</a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h5 class="product_tab_title">({{ reviewCount }}) Review For <span>Blue Dress For Woman</span></h5>
                                     <ul class="list_none comment_list mt-4">
-                                        <li>
-                                            <div class="comment_img">
-                                                <img src="http://placehold.it/50" alt="user1" />
-                                            </div>
-                                            <div class="comment_block">
-                                                <div class="rating_wrap">
-                                                    <div class="rating">
-                                                        <div class="product_rate" style="width: 80%"></div>
+                                        {% for review in reviews %}
+                                            {% if review.comment %}
+                                                <li>
+                                                    {# <div class="comment_img">
+                                                        <img src="{{ review.user.profilePicturePath | default('http://placehold.it/50') }}" alt="{{ review.user.username }}" />
+                                                    </div> #}
+                                                    <div class="comment_block">
+                                                        <div class="rating_wrap">
+                                                            <div class="rating">
+                                                                <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
+                                                            </div>
+                                                        </div>
+                                                        <p class="customer_meta">
+                                                            <span class="review_author">{{ review.user.username }}</span>
+                                                            <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
+</span>
+                                                        </p>
+                                                        <div class="description">
+                                                            <p>{{ review.comment }}</p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <p class="customer_meta">
-                                                    <span class="review_author">Alea Brooks</span>
-                                                    <span class="comment-date">March 5, 2018</span>
-                                                </p>
-                                                <div class="description">
-                                                    <p>Lorem Ipsumin gravida nibh vel velit auctor aliquet. Aenean sollicitudin, lorem quis bibendum auctor, nisi elit consequat ipsum, nec sagittis sem nibh id elit. Duis sed odio sit amet nibh vulputate</p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="comment_img">
-                                                <img src="http://placehold.it/300" alt="user2" />
-                                            </div>
-                                            <div class="comment_block">
-                                                <div class="rating_wrap">
-                                                    <div class="rating">
-                                                        <div class="product_rate" style="width: 60%"></div>
-                                                    </div>
-                                                </div>
-                                                <p class="customer_meta">
-                                                    <span class="review_author">Grace Wong</span>
-                                                    <span class="comment-date">June 17, 2018</span>
-                                                </p>
-                                                <div class="description">
-                                                    <p>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters</p>
-                                                </div>
-                                            </div>
-                                        </li>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
                                     </ul>
-                                </div>
+
+                                </div>                       
                                 <div class="review_form field_form">
-                                    <h5>Add a review</h5>
-                                    <form class="row mt-3">
-                                        <div class="form-group col-12">
-                                            <div class="star_rating">
-                                                <span data-value="1"><i class="far fa-star"></i></span>
-                                                <span data-value="2"><i class="far fa-star"></i></span>
-                                                <span data-value="3"><i class="far fa-star"></i></span>
-                                                <span data-value="4"><i class="far fa-star"></i></span>
-                                                <span data-value="5"><i class="far fa-star"></i></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group col-12">
-                                            <textarea required="required" placeholder="Your review *" class="form-control" name="message" rows="4"></textarea>
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <input required="required" placeholder="Enter Name *" class="form-control" name="name" type="text">
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <input required="required" placeholder="Enter Email *" class="form-control" name="email" type="email">
-                                        </div>
-                                        <div class="form-group col-12">
-                                            <button type="submit" class="btn btn-fill-out" name="submit" value="Submit">Submit Review</button>
-                                        </div>
-                                    </form>
+                                {% if orders|length == 0 %}
+                                    Vous devez avoir acheté ce produit pour laisser un commentaire!
+                                {% else %}
+                                {% for order in orders %}
+                                {% if order and order.state == 4 %}
+                                <h5>Ajoutez un commentaire</h5>
+                                
+                                {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+                                
+                               <div class="form-group col-12">
+                                    <div class="star_rating">
+                                        <span data-value="1"><i class="far fa-star"></i></span>
+                                        <span data-value="2"><i class="far fa-star"></i></span>
+                                        <span data-value="3"><i class="far fa-star"></i></span>
+                                        <span data-value="4"><i class="far fa-star"></i></span>
+                                        <span data-value="5"><i class="far fa-star"></i></span>
+                                        {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                                    </div>
                                 </div>
+
+                                <div class="form-group col-12">
+                                    {{ form_widget(form.comment) }}
+                                    {# {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }} #}
+                                </div>
+                                
+                                <div class="form-group col-12">
+                                    {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+                                </div>
+                                
+                                {{ form_end(form) }}
+                               {% elseif order.state == 1 or order.state == 2 or order.state == 3 %}
+                                    Vous devez recevoir le produit pour laisser un commentaire!
+                                {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+
                             </div>
                         </div>
                     </div>
@@ -206,48 +261,83 @@
                         <h3>Related Products</h3>
                     </div>
                     <div class="releted_product_slider carousel_slider owl-carousel owl-theme" data-margin="20" data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
-                        {% for relatedProduct in product.categorie.products %}
-                            {% if relatedProduct.id != product.id %}
-                                {% include 'partials/_product_item.html.twig' with {'product': relatedProduct} %}
-                            {% endif %}
-                        {% endfor %}
+                      {% for relatedProduct in product.categorie.products %}
+    {% if relatedProduct.id != product.id %}
+        {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
+        {% include 'partials/_product_item.html.twig' with {'product': relatedProduct} %}
+    {% endif %}
+{% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {% block javascripts %}
-        <script>
-            function initElevateZoom() {
-                $('#main_product_img').elevateZoom({
-                    zoomType: "inner",
-                    cursor: "crosshair"
-                });
-
-                {% for image in product.images %}
-                    $('#thumbnail_{{ loop.index }}').elevateZoom({
-                        zoomType: "inner",
-                        cursor: "crosshair"
-                    });
-                {% endfor %}
-            }
-
-            function changeMainImage(thumbnail) {
-                const mainImage = $('#main_product_img');
-                const largeSrc = thumbnail.getAttribute('data-large-src');
-                mainImage.attr('src', largeSrc);
-                mainImage.data('zoom-image', largeSrc);
-
-                mainImage.removeData('elevateZoom');
-                $('.zoomContainer').remove();
-                initElevateZoom();
-            }
-
-            $(window).on('load', function () {
-                initElevateZoom();
+ {% block javascripts %}
+<script>
+    (function() {  // IIFE pour encapsuler le code
+        // Fonctionnalité : Elevate Zoom
+        function initElevateZoom() {
+            $('#main_product_img').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair"
             });
-        </script>
-        {{ encore_entry_script_tags('app') }}
-    {% endblock %}
+
+            {% for image in product.images %}
+            $('#thumbnail_{{ loop.index }}').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair"
+            });
+            {% endfor %}
+        }
+
+        function changeMainImage(thumbnail) {
+            const mainImage = $('#main_product_img');
+            const largeSrc = thumbnail.getAttribute('data-large-src');
+            mainImage.attr('src', largeSrc);
+            mainImage.data('zoom-image', largeSrc);
+
+            mainImage.removeData('elevateZoom');
+            $('.zoomContainer').remove();
+            initElevateZoom();
+        }
+
+        $(window).on('load', initElevateZoom);
+
+        // Fonctionnalité : Évaluation par étoiles
+        function handleStarRating() {
+            const stars = document.querySelectorAll(".star_rating span");
+            stars.forEach(star => {
+                star.addEventListener('click', function(e) {
+                    const value = e.currentTarget.getAttribute('data-value');
+                    document.getElementById('rewiews_product_note').value = value;  // mise à jour de l'input caché
+                    highlightStars(value);  // mise en surbrillance des étoiles
+                });
+            });
+        }
+
+        function highlightStars(value) {
+            const stars = document.querySelectorAll(".star_rating span i");
+            stars.forEach((star, index) => {
+                if (index < value) {
+                    star.classList.remove("far");
+                    star.classList.add("fas");
+                } else {
+                    star.classList.remove("fas");
+                    star.classList.add("far");
+                }
+            });
+        }
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+            handleStarRating();
+        
+        });
+
+
+    })();
+</script>
+{% endblock %}
+
 {% endblock %}

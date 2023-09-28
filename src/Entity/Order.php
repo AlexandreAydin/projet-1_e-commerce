@@ -41,8 +41,8 @@ class Order
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\OneToMany(mappedBy: 'orders', targetEntity: OrderDetails::class)]
-    private Collection $orderDetails;
+    #[ORM\OneToMany(mappedBy: 'orders', targetEntity: OrderDetails::class, cascade: ['remove'])]
+    private $orderDetails;
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
@@ -62,6 +62,12 @@ class Order
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $StripeCheckoutSessionId = null;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private $state;
+
+    #[ORM\ManyToOne(inversedBy: 'orders')]
+    private ?Product $product = null;
 
     public function __construct()
     {
@@ -270,4 +276,29 @@ class Order
 
         return $this;
     }
+
+     public function getState(): ?int
+    {
+        return $this->state;
+    }
+
+    public function setState(?int $state): self
+    {
+        $this->state = $state;
+
+        return $this;
+    }
+
+    public function getProduct(): ?Product
+    {
+        return $this->product;
+    }
+
+    public function setProduct(?Product $product): self
+    {
+        $this->product = $product;
+
+        return $this;
+    }
+
 }

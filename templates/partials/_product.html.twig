@@ -23,17 +23,18 @@
         <div class="product_info">
            <h6 class="product_title"><a href="{{ path('app_single_product', { 'slug': product.slug }) }}">{{product.name}}</a></h6>
             <div class="product_price">
-                 <span class="price">{{product.price/100}}</span>
-                <del>${{product.price *1.35/100}}</del>
+                <span class="price">{{ (product.price / 100)|number_format(2, ',', '.') }} €</span>
+                <del>{{ (product.price * 1.35/100) |number_format(2, ',', '.') }} €</del>
                 <div class="on_sale">
-                    <span>35% Off</span>
+                    <span>35% Off test</span>
                 </div>
             </div>
+            {% set currentProductRating = productRatings[product.id] ?? 0 %}
             <div class="rating_wrap">
                 <div class="rating">
-                    <div class="product_rate" style="width:80%"></div>
+                    <div class="product_rate" style="width: {{ (currentProductRating * 20) | round(0, 'floor') }}%"></div>
                 </div>
-                <span class="rating_num">{{product.rewiewsProducts | length}}</span>
+                <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
             </div>
             <div class="pr_desc">
                 <p>{{product.description}}</p>
