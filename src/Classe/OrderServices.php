@@ -33,7 +33,7 @@ class OrderServices{
                 ->setQuantity($cart->getQuantity())
                 ->setSubTotalHT($cart->getSubTotalHT()/100)
                 ->setTaxe($cart->getTaxe()/100)
-                ->setSubTotalTTC($cart->getSubTotalTTC()/100)
+                ->setSubTotalTTC($cart->getSubTotalHT() + $cart->getTaxe() + $cart->getCarrierPrice())
                 ->setUser($cart->getUser())
                 ->setCreatedAt($cart->getCreatedAt());
         $this->manager->persist($order);
@@ -47,8 +47,8 @@ class OrderServices{
                         ->setProductName($cart_product->getProductName())
                         ->setProductPrice($cart_product->getProductPrice()/100)
                         ->setQuantity($cart_product->getQuantity())
-                        ->setSubTotalHT($cart_product->getSubTotalHT())
-                        ->setTaxe($cart_product->getTaxe())
+                        ->setSubTotalHT($cart_product->getSubTotalHT()*100)
+                        ->setTaxe($cart_product->getTaxe()*100)
                         ->setSubTotalTTC($cart_product->getSubTotalTTC());
             $this->manager->persist($orderDetails);
         }
@@ -117,7 +117,7 @@ class OrderServices{
         $address=$data['checkout']['address'];
         $carrier=$data['checkout']['carrier'];
         $informations=$data['checkout']['information'];
-
+        foreach ($data['products'] as $products){
         $cart->setReference($reference)
             ->setCarrierName($carrier->getName())
             ->setCarrierPrice($carrier->getPrice()/100)
@@ -127,10 +127,11 @@ class OrderServices{
             ->setQuantity($data['data']['quantity_cart'])
             ->setSubTotalHT($data['data']['subTotalHT'])
             ->setTaxe($data['data']['Taxe'])
-            ->setSubTotalTTC(number_format(round(($data['data']['subTotalTTC'] + $carrier->getPrice()) / 100, 2), 2))
-            ->setuser($user)
+            ->setSubTotalTTC(($data['data']['subTotalHT']+($data['data']['Taxe'])))
+            ->setUser($user)
+            ->setProduct($products['product'])
             ->setCreatedAt(new \DateTimeImmutable());
-
+        }
             $this->manager->persist($cart);
 
             $cart_details_aray=[];
@@ -144,6 +145,7 @@ class OrderServices{
                 $cartDetails->setCarts($cart)
                         ->setProductName($products['product']->getName())
                         ->setProductPrice($products['product']->getPrice())
+                        ->setProduct($products['product'])
                         ->setQuantity($products['quantity'])
                         ->setSubTotalHT($subTotal)
                         ->setTaxe($subTotal*0.2)

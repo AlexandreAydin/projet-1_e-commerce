@@ -39,7 +39,6 @@ class HomeController extends AbstractController
         foreach ($products as $product) {
             $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
         }
-
         
         foreach ($products as $product) {
             // Adjust this logic based on your actual data model and relationships.
@@ -53,7 +52,6 @@ class HomeController extends AbstractController
         
         $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
         
-
 
         return $this->render('pages/home/index.html.twig', [
             'controller_name' => 'HomeController',
@@ -82,8 +80,16 @@ class HomeController extends AbstractController
         }
         
         // $order = $orderRepo->findOneBy(['user' => $user, 'product' => $product]);
-        $orders = $orderRepo->findBy(['isPaid'=>true, 'user'=>$this->getUser()],
-        ['id'=>'DESC']);
+        // $orders = $orderRepo->findBy(['isPaid'=>true, 'user'=>$this->getUser()],
+        // ['id'=>'DESC']);
+
+        $orders = $orderRepo->findBy([
+            'isPaid' => true, 
+            'user' => $this->getUser(), 
+            // 'product' => $product
+        ]);
+        // dump($orders);exit;
+
             
         $reviews = $reviewsRepo->findBy(['product' => $product]);
         $starCounts = [

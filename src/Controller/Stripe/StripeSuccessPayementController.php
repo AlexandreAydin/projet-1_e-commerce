@@ -36,7 +36,6 @@ class StripeSuccessPayementController extends AbstractController
             // Commande payer
             $order->setState(1);
             //déstockage
-            $stockManager->deStock($order);
             $manager->flush();
             $cartServices->deleteCart();
         }

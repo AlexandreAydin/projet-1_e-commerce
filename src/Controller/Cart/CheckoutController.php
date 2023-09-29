@@ -3,6 +3,7 @@
 namespace App\Controller\Cart;
 
 use App\Classe\OrderServices;
+use App\Entity\User;
 use App\Form\CheckoutType;
 use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,7 +55,10 @@ class CheckoutController extends AbstractController
     ): Response
     {
         //on récupére le panier de l'utilisateur
+
+        /** @var User $user */
         $user = $this->getUser();
+        
         $cart =$cartService->getFullCart();
 
         if(!isset($cart['products'])){
@@ -89,9 +93,8 @@ class CheckoutController extends AbstractController
 
             // sauvegarder le panier 
             $cart['checkout']= $data;
-            $reference = $orderServices->saveCart($cart,$user);
-      
-            
+           $reference = $orderServices->saveCart($cart, $user, $address);
+
 
 
             return $this->render('pages/checkout/confirm.html.twig',[

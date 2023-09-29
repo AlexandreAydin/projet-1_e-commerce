@@ -35,6 +35,9 @@ class CartDetails
     #[ORM\JoinColumn(nullable: false)]
     private ?Cart $Carts = null;
 
+    #[ORM\ManyToOne(inversedBy: 'cartDetails')]
+    private ?Product $product = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -120,6 +123,18 @@ class CartDetails
     public function setCarts(?Cart $Carts): self
     {
         $this->Carts = $Carts;
+
+        return $this;
+    }
+
+    public function getProduct(): ?Product
+    {
+        return $this->product;
+    }
+
+    public function setProduct(?Product $product): self
+    {
+        $this->product = $product;
 
         return $this;
     }

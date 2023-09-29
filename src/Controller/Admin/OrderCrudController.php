@@ -2,7 +2,6 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\Carrier;
 use App\Entity\Order;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -14,20 +13,22 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use Google\Service\AdExchangeBuyerII\Money;
-use phpDocumentor\Reflection\Types\Boolean;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
-
+use Doctrine\ORM\Mapping as ORM;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 
 class OrderCrudController extends AbstractCrudController
 {
 
+    private $entityManager;
     private $adminUrlGenerator;
 
     public function __construct(EntityManagerInterface $entityManager, AdminUrlGenerator $adminUrlGenerator)
     {
-       
+        $this->entityManager = $entityManager;
         $this->adminUrlGenerator = $adminUrlGenerator;
     }
 
@@ -49,7 +50,6 @@ class OrderCrudController extends AbstractCrudController
             ->add('index', 'detail');
     }
 
-    
 
     public function updatePreparation(AdminContext $context,EntityManagerInterface $entityManager)
     {
@@ -105,14 +105,21 @@ public function delivery(AdminContext $context, EntityManagerInterface $entityMa
     {
        return $crud->setDefaultSort(['id'=>'DESC']);
     }
-
-    
+  
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id')->hideOnForm(),
+            IdField::new('id')
+                ->hideOnForm(),
             TextField::new('user.FullName', 'Client'),
+            TextField::new('user.username', 'Client'),
+            TextField::new('orderDetailsIds', 'Order Details IDs')
+                ->hideOnIndex(),
+                TextField::new('DetailsRepresentation', 'voyon voir')
+                ->hideOnIndex(),
             TextField::new('CarrierName', 'Nom de Livreur'),
+            // AssociationField::new('product', 'Produit id'),
+            IntegerField::new('quantity', 'quantité'),
             MoneyField::new('CarrierPrice','Expédition')->setCurrency('EUR'),
             MoneyField::new('subTotalHT','Sous TotalHT')->setCurrency('EUR'),
             MoneyField::new('Taxe','TVA')->setCurrency('EUR'),

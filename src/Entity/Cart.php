@@ -41,12 +41,16 @@ class Cart
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\OneToMany(mappedBy: 'Carts', targetEntity: CartDetails::class)]
+    #[ORM\OneToMany(mappedBy: 'Carts', targetEntity: CartDetails::class, cascade: ['remove'])]
     private Collection $CartDetails;
 
     #[ORM\ManyToOne(inversedBy: 'Carts')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
+
+    #[ORM\ManyToOne(inversedBy: 'Carts')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Product $product = null;
 
     #[ORM\Column]
     private ?int $quantity = null;
@@ -55,7 +59,7 @@ class Cart
     private ?float $subTotalHT = null;
 
     #[ORM\Column]
-    private ?float $Taxe = null;
+    private ?float $taxe = null;
 
     #[ORM\Column]
     private ?float $subTotalTTC = null;
@@ -208,6 +212,18 @@ class Cart
         return $this;
     }
 
+    public function getProduct(): ?Product
+    {
+        return $this->product;
+    }
+
+    public function setProduct(?Product $product): self
+    {
+        $this->product = $product;
+
+        return $this;
+    }
+
     public function getQuantity(): ?int
     {
         return $this->quantity;
@@ -234,12 +250,12 @@ class Cart
 
     public function getTaxe(): ?float
     {
-        return $this->Taxe*100;
+        return $this->taxe*100;
     }
 
     public function setTaxe(float $Taxe): self
     {
-        $this->Taxe = $Taxe;
+        $this->taxe = $Taxe;
 
         return $this;
     }

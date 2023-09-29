@@ -34,6 +34,7 @@ class CartService
             $cart[$id] = 1;
         }
         $this->updateCart($cart);
+
     }
 
     public function deleteFromCart($id)
@@ -84,7 +85,7 @@ class CartService
     {
         $cart = $this->getCart();
         $fullCart = [];
-        $fullCart["products"] = []; // Ajoutez cette ligne
+        $fullCart["products"] = [];
         $quantity_cart  = 0;
         $subTotal = 0;
     
@@ -99,6 +100,7 @@ class CartService
                 }
                 $fullCart["products"][] = [
                     'product' => $product,
+                    'id' => $id,
                     'quantity' => $quantity,
                 ];
                 $quantity_cart += $quantity;
@@ -107,10 +109,10 @@ class CartService
                 $this->deleteFromCart($id);
             }
         }
-    
+        
         $taxes = round($subTotal * $this->tva, 2);
         $subTotalTTC = round(($subTotal + $taxes), 2);
-    
+
         $fullCart = [
             'products' => $fullCart["products"],
             'data' => [
@@ -120,8 +122,8 @@ class CartService
                 "subTotalTTC" => $subTotalTTC
             ]
         ];
-    
         return $fullCart;
+
     }
     
     
