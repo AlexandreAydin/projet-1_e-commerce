@@ -52,6 +52,9 @@ class Cart
     #[ORM\JoinColumn(nullable: false)]
     private ?Product $product = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $productName = null;
+
     #[ORM\Column]
     private ?int $quantity = null;
 
@@ -271,4 +274,17 @@ class Cart
 
         return $this;
     }
+
+    public function getProductName(): ?string
+    {
+        return $this->productName;
+    }
+
+    public function setProductName(string $productName): self
+    {
+        $this->productName = $productName;
+
+        return $this;
+    }
+
 }

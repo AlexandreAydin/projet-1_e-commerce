@@ -35,8 +35,6 @@ class OrderDetails
     #[ORM\JoinColumn(nullable: false)]
     private ?Order $orders = null;
 
-    #[ORM\ManyToOne(inversedBy: 'orderDetails')]
-    private ?Product $product = null;
 
     public function getId(): ?int
     {
@@ -105,7 +103,7 @@ class OrderDetails
 
     public function getSubTotalTTC(): ?float
     {
-        return $this->subTotalTTC;
+        return $this->subTotalTTC*100;
     }
 
     public function setSubTotalTTC(float $subTotalTTC): self
@@ -127,15 +125,4 @@ class OrderDetails
         return $this;
     }
 
-    public function getProduct(): ?Product
-    {
-        return $this->product;
-    }
-
-    public function setProduct(?Product $product): self
-    {
-        $this->product = $product;
-
-        return $this;
-    }
 }

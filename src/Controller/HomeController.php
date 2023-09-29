@@ -82,14 +82,13 @@ class HomeController extends AbstractController
         // $order = $orderRepo->findOneBy(['user' => $user, 'product' => $product]);
         // $orders = $orderRepo->findBy(['isPaid'=>true, 'user'=>$this->getUser()],
         // ['id'=>'DESC']);
-
+        // permet aux clients de noter uniquement le produit qu'il a acheté 
+        $currentProductName = $product->getName(); 
         $orders = $orderRepo->findBy([
             'isPaid' => true, 
-            'user' => $this->getUser(), 
-            // 'product' => $product
+            'user' => $this->getUser(),
+            'productName' => $currentProductName,
         ]);
-        // dump($orders);exit;
-
             
         $reviews = $reviewsRepo->findBy(['product' => $product]);
         $starCounts = [

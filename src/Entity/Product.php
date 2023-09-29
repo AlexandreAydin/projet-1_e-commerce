@@ -21,7 +21,7 @@ class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type:"integer")]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -79,18 +79,12 @@ class Product
     #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductImage::class, cascade: ['persist'],orphanRemoval: true,)]
     private Collection $images;
 
-
-    // #[ORM\OneToMany(mappedBy: 'product', targetEntity: Order::class,cascade: ['remove'])]
-    // private Collection $orders;
-
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Order::class)]
     private Collection $cart;
 
-    // #[ORM\OneToMany(targetEntity: Order::class, mappedBy: "user")]
-    // private Collection $orders;
-
     #[ORM\OneToMany(mappedBy: 'product', targetEntity: CartDetails::class)]
     private Collection $cartDetails;
+
 
         public function __construct()
         {
@@ -99,8 +93,6 @@ class Product
             $this->relatedProducts = new ArrayCollection();
             $this->relatedProducts = new ArrayCollection();
             $this->images = new ArrayCollection();
-            // $this->orderDetails = new ArrayCollection();
-            // $this->orders = new ArrayCollection();
             $this->rewiewsProducts = new ArrayCollection();
             $this->cartDetails = new ArrayCollection();
         }
@@ -377,36 +369,6 @@ class Product
         return $this;
     }
 
-    // /**
-    //  * @return Collection<int, OrderDetails>
-    //  */
-    // public function getOrderDetails(): Collection
-    // {
-    //     return $this->orderDetails;
-    // }
-
-    // public function addOrderDetail(OrderDetails $orderDetail): self
-    // {
-    //     if (!$this->orderDetails->contains($orderDetail)) {
-    //         $this->orderDetails->add($orderDetail);
-    //         $orderDetail->setProduct($this);
-    //     }
-
-    //     return $this;
-    // }
-
-    // public function removeOrderDetail(OrderDetails $orderDetail): self
-    // {
-    //     if ($this->orderDetails->removeElement($orderDetail)) {
-    //         // set the owning side to null (unless already changed)
-    //         if ($orderDetail->getProduct() === $this) {
-    //             $orderDetail->setProduct(null);
-    //         }
-    //     }
-
-    //     return $this;
-    // }
-
     /**
      * @return Collection<int, Cart>
      */
@@ -437,36 +399,6 @@ class Product
         return $this;
     }
 
-
-    // /**
-    //  * @return Collection<int, Order>
-    //  */
-    // public function getOrders(): Collection
-    // {
-    //     return $this->orders;
-    // }
-
-    // public function addOrder(Order $order): self
-    // {
-    //     if (!$this->orders->contains($order)) {
-    //         $this->orders->add($order);
-    //         $order->setProduct($this);
-    //     }
-
-    //     return $this;
-    // }
-
-    // public function removeOrder(Order $order): self
-    // {
-    //     if ($this->orders->removeElement($order)) {
-    //         // set the owning side to null (unless already changed)
-    //         if ($order->getProduct() === $this) {
-    //             $order->setProduct(null);
-    //         }
-    //     }
-
-    //     return $this;
-    // }
 
     /**
      * @return Collection<int, CartDetails>

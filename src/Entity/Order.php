@@ -66,8 +66,8 @@ class Order
     #[ORM\Column(type: 'integer', nullable: true)]
     private $state;
 
-    #[ORM\ManyToOne(inversedBy: 'orders')]
-    private ?Product $product = null;
+    #[ORM\Column(length: 255)]
+    private ?string $productName = null;
 
     public function __construct()
     {
@@ -255,7 +255,7 @@ class Order
 
     public function getSubTotalTTC(): ?float
     {
-        return $this->subTotalTTC*100;
+        return $this->subTotalTTC;
     }
 
     public function setSubTotalTTC(float $subTotalTTC): self
@@ -289,14 +289,14 @@ class Order
         return $this;
     }
 
-    public function getProduct(): ?Product
+    public function getProductName(): ?string
     {
-        return $this->product;
+        return $this->productName;
     }
 
-    public function setProduct(?Product $product): self
+    public function setProductName(string $productName): self
     {
-        $this->product = $product;
+        $this->productName = $productName;
 
         return $this;
     }

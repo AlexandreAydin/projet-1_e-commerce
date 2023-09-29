@@ -38,6 +38,9 @@ class CartDetails
     #[ORM\ManyToOne(inversedBy: 'cartDetails')]
     private ?Product $product = null;
 
+    // #[ORM\Column(length: 255)]
+    // private ?string $productId = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -138,4 +141,16 @@ class CartDetails
 
         return $this;
     }
+
+    // public function getProductId(): ?string
+    // {
+    //     return $this->productId;
+    // }
+
+    // public function setProductId(string $productId): self
+    // {
+    //     $this->productId = $productId;
+
+    //     return $this;
+    // }
 }
