@@ -29,7 +29,6 @@ class OrderServices{
                 ->setCarrierPrice($cart->getCarrierPrice()/100)
                 ->setFullName($cart->getFullName()) 
                 ->setProductName($cart->getProductName())
-                // ->setProductId($cart->getProductId()) 
                 ->setDeliveryAddress($cart->getDeliveryAddress())
                 ->setMoreInformations($cart->getMoreInformations())
                 ->setQuantity($cart->getQuantity())
@@ -46,7 +45,6 @@ class OrderServices{
         {
             $orderDetails = new OrderDetails();
             $orderDetails->setOrders($order)    
-                        // ->setProductId($cart_product->getProductId())
                         ->setProductName($cart_product->getProductName())
                         ->setProductPrice($cart_product->getProductPrice()/100)
                         ->setQuantity($cart_product->getQuantity())

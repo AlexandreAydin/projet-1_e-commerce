@@ -125,6 +125,58 @@ class CartService
         return $fullCart;
 
     }
+
+
+
+    public function getFullFavoris()
+    {
+        $cart = $this->getCart();
+        $fullCart = [];
+        $fullCart["products"] = [];
+        $quantity_cart  = 0;
+        $subTotal = 0;
     
+        foreach ($cart as $id => $quantity) {
+            $product = $this->repoProduct->find($id);
+            if ($product) {
+                // produit récupéré avec succès
+                if($quantity > $product->getQuantity()){
+                    $quantity = $product->getQuantity();
+                    $cart[$id]= $quantity;
+                    $this->updateCart($cart);
+                }
+                $fullCart["products"][] = [
+                    'product' => $product,
+                    'id' => $id,
+                    'quantity' => $quantity,
+                ];
+                $quantity_cart += $quantity;
+                $subTotal += $product->getPrice()/100 * $quantity;
+            } else {
+                $this->deleteFromCart($id);
+            }
+        }
+        
+        $taxes = round($subTotal * $this->tva, 2);
+        $subTotalTTC = round(($subTotal + $taxes), 2);
+
+        $fullCart = [
+            'products' => $fullCart["products"],
+            'data' => [
+                "quantity_cart" => $quantity_cart,
+                "subTotalHT" => $subTotal,
+                "Taxe" => $taxes,
+                "subTotalTTC" => $subTotalTTC
+            ]
+        ];
+        return $fullCart;
+
+    }
+
+    public function getCartQuantity() 
+    {
+        $fullCart = $this->getFullCart();
+        return $fullCart['data']['quantity_cart'];
+    }
     
 }

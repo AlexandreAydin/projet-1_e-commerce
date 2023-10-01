@@ -78,7 +78,7 @@
                             <div class="cart_btn">
                                 <a href="{{ path('app_add_to_cart', {'id': product.id}) }}" class="btn btn-fill-out btn-addtocart" type="button"><i class="icon-basket-loaded"></i> Add to cart</a>
                                 <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
-                                <a class="add_wishlist" href="#"><i class="icon-heart"></i></a>
+                                <a class="add_wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
                             </div>
                         </div>
                         <hr />

@@ -2,9 +2,13 @@
 
 namespace App\Controller\Cart;
 
+use App\Repository\ProductRepository;
 use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+
+use Symfony\Component\HttpFoundation\Request;
+
 use Symfony\Component\Routing\Annotation\Route;
 
 class CartController extends AbstractController
@@ -15,6 +19,45 @@ class CartController extends AbstractController
     {
         $this->cartServices = $cartServices;
     }
+
+
+    // /**
+    //  * @Route("/add-to-cart-ajax", name="app_add_to_cart_ajax", methods={"POST"})
+    //  */
+    // public function addToCartAjax(Request $request, ProductRepository $productRepository): Response
+    // {
+    //     $productId = $request->request->get('productId');
+        
+    //     // Ajouter le produit au panier
+    //     $this->cartServices->addToCart($productId);
+
+    //     // Récupérer la nouvelle quantité totale d'articles dans le panier
+    //     $newCartQuantity = $this->cartServices->getCartQuantity();
+
+    //     // Récupérer les détails du produit ajouté en utilisant le Repository
+    //     $product = $productRepository->find($productId);
+    //     if (!$product) {
+    //         return $this->json(['error' => 'Product not found'], 404);
+    //     }
+
+    //     // Récupérer la première image du produit
+    //     $firstImage = $product->getImages()[0] ?? null;
+    //     $imageName = $firstImage ? $firstImage->getImageName() : null;
+
+    //     // Renvoyer les informations du produit avec la nouvelle quantité du panier
+    //     return $this->json([
+    //         'newCartQuantity' => $newCartQuantity,
+    //         'product' => [
+    //             'name' => $product->getName(),
+    //             'price' => $product->getPrice(),
+    //             'image' => $imageName
+
+    //         ]
+    //     ]);
+    // }
+
+
+
 
     #[Route('/panier', name: 'app_cart')]
     public function index(): Response

@@ -20,7 +20,7 @@ class Carrier
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\Column]
+    #[ORM\Column( nullable: true)]
     private ?float $price = null;
 
     #[ORM\Column]
