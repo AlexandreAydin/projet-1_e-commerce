@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Classe\Mail;
+
 use App\Entity\OrderDetails;
 use App\Entity\Product;
 use App\Entity\RewiewsProduct;
@@ -13,6 +13,7 @@ use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use App\Repository\RewiewsProductRepository;
 use App\Service\CartService;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -63,6 +64,13 @@ class HomeController extends AbstractController
             'averageRating' => $averageRating,
             'productRatings' => $productRatings,
         ]);
+    }
+
+    #[Route('/pdf/{id}', name: 'app_order_pdf')]
+    public function generatePdfOrder(OrderDetails $orderDetails = null, PdfService $pdf)
+    {
+        $html= $this->render('pages/detail_order.html.twig',['orderDetails'=>$orderDetails]);
+        $pdf->showPdfFile($html);
     }
 
     #[Route('/produit/{slug}', name: 'app_single_product')]

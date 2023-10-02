@@ -11,6 +11,7 @@
         "doctrine/doctrine-bundle": "^2.9",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.14",
+        "dompdf/dompdf": "^2.0",
         "easycorp/easyadmin-bundle": "^4.6",
         "google/apiclient": "2.7",
         "mailjet/mailjet-apiv3-php": "^1.5",

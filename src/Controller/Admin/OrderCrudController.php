@@ -113,11 +113,10 @@ public function delivery(AdminContext $context, EntityManagerInterface $entityMa
                 ->hideOnForm(),
             TextField::new('user.FullName', 'Client'),
             TextField::new('user.username', 'Client'),
-            TextField::new('orderDetailsIds', 'Order Details IDs')
-                ->hideOnIndex(),
-                TextField::new('DetailsRepresentation', 'voyon voir')
-                ->hideOnIndex(),
             TextField::new('CarrierName', 'Nom de Livreur'),
+            CollectionField::new('orderDetails', 'Détails de la commande')
+                ->setTemplatePath('admin/partials/order_details_field.html.twig')
+                ->hideOnIndex(),
             // AssociationField::new('product', 'Produit id'),
             IntegerField::new('quantity', 'quantité'),
             MoneyField::new('CarrierPrice','Expédition')->setCurrency('EUR'),

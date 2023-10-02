@@ -1,0 +1,19 @@
+{% for detail in field.value %}
+    <div>
+        <strong>{{ detail.productName }}</strong> <br>
+        - Quantité : x {{ detail.quantity }}<br>
+        
+        {# {% set isNumericSubtotalHT = (detail.subtotalHT is not empty and detail.subtotalHT ~ '' matches '/^-?\\d+$/') %}
+        {% set isNumericTaxe = (detail.taxe is not empty and detail.taxe ~ '' matches '/^-?\\d+$/') %}
+        {% set isNumericSubTotalTTC = (detail.subTotalTTC is not empty and detail.subTotalTTC ~ '' matches '/^-?\\d+$/') %} #}
+        
+        - Sub Total HT : 
+            {{ (detail.subtotalHT/100) | number_format(2, ",", ".") }} €
+        <br>    
+        - Taxe : 
+           {{ (detail.taxe/100) | number_format(2, ",", ".") }} €
+        <br>
+        - Sub Total TTC : 
+             {{ (detail.subTotalTTC/100) | number_format(2, ",", ".") }} €
+    </div>
+{% endfor %}
