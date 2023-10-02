@@ -52,7 +52,8 @@ class Address
         }
         $result .= $this->address. "[spr]";
         $result .= $this->complement. "[spr]";
-        $result .= $this->codePostal. "[spr]";
+        $result .= $this->codePostal. "  " ;
+        $result .= $this->city. "[spr]";
         $result .= $this->country."[spr]";
 
         return $result;

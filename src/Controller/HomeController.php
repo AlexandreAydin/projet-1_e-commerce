@@ -66,13 +66,6 @@ class HomeController extends AbstractController
         ]);
     }
 
-    #[Route('/pdf/{id}', name: 'app_order_pdf')]
-    public function generatePdfOrder(OrderDetails $orderDetails = null, PdfService $pdf)
-    {
-        $html= $this->render('pages/detail_order.html.twig',['orderDetails'=>$orderDetails]);
-        $pdf->showPdfFile($html);
-    }
-
     #[Route('/produit/{slug}', name: 'app_single_product')]
     public function single_product(
         ?Product $product,
@@ -87,9 +80,6 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
         
-        // $order = $orderRepo->findOneBy(['user' => $user, 'product' => $product]);
-        // $orders = $orderRepo->findBy(['isPaid'=>true, 'user'=>$this->getUser()],
-        // ['id'=>'DESC']);
         // permet aux clients de noter uniquement le produit qu'il a acheté 
         $currentProductName = $product->getName(); 
         $orders = $orderRepo->findBy([

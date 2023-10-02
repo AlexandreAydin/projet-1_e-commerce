@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Order;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
@@ -25,11 +26,13 @@ class OrderCrudController extends AbstractCrudController
 
     private $entityManager;
     private $adminUrlGenerator;
+    private $pdfService;
 
-    public function __construct(EntityManagerInterface $entityManager, AdminUrlGenerator $adminUrlGenerator)
+    public function __construct(EntityManagerInterface $entityManager, AdminUrlGenerator $adminUrlGenerator, PdfService $pdfService)
     {
         $this->entityManager = $entityManager;
         $this->adminUrlGenerator = $adminUrlGenerator;
+        $this->pdfService = $pdfService;
     }
 
     public static function getEntityFqcn(): string
@@ -42,29 +45,58 @@ class OrderCrudController extends AbstractCrudController
         $updatePreparation = Action::new('updatePreparation', 'Préparation en cours', 'fas fa-box-open')->linkToCrudAction('updatePreparation');
         $updateDelivery = Action::new('updateDelivery', 'Livraison en cours', 'fas fa-truck')->linkToCrudAction('updateDelivery');
         $delivery= Action::new('delivery','Livrée','fas fa-check')->linkToCrudAction('delivery');
+        $printInvoice = Action::new('printInvoice', 'Imprimer', 'fa fa-print')->linkToCrudAction('printInvoice');
 
         return $actions
             ->add('detail', $updatePreparation)
             ->add('detail', $updateDelivery)
             ->add('detail', $delivery)
-            ->add('index', 'detail');
+            ->add('index', 'detail')
+            ->add('detail', $printInvoice);
     }
 
+    public function printInvoice(AdminContext $context)
+    {
+        $order = $context->getEntity()->getInstance();
+        
+        // Vérifiez que la commande a des détails associés
+        if (!$order->getOrderDetails() || $order->getOrderDetails()->isEmpty()) {
+            $this->addFlash('error', "La commande " . $order->getReference() . " n'a pas de détails valides.");
+        }
+    
+        // Récupérez le premier OrderDetail pour cette commande (si vous avez plusieurs détails, choisissez le bon ici)
+        $firstOrderDetail = $order->getOrderDetails()->first();
+    
+        if (!$firstOrderDetail) {
+            $this->addFlash('error', "Pas de détails valides trouvés pour la commande " . $order->getReference() . ".");
+            // return $this->redirectToCrudIndex(); // Redirection vers la page de liste
+        }
+    
+        // Générer l'URL pour la facture PDF
+        $pdfUrl = $this->generateUrl('app_order_pdf', [
+            'order' => $order->getId(),
+            'orderDetails' => $firstOrderDetail->getId()
+        ]);
+        
+        // Rediriger vers l'URL générée
+        return $this->redirect($pdfUrl);
+    }
+    
 
     public function updatePreparation(AdminContext $context,EntityManagerInterface $entityManager)
     {
-        $order = $context->getEntity()->getInstance();
-        $order->setState(2);
-        $entityManager->flush();
+            $order = $context->getEntity()->getInstance();
+            $order->setState(2);
+            $entityManager->flush();
 
-        $this->addFlash('notice', "<span style='color:green;'><strong>La commande ".$order->getReference()." est bien <u>en cours de préparation</u>.</strong></span>");
+            $this->addFlash('notice', "<span style='color:green;'><strong>La commande ".$order->getReference()." est bien <u>en cours de préparation</u>.</strong></span>");
 
-        $url = $this->adminUrlGenerator
-        ->setController(OrderCrudController::class)
-        ->setAction('index')
-        ->generateUrl();
-    return $this->redirect($url);
-}
+            $url = $this->adminUrlGenerator
+            ->setController(OrderCrudController::class)
+            ->setAction('index')
+            ->generateUrl();
+        return $this->redirect($url);
+    }
     
 
 
@@ -78,11 +110,12 @@ class OrderCrudController extends AbstractCrudController
 
 
         $url = $this->adminUrlGenerator
-        ->setController(OrderCrudController::class)
-        ->setAction('index')
-        ->generateUrl();
-    return $this->redirect($url);
-}
+            ->setController(OrderCrudController::class)
+            ->setAction('index')
+            ->generateUrl();
+
+        return $this->redirect($url);
+    }
 
 
 public function delivery(AdminContext $context, EntityManagerInterface $entityManager)
@@ -111,8 +144,10 @@ public function delivery(AdminContext $context, EntityManagerInterface $entityMa
         return [
             IdField::new('id')
                 ->hideOnForm(),
-            TextField::new('user.FullName', 'Client'),
-            TextField::new('user.username', 'Client'),
+            TextField::new('reference', 'Référance de la Commande')->hideOnIndex(),
+            TextField::new('user.FullName', 'Client Nom')->hideOnIndex(),
+            TextField::new('user.lastName', 'Client prénom')->hideOnIndex(),
+            TextField::new('user.email', 'Client email')->hideOnIndex(),
             TextField::new('CarrierName', 'Nom de Livreur'),
             CollectionField::new('orderDetails', 'Détails de la commande')
                 ->setTemplatePath('admin/partials/order_details_field.html.twig')

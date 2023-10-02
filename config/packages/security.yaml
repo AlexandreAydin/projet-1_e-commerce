@@ -19,6 +19,9 @@ security:
             custom_authenticator: App\Security\LoginAuthenticator
             logout:
                 path: app_logout
+            remember_me:
+                secret: '%kernel.secret%'
+                always_remember_me: true
                 # where to redirect after logout
                 # target: app_any_route
 

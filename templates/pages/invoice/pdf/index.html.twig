@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Invoice{% endblock %}
+
+{% block body %}
+<div class="container">
+
+    <div>
+  
+        <div style="margin-top:40px;"> 
+            Alexandre <br>
+            123, rue de la vieille maison<br> 98765 Toulouse<br> France <br>
+        </div>
+        <div style="text-align: right;">
+            {# <strong>Nom Complet:</strong> {{ order.fullName }} <br> #}
+            <strong>Adresse de Livraison:</strong> {{ order.deliveryAddress | replace({'[spr]':'<br>'})| raw }} <br>
+        </div>
+    </div> <br> <br>
+    <table border="1" style="width:100%; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>Nom du Produit</th>
+                <th>Prix du Produit</th>
+                <th>Quantité</th>
+                <th>Sous Total HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detail in order.orderDetails %}
+            <tr>
+                <td>{{ detail.productName }}</td>
+                <td>{{ detail.productPrice  | number_format(2, '.', ',') }} €</td>
+                <td>{{ detail.quantity }}</td>
+                <td>{{ (detail.subTotalHt/100) | number_format(2, '.', ',') }} €</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table><br> <br><br> <br>
+    <table style="margin-left:50%;width:50%; margin-top: 20px; text-align: right; border: 1px solid;padding:20px 0;">
+        <tbody>
+            <tr style="width:80%; border: 1px solid;">
+                <td style="width:80%;" class="cart_total_label">Commande Sous total:</td>
+                <td class="cart_total_amount">${{ (order.subTotalHT/100) | number_format(2, '.', ',') }}</td>
+            </tr>
+            <tr>
+                <td class="cart_total_label">Taxe:</td>
+                <td class="cart_total_amount">${{ (order.taxe/100) | number_format(2, '.', ',') }}</td>
+            </tr> 
+            <tr>
+                <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
+                <td class="cart_total_amount">${{ order.carrierPrice/100 | number_format(2, '.', ',') }}</td>
+            </tr>
+            <tr>
+                <td class="cart_total_label"><strong>Total:</strong></td>
+                <td class="cart_total_amount"><strong>${{ (order.subTotalHT/100 + order.taxe/100 + order.carrierPrice/100) | number_format(2, '.', ',') }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

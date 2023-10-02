@@ -2,8 +2,10 @@
 
 namespace App\Service;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf; // Correct namespace for Dompdf class
 use Dompdf\Options; // Correct namespace for Options class
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 
 class PdfService 
 {
@@ -21,7 +23,9 @@ class PdfService
     
     public function showPdfFile($html) 
     {
-        $this->domPdf->loadHtml($html);
+        $bodyContent = $this->extractBodyContent($html);
+        
+        $this->domPdf->loadHtml($bodyContent);
         $this->domPdf->render();
         $this->domPdf->stream("details.pdf", [
             "Attachment" => false,
@@ -30,8 +34,19 @@ class PdfService
 
     public function generateBinaryPDF($html)
     {
-        $this->domPdf->loadHtml($html);
+        $bodyContent = $this->extractBodyContent($html);
+
+        $this->domPdf->loadHtml($bodyContent);
         $this->domPdf->render();
         return $this->domPdf->output();
-    }   
+    }
+
+    private function extractBodyContent($html)
+    {
+        preg_match("/<body[^>]*>(.*?)<\/body>/is", $html, $matches);
+        return $matches[1] ?? '';
+    }
+
+
+    
 }

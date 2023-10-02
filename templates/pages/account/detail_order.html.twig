@@ -10,6 +10,11 @@
 <div class="section">
 	<div class="container">
         <div class="row">
+             <div class="row">
+                <div class="col-12 text-right">
+                    <a target='_blank' href="{{ path('app_order_pdf', {'order': order.id, 'orderDetails': orderDetails.id}) }}" class="btn btn-fill-out mb-4">Imprimer</a>
+                </div>
+            </div>
             <div class="col-12">
                 <div class="table-responsive shop_cart_table">
                 	<table class="table">
@@ -30,11 +35,11 @@
                         	<tr>
                             <td class="product-thumbnail">{{element.id}}</td>
                                 <td class="product-name" data-title="Product"><a href="#">{{element.productName}}</a></td>
-                                <td class="product-price" data-title="Price">{{element.productPrice}}</td>
-                                <td class="product-quantity" data-title="Quantity">{{element.quantity}}</td>
-                                <td class="product-subtotal" data-title="Total">{{element.subtotalHT }}</td>
-                                <td class="product-subtotal" data-title="Total">{{element.taxe | number_format(2, '.', ',')}}</td>
-                                <td class="product-subtotal" data-title="Total">{{element.subTotalTTC | number_format(2, '.', ',')}}</td>
+                                <td class="product-price" data-title="Price">{{element.productPrice | number_format(2, '.', ',')}}</td>
+                                <td class="product-quantity" data-title="Quantity">{{element.quantity }}</td>
+                                <td class="product-subtotal" data-title="Total">{{(element.subtotalHT/100) | number_format(2, '.', ',')}}</td>
+                                <td class="product-subtotal" data-title="Total">{{(element.taxe/100) | number_format(2, '.', ',')}}</td>
+                                <td class="product-subtotal" data-title="Total">{{(element.subTotalTTC/100) | number_format(2, '.', ',')}}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -75,7 +80,7 @@
                             <tbody>
                                 <tr>
                                     <td class="cart_total_label">Commande Sous total</td>
-                                    <td class="cart_total_amount">${{order.subTotalHT/100 | number_format(2, '.', ',')}}</td>
+                                    <td class="cart_total_amount">${{(order.subTotalHT/100) | number_format(2, '.', ',')}}</td>
                                 </tr>
                                 <tr>
                                     <td class="cart_total_label">Taxe</td>

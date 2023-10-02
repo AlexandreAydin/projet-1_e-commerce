@@ -53,26 +53,26 @@
                                     {% for element in cart.products %}
                                         <tr>
                                             <td>{{ element.product.name }} <span class="product-qty">x {{ element.quantity }}</span></td>
-                                            <td>$ {{ element.product.price/100 | number_format(2, '.', ',') }}</td>
+                                            <td>{{ element.product.price/100 | number_format(2, '.', ',') }} €</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                                 <tfoot>
                                     <tr>
                                         <th>Sous Total HT</th>
-                                        <td class="product-subtotal">$ {{ cart.data.subTotalHT | number_format(2, '.', ',') }}</td>
+                                        <td class="product-subtotal"> {{ cart.data.subTotalHT | number_format(2, '.', ',') }} €</td>
                                     </tr>
                                     <tr>
                                         <th>Taxe</th>
-                                        <td class="product-subtotal">$ {{ cart.data.Taxe | number_format(2, '.', ',') }}</td>
+                                        <td class="product-subtotal"> {{ cart.data.Taxe | number_format(2, '.', ',') }} €</td>
                                     </tr>
                                     <tr>
                                         <th>Expédition({{ carrier.name }})</th>
-                                        <td class="product-subtotal">$ {{ carrier.price/100 | number_format(2, '.', ',') }}</td>
+                                        <td class="product-subtotal"> {{ carrier.price/100 | number_format(2, '.', ',') }} €</td>
                                     </tr>
                                     <tr>
                                         <th>Total</th>
-                                       <td class="product-subtotal">$ {{ (cart.data.subTotalTTC + carrier.price/100) | number_format(2, '.', ',') }}</td>
+                                       <td class="product-subtotal"> {{ (cart.data.subTotalTTC + carrier.price/100) | number_format(2, '.', ',') }} €</td>
 
                                     </tr>
                                 </tfoot>
@@ -83,7 +83,7 @@
                                 <h4>Payment</h4>
                                   {# <a href="{{ path ('app_stripe_create_session', {'reference': reference}) }}" class="btn btn-success btn-block mt-3" id="checkout-button">Payer | {{ ((total / 100) + (carrier.price / 100))|number_format(2, ',', '.') }} €</a> #}
                                 <button type="button" id="checkout-button" class="btn btn-fill-out btn-block">
-                                    Payer | $ {{ cart.data.subTotalTTC + carrier.price/100 | number_format(2, '.', ',')}}
+                                    Payer |  {{ cart.data.subTotalTTC + carrier.price/100 | number_format(2, '.', ',')}} €
                                 </button>
 
                             </div>
@@ -91,7 +91,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div
     </div>
 {% endblock %}
 

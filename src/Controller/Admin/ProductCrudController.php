@@ -36,11 +36,9 @@ class ProductCrudController extends AbstractCrudController
             BooleanField::new('isNewArrival'),
             BooleanField::new('isFeatured'),
             BooleanField::new('isSpacialOffer'),
-            TextField::new('name', 'Nom'),
             CollectionField::new('images')
                 ->setEntryType(ProductImageType::class),
-            AssociationField::new('categorie'),
-            
+            AssociationField::new('categorie'), 
         ];
            
     }

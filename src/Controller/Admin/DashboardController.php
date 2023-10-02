@@ -39,17 +39,24 @@ class DashboardController extends AbstractDashboardController
 
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::linkToDashboard('Tableau de bord', 'fa fa-home');
-        yield MenuItem::linkToCrud('Produit', 'fas fa-shopping-cart', Product::class);
-        yield MenuItem::linkToCrud('Utilisateur', 'fas fa-user', User::class);
-        yield MenuItem::linkToCrud('Addresse', 'fas fa-user', Address::class);
-        yield MenuItem::linkToCrud('Commande', 'fas fa-shopping-bag', Order::class);
-        yield MenuItem::linkToCrud('Commande Détaillé', 'fas fa-shopping-bag', OrderDetails::class);
-        yield MenuItem::linkToCrud('Panier', 'fas fa-boxes', Cart::class);
-        yield MenuItem::linkToCrud('Image de Produit', 'fas fa-image', ProductImage::class);
-        yield MenuItem::linkToCrud('Catégorie', 'fas fa-list', Categorie::class);
-        yield MenuItem::linkToCrud('Livraison', 'fas fa-truck', Carrier::class);
-        yield MenuItem::linkToCrud('Contact', 'fas fa-user', Contact::class);
-        yield MenuItem::linkToCrud('Commentaire', 'fas fa-user', RewiewsProduct::class);
+        yield MenuItem::linkToRoute('Aller sur le site', 'fa fa-home', 'app_home');
+        yield MenuItem::subMenu('Produit', 'fas fa-shopping-cart')->setSubItems([
+            MenuItem::linkToCrud('Produit', 'fas fa-shopping-cart', Product::class),
+            MenuItem::linkToCrud('Image de Produit', 'fas fa-image', ProductImage::class),
+            MenuItem::linkToCrud('Commentaire', 'fas fa-user', RewiewsProduct::class),
+            MenuItem::linkToCrud('Catégorie', 'fas fa-list', Categorie::class),
+            MenuItem::linkToCrud('Livraison', 'fas fa-truck', Carrier::class),
+            
+        ]);
+        yield MenuItem::subMenu('Utilisateur', 'fas fa-user')->setSubItems([
+            MenuItem::linkToCrud('Utilisateur', 'fas fa-user', User::class),
+            MenuItem::linkToCrud('Addresse de l\'utilisateur', 'fas fa-map', Address::class),
+            MenuItem::linkToCrud('Contact', 'fas fa-user', Contact::class),
+        ]);
+        yield MenuItem::subMenu('Commande, Factures et panier', 'fas fa-shopping-bag')->setSubItems([
+            MenuItem::linkToCrud('Commandes et Factures', 'fas fa-shopping-bag', Order::class),
+            MenuItem::linkToCrud('Commande Détaillé', 'fas fa-shopping-bag', OrderDetails::class),
+            MenuItem::linkToCrud('Panier', 'fas fa-boxes', Cart::class),
+        ]);
     }
 }

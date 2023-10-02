@@ -6,6 +6,7 @@ use App\Repository\ProductRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Doctrine\ORM\Mapping as ORM;
 
 
@@ -16,6 +17,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
  * @ORM\Entity
  * @Vich\Uploadable
  */
+#[UniqueEntity('slug')]
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
 {
@@ -68,7 +70,7 @@ class Product
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $tags = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique:true)]
     private ?string $slug = null;
 
      /**

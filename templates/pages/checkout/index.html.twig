@@ -49,22 +49,22 @@
                                     {% for element in cart.products %}
                                         <tr>
                                             <td> {{element.product.name}} <span class="product-qty"> x {{element.quantity}}</span></td>
-                                        <td>$ {{element.product.price/100 | number_format(2, '.', ',')}}</td>
+                                        <td> {{element.product.price/100 | number_format(2, '.', ',')}}€</td>
                                     </tr>
                                     {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th>SubTotal HT</th>
-                                    <td class="product-subtotal">$ {{cart.data.subTotalHT | number_format(2, '.', ',')}}</td>
+                                    <td class="product-subtotal"> {{cart.data.subTotalHT | number_format(2, '.', ',')}}€</td>
                                 </tr>
                                 <tr>
                                     <th>Taxe</th>
-                                    <td class="product-subtotal">$ {{cart.data.Taxe | number_format(2, '.', ',')}}</td>
+                                    <td class="product-subtotal"> {{cart.data.Taxe | number_format(2, '.', ',')}}€</td>
                                 </tr>
                                 <tr>
                                     <th>Total</th>
-                                    <td class="product-subtotal">$  {{cart.data.subTotalTTC | number_format(2, '.', ',')}}</td>
+                                    <td class="product-subtotal">  {{cart.data.subTotalTTC | number_format(2, '.', ',')}}€</td>
                                 </tr>
                             </tfoot>
                         </table>

@@ -37,8 +37,6 @@ class ProductImage
         return $this->imageName;
     }
 
-    
-
     public function getId(): ?int
     {
         return $this->id;
