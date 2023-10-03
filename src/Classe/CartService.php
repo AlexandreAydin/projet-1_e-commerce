@@ -16,6 +16,16 @@ class CartService
     {
         $this->requestStack = $requestStack;
         $this->repoProduct = $repoProduct;
+        
+        // Récupération des données du localStorage
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let localCart = localStorage.getItem('cart');
+                if (localCart) {
+                    // Envoyez les données à PHP via une requête AJAX ou un autre mécanisme
+                }
+            });
+        </script>";
     }
 
     private function getSession() // nouvelle méthode pour obtenir la session
@@ -69,11 +79,24 @@ class CartService
         $this->updateCart([]);
     }
 
+    // public function updateCart($cart)
+    // {
+    //     $this->getSession()->set('cart', $cart); // utilisé $this->getSession() au lieu de $this->session
+    //     $this->getSession()->set('cartData', $this->getFullCart()); // utilisé $this->getSession() au lieu de $this->session
+    // }
+
     public function updateCart($cart)
-    {
-        $this->getSession()->set('cart', $cart); // utilisé $this->getSession() au lieu de $this->session
-        $this->getSession()->set('cartData', $this->getFullCart()); // utilisé $this->getSession() au lieu de $this->session
-    }
+{
+    // Sauvegarde dans la session
+    $this->getSession()->set('cart', $cart);
+    $this->getSession()->set('cartData', $this->getFullCart());
+
+    // Sauvegarde dans localStorage (côté client)
+    echo "<script>
+        localStorage.setItem('cart', '" . json_encode($cart) . "');
+    </script>";
+}
+
 
     public function getCart()
     {
