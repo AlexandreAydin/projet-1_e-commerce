@@ -11,6 +11,7 @@
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
                     <div class="product-image">
                         {% if product.images|length > 0 %}
+                        {% set lastMedia = product.images|last %}   
                             {% set firstImage = product.images|first %}
                             <div class="main_image_containe">
                                 <div class="mb-3" style="width: 100%; height:600px">
@@ -19,23 +20,32 @@
                                     </a>
                                 </div>
                             </div>
-
+                            {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}
                             <div class="row">
-                                {% for image in product.images %}
-                                    <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
-                                        <div class="thumbnail_img_box" style="width: 100px; height: 100px;">
-                                            {% if loop.index == 1 %}
-                                                <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
-                                            {% else %}
-                                                <a href="{{ asset('images/products/' ~ image.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                                    <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ image.imageName) }}" data-large-src="{{ asset('images/products/' ~ image.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
-                                                </a>
-                                            {% endif %}
+                                {% for media in product.images %}
+                                    {% if loop.index > 1 %}
+                                        <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
+                                            <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                                                {% if loop.last %}
+                                                    <!-- C'est la dernière itération, donc c'est une vidéo -->
+                                                    <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" data-type="video" data-width="640" data-height="360">
+                                                        <video controls style="width: 100%; height: 100%; object-fit: cover;">
+                                                            <source src="{{ asset('images/products/' ~ media.imageName) }}" type="video/mp4">
+                                                            Votre navigateur ne prend pas en charge la balise vidéo.
+                                                        </video>
+                                                        <i class="fas fa-play-circle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 2rem;"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <!-- Ce n'est pas la dernière itération, donc c'est une image -->
+                                                    <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
+                                                        <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ media.imageName) }}" data-large-src="{{ asset('images/products/' ~ media.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
+                                                    </a>
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
-
                         {% endif %}
                     </div>   
                 </div>
