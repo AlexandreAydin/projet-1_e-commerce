@@ -5,6 +5,7 @@ namespace App\Controller\Account;
 use App\Entity\Order;
 use App\Entity\OrderDetails;
 use App\Repository\OrderRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -26,22 +27,22 @@ class AccountController extends AbstractController
     }
 
     #[Route('/compte/{id}', name: 'app_account_show')]
-    public function show(Order $order,OrderDetails $orderDetails): Response
+    public function show(Order $order, EntityManagerInterface $entityManager): Response
     {
-        if(!$order || $order->getUser() !== $this->getUser()){
+        if (!$order || $order->getUser() !== $this->getUser()) {
             return $this->redirectToRoute('app_home');
         }
-
-        if(!$order->getIsPaid()){
+    
+        if (!$order->getIsPaid()) {
             return $this->redirectToRoute('app_account');
         }
-
-        $orderDetails = $order->getOrderDetails()->first(); // par exemple, pour obtenir le premier élément
-
-        return $this->render('pages/account/detail_order.html.twig',[
-            'order'=> $order,
+    
+        $orderDetails = $order->getOrderDetails()->first(); 
+    
+        return $this->render('pages/account/detail_order.html.twig', [
+            'order' => $order,
             'orderDetails' => $orderDetails
-        ] );
-   
+        ]);
     }
+    
 }

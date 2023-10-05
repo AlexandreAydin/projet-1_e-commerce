@@ -37,21 +37,22 @@ class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
     
-            // Générer une URL signée
-            $signedUrl = $urlGenerator->generate(
-                'app_verify_email',
-                ['id' => $user->getId()],
-                UrlGeneratorInterface::ABSOLUTE_URL
-            );
-    
-            // Envoyer un e-mail avec Mailjet
+            // Envoyer un e-mail de bienvenue
             $mail = new Mail();
             $to_email = $user->getEmail();
             $to_name = $user->getFirstName();
-            $subject = 'Veuillez confirmer votre mail';
-            $content = sprintf('Pour valider votre inscription, veuillez cliquer <a href="%s">ici</a>.', $signedUrl);
-            $mail->send($to_email, $to_name, $subject, $content);
+            $subject = 'Bienvenue sur Amanoz !';
+            
+            $content = "Bonjour ".$to_name.",<br/>";
+            $content .= "Bienvenue sur Amanoz ! Nous sommes ravis de vous compter parmi nos clients. Votre inscription a bien été prise en compte.<br/><br/>";
+            $content .= "Parcourez nos différentes catégories pour découvrir nos produits phares et profitez de nos offres spéciales et de nos nouveautés régulièrement mises à jour.<br/><br/>";
+            $content .= "N'hésitez pas à nous contacter si vous avez des questions ou besoin d'assistance lors de vos achats.<br/><br/>";
+            $content .= "Bonne découverte et bons achats sur Amanoz !<br/>";
+            $content .= "Cordialement,<br/>";
+            $content .= "L'équipe de Amanoz";
     
+            $mail->send($to_email, $to_name, $subject, $content);
+            
             return $this->redirectToRoute('app_home');
         }
     
@@ -59,7 +60,7 @@ class RegistrationController extends AbstractController
             'registrationForm' => $form->createView(),
         ]);
     }
-
+    
 
 
     #[Route('/verifier-email', name: 'app_verify_email')]
