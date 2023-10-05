@@ -76,9 +76,9 @@
 
                             <div class="product_sort_info">
                                 <ul>
-                                    <li><i class="linearicons-shield-check"></i> 1 Year AL Jazeera Brand Warranty</li>
-                                    <li><i class="linearicons-sync"></i> 30 Day Return Policy</li>
-                                    <li><i class="linearicons-bag-dollar"></i> Cash on Delivery available</li>
+                                    <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
+                                    <li><i class="linearicons-truck"></i> Livraison Rapide</li>
+                                    <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
                                 </ul>
                             </div>
                         </div>
@@ -110,7 +110,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-12">
                     <div class="large_divider clearfix"></div>
@@ -130,7 +129,7 @@
                         </ul>
                         <div class="tab-content shop_info_tab">
                             <div class="tab-pane fade show active" id="Description" role="tabpanel" aria-labelledby="Description-tab">
-                                <p>{{ product.description }}</p>
+                                <p>{{ product.description2  | raw }}</p>
                             </div>
 
                             <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
@@ -184,7 +183,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <h5 class="product_tab_title">({{ reviewCount }}) Review For <span>Blue Dress For Woman</span></h5>
+                                    <h5 class="product_tab_title">({{ reviewCount }}) Commentaire <span>{{product.name}}</span></h5>
                                     <ul class="list_none comment_list mt-4">
                                         {% for review in reviews %}
                                             {% if review.comment %}
@@ -201,7 +200,6 @@
                                                         <p class="customer_meta">
                                                             <span class="review_author">{{ review.user.username }}</span>
                                                             <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
-</span>
                                                         </p>
                                                         <div class="description">
                                                             <p>{{ review.comment }}</p>
@@ -268,7 +266,7 @@
             <div class="row">
                 <div class="col-12">
                     <div class="heading_s1">
-                        <h3>Related Products</h3>
+                        <h3>Produits apparentés</h3>
                     </div>
                     <div class="releted_product_slider carousel_slider owl-carousel owl-theme" data-margin="20" data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
                       {% for relatedProduct in product.categorie.products %}
@@ -351,3 +349,4 @@
 {% endblock %}
 
 {% endblock %}
+

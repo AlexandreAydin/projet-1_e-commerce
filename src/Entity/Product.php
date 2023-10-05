@@ -87,6 +87,57 @@ class Product
     #[ORM\OneToMany(mappedBy: 'product', targetEntity: CartDetails::class)]
     private Collection $cartDetails;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration1 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText1 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration2 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration3 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration4 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration5 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration6 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration7 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $illustration8 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText2 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText3 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText4 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText5 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText6 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText7 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $illustrationText8 = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description2 = null;
+
 
         public function __construct()
         {
@@ -428,6 +479,210 @@ class Product
                 $cartDetail->setProduct(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getIllustration1(): ?string
+    {
+        return $this->illustration1;
+    }
+
+    public function setIllustration1(?string $illustration1): self
+    {
+        $this->illustration1 = $illustration1;
+
+        return $this;
+    }
+
+    public function getIllustrationText1(): ?string
+    {
+        return $this->illustrationText1;
+    }
+
+    public function setIllustrationText1(?string $illustrationText1): self
+    {
+        $this->illustrationText1 = $illustrationText1;
+
+        return $this;
+    }
+
+    public function getIllustration2(): ?string
+    {
+        return $this->illustration2;
+    }
+
+    public function setIllustration2(?string $illustration2): self
+    {
+        $this->illustration2 = $illustration2;
+
+        return $this;
+    }
+
+    public function getIllustration3(): ?string
+    {
+        return $this->illustration3;
+    }
+
+    public function setIllustration3(?string $illustration3): self
+    {
+        $this->illustration3 = $illustration3;
+
+        return $this;
+    }
+
+    public function getIllustration4(): ?string
+    {
+        return $this->illustration4;
+    }
+
+    public function setIllustration4(?string $illustration4): self
+    {
+        $this->illustration4 = $illustration4;
+
+        return $this;
+    }
+
+    public function getIllustration5(): ?string
+    {
+        return $this->illustration5;
+    }
+
+    public function setIllustration5(?string $illustration5): self
+    {
+        $this->illustration5 = $illustration5;
+
+        return $this;
+    }
+
+    public function getIllustration6(): ?string
+    {
+        return $this->illustration6;
+    }
+
+    public function setIllustration6(?string $illustration6): self
+    {
+        $this->illustration6 = $illustration6;
+
+        return $this;
+    }
+
+    public function getIllustration7(): ?string
+    {
+        return $this->illustration7;
+    }
+
+    public function setIllustration7(?string $illustration7): self
+    {
+        $this->illustration7 = $illustration7;
+
+        return $this;
+    }
+
+    public function getIllustration8(): ?string
+    {
+        return $this->illustration8;
+    }
+
+    public function setIllustration8(?string $illustration8): self
+    {
+        $this->illustration8 = $illustration8;
+
+        return $this;
+    }
+
+    public function getIllustrationText2(): ?string
+    {
+        return $this->illustrationText2;
+    }
+
+    public function setIllustrationText2(?string $illustrationText2): self
+    {
+        $this->illustrationText2 = $illustrationText2;
+
+        return $this;
+    }
+
+    public function getIllustrationText3(): ?string
+    {
+        return $this->illustrationText3;
+    }
+
+    public function setIllustrationText3(?string $illustrationText3): self
+    {
+        $this->illustrationText3 = $illustrationText3;
+
+        return $this;
+    }
+
+    public function getIllustrationText4(): ?string
+    {
+        return $this->illustrationText4;
+    }
+
+    public function setIllustrationText4(?string $illustrationText4): self
+    {
+        $this->illustrationText4 = $illustrationText4;
+
+        return $this;
+    }
+
+    public function getIllustrationText5(): ?string
+    {
+        return $this->illustrationText5;
+    }
+
+    public function setIllustrationText5(?string $illustrationText5): self
+    {
+        $this->illustrationText5 = $illustrationText5;
+
+        return $this;
+    }
+
+    public function getIllustrationText6(): ?string
+    {
+        return $this->illustrationText6;
+    }
+
+    public function setIllustrationText6(?string $illustrationText6): self
+    {
+        $this->illustrationText6 = $illustrationText6;
+
+        return $this;
+    }
+
+    public function getIllustrationText7(): ?string
+    {
+        return $this->illustrationText7;
+    }
+
+    public function setIllustrationText7(?string $illustrationText7): self
+    {
+        $this->illustrationText7 = $illustrationText7;
+
+        return $this;
+    }
+
+    public function getIllustrationText8(): ?string
+    {
+        return $this->illustrationText8;
+    }
+
+    public function setIllustrationText8(?string $illustrationText8): self
+    {
+        $this->illustrationText8 = $illustrationText8;
+
+        return $this;
+    }
+
+    public function getDescription2(): ?string
+    {
+        return $this->description2;
+    }
+
+    public function setDescription2(?string $description2): self
+    {
+        $this->description2 = $description2;
 
         return $this;
     }
