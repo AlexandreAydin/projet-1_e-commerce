@@ -6,6 +6,7 @@ use App\Classe\Mail;
 use App\Entity\Order;
 use App\Repository\ProductRepository;
 use App\Service\PdfService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
@@ -22,6 +23,7 @@ use Symfony\Component\Routing\RouterInterface;
 use Doctrine\ORM\Mapping as ORM;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 
 class OrderCrudController extends AbstractCrudController
@@ -198,6 +200,7 @@ class OrderCrudController extends AbstractCrudController
                 'Livraison en cours' => 3,
                 'Livré' => 4
             ]),
+            DateTimeField::new('createdAt','Date de la commande'),
            
         ];
     }

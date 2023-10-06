@@ -33,7 +33,6 @@ class WishListService
             $wishList[$id] = 1;
             $this->updateWishList($wishList);
         }
-
     }
 
     public function removeToWishList($id)

@@ -13,11 +13,12 @@
         </div>
         <div style="text-align: right;">
             {# <strong>Nom Complet:</strong> {{ order.fullName }} <br> #}
-            <strong>Adresse de Livraison:</strong> {{ order.deliveryAddress | replace({'[spr]':'<br>'})| raw }} <br>
+            {{ order.deliveryAddress | replace({'[spr]':'<br>'})| raw }} <br>
         </div>
     </div> <br> <br><br> <br>
+    <strong>Date de la commande:</strong> {{ order.createdAt |date('d-m-Y') }} <br>
     <strong>Référence de la commande:</strong> {{ order.reference }} <br>
-    <strong>Numéro de Factures:</strong> {{ order.id }} <br>
+    <strong>Numéro de Factures:</strong> {{ order.createdAt |date('m-Y') }}-{{ order.id }} <br>
 
     <table border="1" style="width:100%; margin-top: 20px;">
         <thead>

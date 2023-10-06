@@ -54,6 +54,9 @@ class ProductCrudController extends AbstractCrudController
             TextEditorField::new('description2')
                     ->setFormType(CKEditorType::class)
                     ->hideOnIndex(),
+            TextEditorField::new('illustrationText1')
+            ->setFormType(CKEditorType::class)
+            ->hideOnIndex(),
          
         ];
            

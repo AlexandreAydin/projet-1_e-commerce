@@ -96,7 +96,6 @@
                             <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
                             <li>Tags: {{ product.tags }}</li>
                         </ul>
-
                         <div class="product_share">
                             <span>Share:</span>
                             <ul class="social_icons">
@@ -110,12 +109,16 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-12">
-                    <div class="large_divider clearfix"></div>
-                </div>
+            <br><br>
+             {% if product.illustrationText1 %}
+            <div class="row nav nav-tabs">
             </div>
-
+                <div class="row nav nav-tabs">
+                    <div class="large_divider clearfix mt-4">
+                        {{ product.illustrationText1 | raw }}
+                    </div>
+                </div>
+            {% endif %}
             <div class="row">
                 <div class="col-12">
                     <div class="tab-style3">
