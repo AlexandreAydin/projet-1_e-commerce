@@ -67,6 +67,9 @@ class Cart
     #[ORM\Column]
     private ?float $subTotalTTC = null;
 
+    #[ORM\Column (nullable:true)]
+    private ?int $count = null;
+
     public function __construct()
     {
         $this->CartDetails = new ArrayCollection();
@@ -283,6 +286,18 @@ class Cart
     public function setProductName(string $productName): self
     {
         $this->productName = $productName;
+
+        return $this;
+    }
+
+    public function getCount(): ?int
+    {
+        return $this->count;
+    }
+
+    public function setCount(int $count): self
+    {
+        $this->count = $count;
 
         return $this;
     }

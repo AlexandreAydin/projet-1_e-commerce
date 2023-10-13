@@ -722,11 +722,19 @@
 	$('.plus').on('click', function() {
 		if ($(this).prev().val()) {
 			$(this).prev().val(+$(this).prev().val() + 1);
+			let href = $('a.btn-addtocart').attr('href')
+			let newHref = href.split('/')
+			newHref.pop()
+			$('a.btn-addtocart').attr('href', newHref.join("/")+'/'+$(this).prev().val())
 		}
 	});
 	$('.minus').on('click', function() {
 		if ($(this).next().val() > 1) {
 			if ($(this).next().val() > 1) $(this).next().val(+$(this).next().val() - 1);
+			let href = $('a.btn-addtocart').attr('href')
+			let newHref = href.split('/')
+			newHref.pop()
+			$('a.btn-addtocart').attr('href', newHref.join("/")+'/'+$(this).next().val())
 		}
 	});
 	

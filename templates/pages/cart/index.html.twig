@@ -7,7 +7,7 @@
 
 
 {{  include ("partials/_title_section.html.twig", {'name':"Mon Panier"}) }}
-<div class="section">
+<div class="section" data-cart="{{cart_json}}">
 	<div class="container">
         <div class="row">
             <div class="col-12">
@@ -26,28 +26,35 @@
                         <tbody>
                         {% set subTotal = 0 %}                        
                         {% for element in cart.products %}
-                        	<tr>
+                        <div id="cart-data" 
+                            data-delete-path="{{ path('app_delete_to_cart', {'id': 'element.product.id'}) }}" 
+                            data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
+                            data-delete-all-path="{{ path('app_cart_delete_all', {'id': 'element.product.id'}) }}">
+                        </div>
+                        	{# <tr>
                             <td class="product-thumbnail">
                             <a href="#">
-                                {% if element.product.getImages()|first %}
-                                    <img src="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" data-zoom-image="{{ asset('images/products/' ~ element.product.getImages()|first.getImageName()) }}" alt="{{ element.product.getName() }}">
+                                {% if element.product.images %}
+                                    <img src="{{ asset('images/products/' ~ element.product.images) }}" data-zoom-image="{{ asset('images/products/' ~ element.product.images) }}" alt="{{ element.product.name }}">
                                 {% else %}
                                     <img src="{{ asset('images/placeholder-image.jpg') }}" alt="Placeholder Image">
                                 {% endif %}
                             </a>
+
                             </td>
                                 <td class="product-name" data-title="Product"><a href="#">{{element.product.name}}</a></td>
                                 <td class="product-price" data-title="Price">{{element.product.price/100}}</td>
                                 <td class="product-quantity" data-title="Quantity"><div class="quantity">
                                 <a href="{{path('app_delete_to_cart',{'id': element.product.id})}}" type="button" value="-" class="minus"> - </a>
                                 <input type="text" name="quantity" value="{{element.quantity}}" title="Qty" class="qty" size="4">
-                                {% if element.quantity < element.product.quantity %}
+                                {% if element.quantity %}
                                     <a href="{{path('app_add_to_cart',{'id': element.product.id})}}" type="button" value="+" class="plus"> + </a>
                                 {% endif %}
+
                                 </td>
                               	<td class="product-subtotal" data-title="Total">{{element.quantity * element.product.price/100 }}</td>
                                <td class="product-remove" data-title="Remove"><a href="{{ path('app_cart_delete_all', {'id': element.product.id}) }}"><i class="ti-close"></i></a></td>
-                            </tr>
+                            </tr> #}
                         {% endfor %}
                         </tbody>
                         <tfoot>
@@ -86,6 +93,20 @@
                             <tbody>
                                 <tr>
                                     <td class="cart_total_label">Cart Subtotal</td>
+                                    <td class="cart_total_amount cart_subtotalHT"></td>
+                                </tr>
+                                <tr>
+                                    <td class="cart_total_label">Taxe (20%)</td>
+                                   <td class="cart_total_amount cart_taxe"></td>
+                                </tr>
+                                <tr>
+                                    <td class="cart_total_label">Total</td>
+                                    <td class="cart_total_amount cart_subtotalTTC"></td>
+                                </tr>
+                            </tbody>
+                            {# <tbody>
+                                <tr>
+                                    <td class="cart_total_label">Cart Subtotal</td>
                                     <td class="cart_total_amount">${{cart.data.subTotalHT | number_format(2, '.', ',')}}</td>
                                 </tr>
                                 <tr>
@@ -96,7 +117,7 @@
                                     <td class="cart_total_label">Total</td>
                                     <td class="cart_total_amount"><strong>${{cart.data.subTotalTTC | number_format(2, '.', ',')}}</strong></td>
                                 </tr>
-                            </tbody>
+                            </tbody> #}
                         </table>
                     </div>
                     <a href="{{ path('app_checkout')}}" class="btn btn-fill-out">Proceed To CheckOut</a>
@@ -108,3 +129,8 @@
 
 
 {% endblock %}
+
+{% block javascripts %}
+
+{% endblock %}
+

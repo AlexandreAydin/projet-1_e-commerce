@@ -72,7 +72,7 @@
                         <a class="nav-link cart_trigger" href="#" data-toggle="dropdown">
                             <i class="linearicons-cart"></i>
                             <span class="cart_count">
-                                {% set quantity = 0 %}
+                                {# {% set quantity = 0 %}
                                 {% if app.request.pathinfo == path('app_cart') %}
                                     {% set cartData = cart %}
                                 {% else %}
@@ -85,47 +85,56 @@
                                 {% for product in cartData.products %}
                                     {% set quantity = quantity + product.quantity %}
                                 {% endfor %}
-                                {{quantity}}
+                                {{quantity}} #}
                             </span>
                         </a>
                         <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
                             <ul class="cart_list">
-                                {% set subTotal = 0 %}
+                                <div id="cart-data" 
+                                    data-delete-path="{{ path('app_delete_to_cart', {'id': 'element.product.id'}) }}" 
+                                    data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
+                                    data-delete-all-path="{{ path('app_cart_delete_all', {'id': 'element.product.id'}) }}">
+                                </div>
+                                {# {% set subTotal = 0 %}
                                 {% if cartData.products is not empty %}
                                     {% for cartItem in cartData.products %}
                                         {% set product = cartItem.product %}
                                         {% set quantity = cartItem.quantity %}
                                         {% set subTotal = subTotal + (quantity * product.price/100) %}
-                                        <li>
+                                        {# <li>
                                             <a href="{{ path('app_cart_delete_all', {'id': product.id}) }}" class="item_remove"><i class="ion-close"></i></a>
-                                            {% if product.images|length > 0 %}
-                                                {% set firstImage = product.images|first %}
-                                                <a href="#"><img src="{{ asset('images/products/' ~ firstImage.getImageName()) }}" alt="{{firstImage.getImageName()}}">{{product.name}}</a>
+                                           {% if product.images|length > 0 %}
+                                            {% set firstImage = product.images|first %}
+                                            <a href="#"><img src="{{ asset('images/products/' ~ product.images) }}" alt="{{product.images}}">{{product.name}}</a>
                                             {% else %}
                                                 <a href="#"><img src="{{ asset('images/placeholder-image.jpg') }}" alt="Placeholder Image">{{product.name}}</a>
                                             {% endif %}
                                             <span class="cart_quantity  text-dark"> {{quantity}} x <span class="cart_amount"> <span class="price_symbole">€</span></span>{{product.price/100}}</span>
-                                        </li>
+                                        </li> 
                                     {% endfor %}
                                 {% else %}
                                     <li> Votre panier est vide </li>
-                                {% endif %}
+                                {% endif %} #}
                             </ul>
-                            {% if cartData.data is defined %}
                                 <div class="cart_footer">
-                                    <p class="cart_total text-dark"><strong>Sous Total HT:</strong> <span class="cart_price"> <span class="price_symbole">€</span></span>{{subTotal}}</p>
-                                    <p class="cart_buttons"><a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a><a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">Checkout</a></p>
+                                    <p class="cart_total text-dark">
+                                        <strong>Sous Total HT:</strong> 
+                                        <span class="cart_price"> 
+                                            <span class="price_symbole">€</span>
+                                        </span>
+                                        <span class="cart_price_value"></span>
+                                    </p>
+                                    <p class="cart_buttons">
+                                        <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a>
+                                        <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">Checkout</a>
+                                    </p>
                                 </div>
-                            {% endif %}
                         </div>
                     </li> 
 
                 </ul>
-
-
-
-
 			</div>
 		</div>
 	</div>
+
 </nav> 

@@ -347,8 +347,8 @@ class Product
         return $this;
     }
 
-      /**
-     * @return Collection<int, ProductImage>
+    /**
+     * @return Collection|ProductImage[]
      */
     public function getImages(): Collection
     {
