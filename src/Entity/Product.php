@@ -93,6 +93,9 @@ class Product
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description2 = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $off = null;
+
 
         public function __construct()
         {
@@ -458,6 +461,18 @@ class Product
     public function setDescription2(?string $description2): self
     {
         $this->description2 = $description2;
+
+        return $this;
+    }
+
+    public function getOff(): ?int
+    {
+        return $this->off;
+    }
+
+    public function setOff(?int $off): self
+    {
+        $this->off = $off;
 
         return $this;
     }

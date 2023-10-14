@@ -133,67 +133,19 @@ class CartService
     {
         return $this->getSession()->get('cart', []); // utilisé $this->getSession() au lieu de $this->session
     }
-    
 
     // public function getFullCart()
     // {
     //     $cart = $this->getCart();
     //     $fullCart = [];
     //     $fullCart["products"] = [];
-    //     $quantity_cart  = 0;
-    //     $subTotal = 0;
+    //     $cart_count = 0;
+    //     $subTotalTTC = 0;  // Total TTC des produits
     
     //     foreach ($cart as $id => $quantity) {
     //         $product = $this->repoProduct->find($id);
     //         if ($product) {
-    //             // produit récupéré avec succès
-    //             if($quantity > $product->getQuantity()){
-    //                 $quantity = $product->getQuantity();
-    //                 $cart[$id]= $quantity;
-    //                 $this->updateCart($cart);
-    //             }
-    //             $fullCart["products"][] = [
-    //                 'product' => $product,
-    //                 'id' => $id,
-    //                 'quantity' => $quantity,
-    //             ];
-    //             $quantity_cart += $quantity;
-    //             $subTotal += $product->getPrice()/100 * $quantity;
-    //         } else {
-    //             $this->deleteFromCart($id);
-    //         }
-    //     }
-        
-    //     $taxes = round($subTotal * $this->tva, 2);
-    //     $subTotalTTC = round(($subTotal + $taxes), 2);
-
-    //     $fullCart = [
-    //         'products' => $fullCart["products"],
-    //         'data' => [
-    //             "quantity_cart" => $quantity_cart,
-    //             "subTotalHT" => $subTotal,
-    //             "Taxe" => $taxes,
-    //             "subTotalTTC" => $subTotalTTC
-    //         ]
-    //     ];
-    //     return $fullCart;
-
-    // }
-
-    
-    // public function getFullCart()
-    // {
-    //     $cart = $this->getCart();
-    //     $fullCart = [];
-    //     $fullCart["products"] = [];
-    //     $cart_count  = 0;
-    //     $subTotal = 0;
-    
-    //     foreach ($cart as $id => $quantity) {
-    //         $product = $this->repoProduct->find($id);
-    //         if ($product) {
-    //             // produit récupéré avec succès
-    //             if($quantity > $product->getQuantity()){
+    //             if ($quantity > $product->getQuantity()) {
     //                 $quantity = $product->getQuantity();
     //                 $cart[$id]= $quantity;
     //                 $this->updateCart($cart);
@@ -202,87 +154,96 @@ class CartService
     //                 'product' => [ 
     //                     'id' => $product->getId(),
     //                     'name' => $product->getName(),
+    //                     'slug' => $product->getSlug(),
     //                     'images' => $product->getImages()->first()->getImageName(),
-    //                     'price' => $product->getPrice(),
-    //                     "cart_count" => $cart_count,
+    //                     'price' => $product->getPrice()
     //                 ],
     //                 'id' => $id,
-    //                 'quantity' => $quantity,
+    //                 'quantity' => $quantity
     //             ];            
-    //             $fullCart["cart_count"] =+ $quantity;
-    //             $subTotal += $product->getPrice()/100 * $quantity;
+    //             $cart_count += $quantity;
+    //             $subTotalTTC += ($product->getPrice() / 100) * $quantity;
     //         } else {
     //             $this->deleteFromCart($id);
     //         }
     //     }
         
-    //     $taxes = round($subTotal * $this->tva, 2);
-    //     $subTotalTTC = round(($subTotal + $taxes), 2);
-
+    //     $taxes = ($subTotalTTC / 1.20) * 0.20;
+    //     $subTotalHT = $subTotalTTC - $taxes;
+    
     //     $fullCart = [
     //         'products' => $fullCart["products"],
     //         'data' => [
     //             "cart_count" => $cart_count,
-    //             "subTotalHT" => $subTotal,
+    //             "subTotalHT" => $subTotalHT,
     //             "Taxe" => $taxes,
     //             "subTotalTTC" => $subTotalTTC
     //         ]
     //     ];
-    //     // $fullCart[ "cart_count"] =+ $quantity;
+    
     //     return $fullCart;
-
     // }
-
-    public function getFullCart()
-    {
+      
+    public function getFullCart() {
         $cart = $this->getCart();
         $fullCart = [];
         $fullCart["products"] = [];
         $cart_count = 0;
-        $subTotal = 0;
-
+        $subTotalTTC = 0;  // Total TTC des produits
+    
         foreach ($cart as $id => $quantity) {
             $product = $this->repoProduct->find($id);
             if ($product) {
-                if($quantity > $product->getQuantity()){
+                if ($quantity > $product->getQuantity()) {
                     $quantity = $product->getQuantity();
-                    $cart[$id]= $quantity;
+                    $cart[$id] = $quantity;
                     $this->updateCart($cart);
                 }
-                $fullCart["products"][] = [
-                    'product' => [ 
-                        'id' => $product->getId(),
-                        'name' => $product->getName(),
-                        'slug' => $product->getSlug(),
-                        'images' => $product->getImages()->first()->getImageName(),
-                        'price' => $product->getPrice()
-                    ],
-                    'id' => $id,
-                    'quantity' => $quantity
-                ];            
-                $cart_count += $quantity; // Augmente la quantité totale
-                $subTotal += $product->getPrice()/100 * $quantity;
+    
+            // Calculez le prix avec réduction s'il y en a une
+            // Calculez le prix avec réduction s'il y en a une
+            $productPrice = $product->getPrice();
+            if ($product->getOff()) {
+                $discount = $product->getOff() / 100; // Convertir le pourcentage en décimal
+                $productPrice = $productPrice * (1 - $discount);
+            }
+
+    
+            $fullCart["products"][] = [
+                'product' => [ 
+                    'id' => $product->getId(),
+                    'name' => $product->getName(),
+                    'slug' => $product->getSlug(),
+                    'images' => $product->getImages()->first()->getImageName(),
+                    'price' => $productPrice
+                ],
+                'id' => $id,
+                'quantity' => $quantity
+            ];            
+    
+                $cart_count += $quantity;
+                $subTotalTTC += ($productPrice / 100) * $quantity;
             } else {
                 $this->deleteFromCart($id);
             }
         }
         
-        $taxes = round($subTotal * $this->tva, 2);
-        $subTotalTTC = round(($subTotal + $taxes), 2);
-
+        $taxes = ($subTotalTTC / 1.20) * 0.20;
+        $subTotalHT = $subTotalTTC - $taxes;
+    
         $fullCart = [
             'products' => $fullCart["products"],
             'data' => [
-                "cart_count" => $cart_count, // Envoyez la quantité totale
-                "subTotalHT" => $subTotal,
+                "cart_count" => $cart_count,
+                "subTotalHT" => $subTotalHT,
                 "Taxe" => $taxes,
                 "subTotalTTC" => $subTotalTTC
             ]
         ];
-
+    
         return $fullCart;
     }
-
+    
 
     public function getFullFavoris()
     {

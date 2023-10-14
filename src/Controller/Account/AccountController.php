@@ -27,7 +27,7 @@ class AccountController extends AbstractController
     }
 
     #[Route('/compte/{id}', name: 'app_account_show')]
-    public function show(Order $order, EntityManagerInterface $entityManager): Response
+    public function show(Order $order,): Response
     {
         if (!$order || $order->getUser() !== $this->getUser()) {
             return $this->redirectToRoute('app_home');

@@ -42,7 +42,8 @@ class ProductCrudController extends AbstractCrudController
             TextEditorField::new('description')
                 ->setFormType(CKEditorType::class)
                 ->hideOnIndex(),
-            MoneyField::new('price')->setCurrency('USD'),
+            MoneyField::new('price')->setCurrency('EUR'),
+            IntegerField::new('off','reduction en %'),
             IntegerField::new('quantity'),
             BooleanField::new('isBestSeller'),
             BooleanField::new('isNewArrival'),
@@ -57,7 +58,6 @@ class ProductCrudController extends AbstractCrudController
             TextEditorField::new('illustrationText1')
             ->setFormType(CKEditorType::class)
             ->hideOnIndex(),
-         
         ];
            
     }   

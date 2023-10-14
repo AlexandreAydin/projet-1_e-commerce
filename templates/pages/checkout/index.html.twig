@@ -48,8 +48,8 @@
                             <tbody>
                                     {% for element in cart.products %}
                                         <tr>
-                                            <td> {{element.product.name}} <span class="product-qty"> x {{element.quantity}}</span></td>
-                                        <td> {{element.product.price/100 | number_format(2, '.', ',')}}€</td>
+                                        <td> {{element.product.name}} <span class="product-qty"> x {{element.quantity}}</span></td>
+                                        <td> {{(element.product.price/100)|number_format (2, '.', ',')}}€</td>
                                     </tr>
                                     {% endfor %}
                             </tbody>

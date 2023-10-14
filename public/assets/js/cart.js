@@ -23,6 +23,10 @@ function generatePath(pathTemplate, productId) {
 async function manageLink(event) {
     event.preventDefault();
     const link = event.target.closest('a');
+    if (link && link.classList.contains('view-details')) {
+        window.location.href = link.href;
+        return;
+    }
     if (link && link.href) {
         cart = await fetchData(link.href);
         initCart();
@@ -30,8 +34,9 @@ async function manageLink(event) {
     }
 }
 
+
 function addEventListenerToLink() {
-    const links = document.querySelectorAll('tbody a, li.add-to-cart a, a.item_remove, a.btn-addtocart, a.ion-close');
+    const links = document.querySelectorAll('tbody a, li.add-to-cart a, a.item_remove, a.btn-addtocart, a.ion-close, .view-details');
     links.forEach(link => link.addEventListener('click', manageLink));
 }
 
@@ -51,14 +56,6 @@ function initCart() {
                 const deletePath = generatePath(cartDataElement.getAttribute('data-delete-path'), product.id);
                 const addPath = generatePath(cartDataElement.getAttribute('data-add-path'), product.id);
                 const deleteAllPath = generatePath(cartDataElement.getAttribute('data-delete-all-path'), product.id);
-
-                let minusButtonContent;
-
-                if (quantity === 1) {
-                    minusButtonContent = `<i class="fa-thin fa-trash"></i>`;
-                } else {
-                    minusButtonContent = `<a href="${deletePath}" type="button" class="minus"> - </a>`;
-                }
                 
                 const content = `
                                 <tr>
@@ -91,7 +88,7 @@ function initCart() {
         cartSubtotalElement.innerHTML = `${cart.data.subTotalHT.toFixed(2)}`;
     }
     if (cartTaxeElement && cart.data && cart.data.Taxe) {
-        cartTaxeElement.innerHTML = `${cart.data.Taxe}`;
+        cartTaxeElement.innerHTML = `${cart.data.Taxe.toFixed(2)}`;
     }
     if (cartTotalElement && cart.data && cart.data.subTotalTTC) {
         cartTotalElement.innerHTML = `${cart.data.subTotalTTC.toFixed(2)}`;
@@ -152,7 +149,7 @@ async function updateHeaderCart() {
         const cart_price_value = document.querySelector('.cart_price_value');
 
         cart_count.innerHTML = cart.data.cart_count;
-        cart_price_value.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
+        cart_price_value.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
 
         let contenuDuPanier = '';
         cart.products.forEach(item => {
