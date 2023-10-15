@@ -96,6 +96,9 @@ class Product
     #[ORM\Column(nullable: true)]
     private ?int $off = null;
 
+    #[ORM\ManyToMany(targetEntity: Wishlist::class, mappedBy: 'products')]
+    private Collection $wishlists;
+
 
         public function __construct()
         {
@@ -106,6 +109,7 @@ class Product
             $this->images = new ArrayCollection();
             $this->rewiewsProducts = new ArrayCollection();
             $this->cartDetails = new ArrayCollection();
+            $this->wishlists = new ArrayCollection();
         }
 
         public function __toString(): string
@@ -473,6 +477,33 @@ class Product
     public function setOff(?int $off): self
     {
         $this->off = $off;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Wishlist>
+     */
+    public function getWishlists(): Collection
+    {
+        return $this->wishlists;
+    }
+
+    public function addWishlist(Wishlist $wishlist): self
+    {
+        if (!$this->wishlists->contains($wishlist)) {
+            $this->wishlists->add($wishlist);
+            $wishlist->addProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWishlist(Wishlist $wishlist): self
+    {
+        if ($this->wishlists->removeElement($wishlist)) {
+            $wishlist->removeProduct($this);
+        }
 
         return $this;
     }

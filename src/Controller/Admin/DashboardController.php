@@ -13,6 +13,7 @@ use App\Entity\Product;
 use App\Entity\ProductImage;
 use App\Entity\RewiewsProduct;
 use App\Entity\User;
+use App\Entity\Wishlist;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -57,6 +58,7 @@ class DashboardController extends AbstractDashboardController
             MenuItem::linkToCrud('Commandes et Factures', 'fas fa-shopping-bag', Order::class),
             MenuItem::linkToCrud('Commande Détaillé', 'fas fa-shopping-bag', OrderDetails::class),
             MenuItem::linkToCrud('Panier', 'fas fa-boxes', Cart::class),
+            MenuItem::linkToCrud('WishList', 'fas fa-boxes', Wishlist::class),
         ]);
     }
 }

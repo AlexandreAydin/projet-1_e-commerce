@@ -36,7 +36,7 @@ async function manageLink(event) {
 
 
 function addEventListenerToLink() {
-    const links = document.querySelectorAll('tbody a, li.add-to-cart a, a.item_remove, a.btn-addtocart, a.ion-close, .view-details');
+    const links = document.querySelectorAll('tbody a, li.add-to-cart a, li add_wishlist, a.item_remove, a.btn-addtocart, a.ion-close, .view-details');
     links.forEach(link => link.addEventListener('click', manageLink));
 }
 

@@ -81,11 +81,9 @@ class HomeController extends AbstractController
         }
         
         // permet aux clients de noter uniquement le produit qu'il a acheté 
-        $currentProductName = $product->getName(); 
         $orders = $orderRepo->findBy([
             'isPaid' => true, 
             'user' => $this->getUser(),
-            'productName' => $currentProductName,
         ]);
             
         $reviews = $reviewsRepo->findBy(['product' => $product]);

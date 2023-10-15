@@ -54,11 +54,13 @@
                         <div class="product_description">
                             <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
                             <div class="product_price">
-                                <span class="price">{{ (product.price / 100)|number_format(2, ',', '.') }} €</span>
-                                <del>{{ (product.price * 1.35/100) |number_format(2, ',', '.') }} €</del>
-                                <div class="on_sale">
-                                    <span>35% Off</span>
-                                </div>
+                                <span class="price">{{ ((product.price/100) - (product.price/100 * product.off/100)) | number_format(2, ',', '.') }} €</span>
+                 {% if product.off is defined and product.off > 0 %}
+                <del>{{ (product.price / 100)|number_format(2, ',', '.') }} €</del>
+                    <div class="on_sale">
+                        <span>{{product.off}}% réduction</span>
+                    </div>
+                {% endif %}
                             </div>
                             
                             <div class="rating_wrap">
@@ -228,43 +230,136 @@
                                     </ul>
 
                                 </div>                       
-                                <div class="review_form field_form">
-                                {% if orders|length == 0 %}
-                                    Vous devez avoir acheté ce produit pour laisser un commentaire!
-                                {% else %}
-                                {% for order in orders %}
-                                {% if order and order.state == 4 %}
-                                <h5>Ajoutez un commentaire</h5>
+                                {# <div class="review_form field_form">
+                                    {% if orders|length == 0 %}
+                                        Vous devez avoir acheté ce produit pour laisser un commentaire!
+                                    {% else %}
+                                    {% for order in orders %}
+                                    {% if order and order.state == 4 %}
+                                    <h5>Ajoutez un commentaire</h5>
                                 
-                                {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+                                    {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
                                 
-                               <div class="form-group col-12">
-                                    <div class="star_rating">
-                                        <span data-value="1"><i class="far fa-star"></i></span>
-                                        <span data-value="2"><i class="far fa-star"></i></span>
-                                        <span data-value="3"><i class="far fa-star"></i></span>
-                                        <span data-value="4"><i class="far fa-star"></i></span>
-                                        <span data-value="5"><i class="far fa-star"></i></span>
-                                        {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                                    <div class="form-group col-12">
+                                        <div class="star_rating">
+                                            <span data-value="1"><i class="far fa-star"></i></span>
+                                            <span data-value="2"><i class="far fa-star"></i></span>
+                                            <span data-value="3"><i class="far fa-star"></i></span>
+                                            <span data-value="4"><i class="far fa-star"></i></span>
+                                            <span data-value="5"><i class="far fa-star"></i></span>
+                                            {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="form-group col-12">
-                                    {{ form_widget(form.comment) }}
-                                    {# {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }} #}
-                                </div>
+                                    <div class="form-group col-12">
+                                        {{ form_widget(form.comment) }}
+                                        {# {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                                    </div>
                                 
-                                <div class="form-group col-12">
-                                    {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
-                                </div>
+                                    <div class="form-group col-12">
+                                        {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+                                    </div>
                                 
-                                {{ form_end(form) }}
-                               {% elseif order.state == 1 or order.state == 2 or order.state == 3 %}
-                                    Vous devez recevoir le produit pour laisser un commentaire!
-                                {% endif %}
-                                {% endfor %}
-                                {% endif %}
-                            </div>
+                                    {{ form_end(form) }}
+                                    {% elseif order.state == 1 or order.state == 2 or order.state == 3 %}
+                                        Vous devez recevoir le produit pour laisser un commentaire!
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+                                </div> #}
+    
+{# <div class="review_form field_form">
+    {% set hasPermissionToComment = false %}
+    
+    {% for order in orders %}
+        {% if order.state == 4 %}
+            {% for orderDetail in order.orderDetails %}
+                {% if orderDetail.productName == product.name %}
+                    {% set hasPermissionToComment = true %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+    {% if hasPermissionToComment %}
+        <h5>Ajoutez un commentaire</h5>
+
+        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+
+        <div class="form-group col-12">
+            <div class="star_rating">
+                <span data-value="1"><i class="far fa-star"></i></span>
+                <span data-value="2"><i class="far fa-star"></i></span>
+                <span data-value="3"><i class="far fa-star"></i></span>
+                <span data-value="4"><i class="far fa-star"></i></span>
+                <span data-value="5"><i class="far fa-star"></i></span>
+                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+            </div>
+        </div>
+
+        <div class="form-group col-12">
+            {{ form_widget(form.comment) }}
+        </div>
+
+        <div class="form-group col-12">
+            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+        </div>
+
+        {{ form_end(form) }}
+    {% else %}
+        Vous n'avez pas la permission de commenter ce produit.
+    {% endif %}
+</div> #}
+
+<div class="review_form field_form">
+    {% set hasBoughtProduct = false %}
+    {% set hasReceivedProduct = false %}
+    
+    {% for order in orders %}
+        {% for orderDetail in order.orderDetails %}
+            {% if orderDetail.productName == product.name %}
+                {% set hasBoughtProduct = true %}
+                {% if order.state == 4 %}
+                    {% set hasReceivedProduct = true %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+
+    {% if not hasBoughtProduct %}
+        Vous devez avoir acheté ce produit pour laisser un commentaire!
+    {% elseif not hasReceivedProduct %}
+        Vous devez recevoir le produit pour laisser un commentaire!
+    {% else %}
+        <h5>Ajoutez un commentaire</h5>
+
+        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+
+        <div class="form-group col-12">
+            <div class="star_rating">
+                <span data-value="1"><i class="far fa-star"></i></span>
+                <span data-value="2"><i class="far fa-star"></i></span>
+                <span data-value="3"><i class="far fa-star"></i></span>
+                <span data-value="4"><i class="far fa-star"></i></span>
+                <span data-value="5"><i class="far fa-star"></i></span>
+                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+            </div>
+        </div>
+
+        <div class="form-group col-12">
+            {{ form_widget(form.comment) }}
+        </div>
+
+        <div class="form-group col-12">
+            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+        </div>
+
+        {{ form_end(form) }}
+    {% endif %}
+</div>
+
+
+
 
                             </div>
                         </div>
