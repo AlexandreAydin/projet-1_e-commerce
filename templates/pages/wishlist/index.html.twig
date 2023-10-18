@@ -4,7 +4,7 @@
 
 {% block body %}
 {# {% include "page_head/page_head.html.twig" with {'page_name': 'Wish List'} %} #}
-<div  class="main_content">
+<div  class="main_content wishlist_content" data-wishlist="{{wishlist_json}}">
     <div  class="section">
         <div  class="container">
             <div  class="row">
@@ -22,39 +22,38 @@
                                 </tr>
                             </thead>
                             <tbody>
-    {% set subTotal = 0 %}
-    {% for product in wishList %}
-        <tr>
-            <td class="product-thumbnail">
-                <a href="#">
-                    {% if product.getImages()|first %}
-                        <img src="{{ asset('images/products/' ~ product.getImages()|first.getImageName()) }}" data-zoom-image="{{ asset('images/products/' ~ product.getImages()|first.getImageName()) }}" alt="{{ product.getName() }}">
-                    {% else %}
-                        <img src="{{ asset('images/placeholder-image.jpg') }}" alt="Placeholder Image">
-                    {% endif %}
-                </a>
-            </td>
-            <td class="product-name" data-title="Product"><a href="#">{{ product.name }}</a></td>
-            <td class="product-price" data-title="Price">{{ (product.price/100)  | number_format(2, '.', ' ') }}</td>
-            {% if product.quantity > 10 %}
-                <td data-title="Stock Status" class="product-stock-status">
-                    <span class="badge badge-pill badge-success">En Stock</span>
-                </td>
-            {% else %}
-                <td class="product-price" data-title="Price">Il reste plus que {{ product.quantity }} articles dans le stock</td>
-            {% endif %}
-            <td class="product-add-to-cart">
-                <a href="{{ path('app_add_to_cart', {'id': product.id}) }}" class="btn btn-fill-out">
-                    <i class="icon-basket-loaded"></i> Add to Cart
-                </a>
-            </td>
-            <td class="product-remove" data-title="Remove">
-                <a href="{{ path('app_remove_to_wishList', {'id': product.id}) }}"><i class="ti-close"></i></a>
-            </td>
-        </tr>
-    {% endfor %}
-</tbody>
-
+                                {# {% set subTotal = 0 %}
+                                {% for product in wishList %} #}
+                                    {# <tr>
+                                    <td class="product-thumbnail">
+                                            <a href="#">
+                                                {% if product.product.getImages()|first %}
+                                                    <img src="{{ asset('images/products/' ~ product.product.getImages()|first.getImageName()) }}" data-zoom-image="{{ asset('images/products/' ~ product.product.getImages()|first.getImageName()) }}" alt="{{ product.product.getName() }}">
+                                                {% else %}
+                                                    <img src="{{ asset('images/placeholder-image.jpg') }}" alt="Placeholder Image">
+                                                {% endif %}
+                                            </a>
+                                        </td>
+                                        <td class="product-name" data-title="Product"><a href="#">{{ product.product.name }}</a></td>
+                                        <td class="product-price" data-title="Price">{{ ( product.product.price/100)  | number_format(2, '.', ' ') }}</td>
+                                        {% if product.product.quantity > 10 %}
+                                            <td data-title="Stock Status" class="product-stock-status">
+                                                <span class="badge badge-pill badge-success">En Stock</span>
+                                            </td>
+                                        {% else %}
+                                            <td class="product-price" data-title="Price">Il reste plus que {{  product.product.quantity }} articles dans le stock</td>
+                                        {% endif %}
+                                        <td class="product-add-to-cart">
+                                            <a href="{{ path('app_add_to_cart', {'id':  product.product.id}) }}" class="btn btn-fill-out">
+                                                <i class="icon-basket-loaded"></i> Add to Cart
+                                            </a>
+                                        </td>
+                                        <td class="product-remove" data-title="Remove">
+                                            <a href="{{ path('app_remove_to_wishList', {'id':  product.product.id}) }}"><i class="ti-close"></i></a>
+                                        </td>
+                                    </tr>
+                                {% endfor %} #}
+                            </tbody>
                         </table>
                     </div>
                 </div>
