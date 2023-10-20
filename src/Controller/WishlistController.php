@@ -36,6 +36,7 @@ class WishlistController extends AbstractController
     //     ]);
     // }
     {
+
         $wishlist = $this->wishListService->getWishListDetails();
         $wishlist_json = json_encode($wishlist);
 
