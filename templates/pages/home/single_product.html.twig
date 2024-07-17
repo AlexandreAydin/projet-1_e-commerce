@@ -3,7 +3,6 @@
 {% block title %}Ama noz poruduit{% endblock %}
 
 {% block body %}
-    {{ include('partials/_title_section.html.twig', {'name': "Details des produits"}) }}
 
     <div class="section">
         <div class="container">
@@ -62,7 +61,6 @@
                     </div>
                 {% endif %}
                             </div>
-                            
                             <div class="rating_wrap">
                                 <div class="rating">
                                     <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
@@ -78,7 +76,7 @@
                             <div class="product_sort_info">
                                 <ul>
                                     <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
-                                    <li><i class="linearicons-truck"></i> Livraison Rapide</li>
+                                    <li><i class="linearicons-truck"></i>Livraison Rapide</li>
                                     <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
                                 </ul>
                             </div>
@@ -91,14 +89,25 @@
                                 <a type="button" value="+" class="plus"> + </a>
                             </div>
                         </div> #}
-                          <div class="cart-product-quantity">
-                                <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
+                        {% if product.quantity == 0  %}
+                            <div>
+                                <br>
+                                <span> 
+                                    Ce produit est indisponible pour le moment.
+                                </span>
+                                <br>
+                                <br>
+                            </div>
+                        {% else %}
+                        <div class="cart-product-quantity">
+                            <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
                                         name="quantity" value="1" title="Qty" size="4" class="qty"><input type="button"
                                         value="+" class="plus"></div>
-                            </div>
+                        </div>
                         <div class="cart_extra mt-4">
                             {# TODO: Implement product quantity selection #}
                             <div class="cart_btn">
+                            
                                 <a href="/panier/{{product.id}}/ajouter/1" class="btn btn-fill-out btn-addtocart" type="button">
                                     <i class="icon-basket-loaded"></i>
                                     Ajouter au panier
@@ -107,6 +116,7 @@
                                 <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
                             </div>
                         </div>
+                        {% endif %}
                         <hr />
                         <ul class="product-meta">
                             <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
@@ -382,11 +392,11 @@
                     </div>
                     <div class="releted_product_slider carousel_slider owl-carousel owl-theme" data-margin="20" data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
                       {% for relatedProduct in product.categorie.products %}
-    {% if relatedProduct.id != product.id %}
-        {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
-        {% include 'partials/_product_item.html.twig' with {'product': relatedProduct} %}
-    {% endif %}
-{% endfor %}
+                        {% if relatedProduct.id != product.id %}
+                            {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
+                            {% include 'partials/_product_item.html.twig' with {'product': relatedProduct} %}
+                        {% endif %}
+                    {% endfor %}
                     </div>
                 </div>
             </div>

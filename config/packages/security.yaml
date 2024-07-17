@@ -42,7 +42,7 @@ security:
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/compte, roles: ROLE_USER }
         - { path: ^/address, roles: ROLE_USER }
-        - { path: ^/caisse, roles: ROLE_USER }
+        # - { path: ^/caisse, roles: ROLE_USER }
 
 
 

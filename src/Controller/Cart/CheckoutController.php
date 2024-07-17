@@ -5,6 +5,8 @@ namespace App\Controller\Cart;
 use App\Classe\OrderServices;
 use App\Entity\User;
 use App\Form\CheckoutType;
+use App\Repository\AddressRepository;
+use App\Repository\CarrierRepository;
 use App\Service\CartService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,63 +17,81 @@ use Symfony\Component\Routing\Annotation\Route;
 class CheckoutController extends AbstractController
 {
     #[Route('/caisse', name: 'app_checkout')]
-    public function index(CartService $cartService, SessionInterface $session): Response
+    public function index(CartService $cartService,
+    Request $request,
+    SessionInterface $session,
+    OrderServices $orderServices,
+    CarrierRepository $carrierRepository,
+     AddressRepository $addressRepository): Response
     {
-        $user = $this->getUser();
         $cart = $cartService->getFullCart();
 
-        if(!isset($cart['products'])){
+        if(!count($cart['products'])) {
+            return $this->redirectToRoute('app_home');
+        }
+    
+        if (!isset($cart['products'])) {
             return $this->redirectToRoute("app_home");
         }
-        
-        if(!$user->getAddresses()->getValues()){
-            $this->addFlash(
-                'checkout_message',
-                "Merci d'ajouter votre adressse avant de continuer"
-            );
-            return $this->redirectToRoute("app_address_new");
-        }
-        
-        //permet de changer l'adresse a chekout_confirm
-        if($session->get('checkout_data')){
-            return $this->redirectToRoute('app_checkout_confirm');
+
+        $user = $this->getUser();
+
+        if (!$user) {
+            // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+            return $this->redirectToRoute('app_login');
         }
 
-        $form=$this->createForm(CheckoutType::class,null,['user'=>$user]);
-
-
-        return $this->render('pages/checkout/index.html.twig',[
-            'cart'=> $cart,
-            'checkout'=> $form->createView()
+        $addresses = $addressRepository->findByUser($user);
+    
+        // if (!$user->getAddresses()->getValues()) {
+        //     $this->addFlash('checkout_message', "Merci d'ajouter votre adresse avant de continuer");
+        //     return $this->redirectToRoute("app_address_new");
+        // }
+    
+        //Corrigez l'accès à subTotalTTC ici
+        $isFreeDeliveryAvailable = ($cart['data']['subTotalTTC'] ?? 0) >= 100;
+    
+        $form = $this->createForm(CheckoutType::class, null, [
+            'user' => $user,
+            'is_free_delivery_available' => $isFreeDeliveryAvailable,
+        ]);
+    
+        return $this->render('pages/checkout/index.html.twig', [
+            'cart' => $cart,
+            'addresses' => $addresses,
+            'checkout' => $form->createView(),
         ]);
     }
+    
 
     #[Route('/caisse/confirmer', name:'app_checkout_confirm')]
     public function checkout_confirm(
     CartService $cartService,
     Request $request,
     SessionInterface $session,
+    AddressRepository $addressRepository,
     OrderServices $orderServices
     ): Response
     {
         //on récupére le panier de l'utilisateur
+        $cart = $cartService->getFullCart();
 
-        /** @var User $user */
-        $user = $this->getUser();
-        
-        $cart =$cartService->getFullCart();
-
-        if(!isset($cart['products'])){
+        if(!count($cart['products'])) {
+            return $this->redirectToRoute('app_home');
+        }
+    
+        if (!isset($cart['products'])) {
             return $this->redirectToRoute("app_home");
         }
-        
-        if(!$user->getAddresses()->getValues()){
-            $this->addFlash(
-                'checkout_message',
-                "Merci d'ajouter votre adressse avant de continuer"
-            );
-            return $this->redirectToRoute("app_address_new");
+
+        $user = $this->getUser();
+
+        if (!$user) {
+            // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+            return $this->redirectToRoute('app_login');
         }
+        
+        $address = $addressRepository->findByUser($user);
 
         $form=$this->createForm(CheckoutType::class,null,['user'=>$user]);
 

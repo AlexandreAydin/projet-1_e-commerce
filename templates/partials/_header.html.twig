@@ -1,58 +1,65 @@
-<nav class="navbar navbar-expand-lg ">
-	<div class="container-fluid ">
-		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-		</button>
-		<div class="collapse navbar-collapse d-flex justify-content-around mt-4" id="navbarColor01">
-			<ul class="navbar-nav me-auto">
-				<li class="nav-item">
-					<a class="nav-link active" href="{{path("app_home")}}">Accueil
-						<span class="visually-hidden"></span>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="{{ path('app_shop')}}">Boutique
-					</a>
-				</li> 
-			
-					<li class="nav-item">
-						<a class="nav-link" href="#">Nouveauté 
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ path('app_contact')}}">Contact
-						</a>
-					</li>
-				
-			</ul>
-			<div class="d-flex">
-				<ul class="navbar-nav me-auto">
-					{% if app.user %}
-						<li class="nav-item dropdown" style="margin-right: 5rem;">
-							<a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ app.user.firstName }}</a>
-							<div class="dropdown-menu bg-light">
-								<a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
-								<div class="dropdown-divider"></div>
-								
-									<a class="dropdown-item" href="#">Administration</a>
-									<div class="dropdown-divider"></div>
-								
-								<a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
-							</div>
-						</li>
-					{% else %}
-						<li class="nav-item">
-							<a class="nav-link" href="{{path("app_login")}}">Connexion
-							</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="{{ path('app_register')}}">Inscription
-							</a>
-						</li>
-					{% endif %}
-				</ul>
+<header  class="header_wrap fixed-top header_with_topbar active">
+    <div  class="bottom_header dark_skin main_menu_uppercase">
+        <div  class="container mt-4">
+            <nav  class="navbar navbar-expand-lg">
+                <a 
+                    routerlink="/" class="navbar-brand" ng-reflect-router-link="/" href="/">
+                    <h2 >Jstore</h2>
+                </a>
+                <button id="menu-btns" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-expanded="false" class="navbar-toggler ">
+                    <span class="ion-android-menu"></span>
+                </button>
+                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse" style="margin-left: 10rem;">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{path("app_home")}}">Accueil
+                                <span class="visually-hidden"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_shop')}}">Boutique
+                            </a>
+                        </li> 
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Nouveauté 
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_contact')}}">Contact
+                            </a>
+                        </li>
+                        {% if app.user %}
+                                <li class="nav-item dropdown user-name" style="">
+                                    <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                        <i class="ti-user">  
+                                            {{ app.user.firstName }}
+                                        </i>  
+                                    </a>
+                                    <div class="dropdown-menu bg-light">
+                                        <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                                        <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item" href="/admin">Administration</a>
+                                            <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
+                                    </div>
+                                </li>
+                            {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{path("app_login")}}">Connexion
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('app_register')}}">Inscription
+                                    </a>
+                                </li>
+                            {% endif %}				
+                    </ul>
+                </div> 
                 <ul class="navbar-nav attr-nav align-items-center">
-                    <li><a href="javascript:void(0);" class="nav-link search_trigger"><i class="linearicons-magnifier"></i></a>
+                    <li>
+                        <a href="javascript:void(0);" class="nav-link search_trigger">
+                            <i class="linearicons-magnifier"></i>
+                        </a>
                         <div class="search_wrap">
                             <span class="close-search"><i class="ion-ios-close-empty"></i></span>
                             <form>
@@ -62,32 +69,18 @@
                         </div>
                         <div class="search_overlay"></div>
                     </li>
-                   <li>
-                    <a class="text-decoration-none" href="{{ path('app_wishList')}}">
-                        <i class="icon-heart m-4 style-none"></i>
-                    </a>
-                </li>
-
+                    <li>
+                        <a class="text-decoration-none" href="{{ path('app_wishList')}}">
+                            <i class="icon-heart style-none"></i>
+                        </a>
+                    </li>
                     <li class="dropdown cart_dropdown">
-                        <a class="nav-link cart_trigger" href="#" data-toggle="dropdown">
+                        <a class="nav-link cart_trigger" id="cart-btn" href="#" data-toggle="dropdown">
                             <i class="linearicons-cart"></i>
                             <span class="cart_count">
-                                {# {% set quantity = 0 %}
-                                {% if app.request.pathinfo == path('app_cart') %}
-                                    {% set cartData = cart %}
-                                {% else %}
-                                    {% if cart is iterable %}
-                                        {% set cartData = cart %}
-                                    {% else %}
-                                        {% set cartData = cart.getFullCart() %}
-                                    {% endif %}
-                                {% endif %}
-                                {% for product in cartData.products %}
-                                    {% set quantity = quantity + product.quantity %}
-                                {% endfor %}
-                                {{quantity}} #}
                             </span>
                         </a>
+                        {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' %}
                         <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
                             <ul class="cart_list">
                                 <div id="cart-data" 
@@ -95,26 +88,6 @@
                                     data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
                                     data-delete-all-path="{{ path('app_cart_delete_all', {'id': 'element.product.id'}) }}">
                                 </div>
-                                {# {% set subTotal = 0 %}
-                                {% if cartData.products is not empty %}
-                                    {% for cartItem in cartData.products %}
-                                        {% set product = cartItem.product %}
-                                        {% set quantity = cartItem.quantity %}
-                                        {% set subTotal = subTotal + (quantity * product.price/100) %}
-                                        {# <li>
-                                            <a href="{{ path('app_cart_delete_all', {'id': product.id}) }}" class="item_remove"><i class="ion-close"></i></a>
-                                           {% if product.images|length > 0 %}
-                                            {% set firstImage = product.images|first %}
-                                            <a href="#"><img src="{{ asset('images/products/' ~ product.images) }}" alt="{{product.images}}">{{product.name}}</a>
-                                            {% else %}
-                                                <a href="#"><img src="{{ asset('images/placeholder-image.jpg') }}" alt="Placeholder Image">{{product.name}}</a>
-                                            {% endif %}
-                                            <span class="cart_quantity  text-dark"> {{quantity}} x <span class="cart_amount"> <span class="price_symbole">€</span></span>{{product.price/100}}</span>
-                                        </li> 
-                                    {% endfor %}
-                                {% else %}
-                                    <li> Votre panier est vide </li>
-                                {% endif %} #}
                             </ul>
                                 <div class="cart_footer">
                                     <p class="cart_total text-dark">
@@ -124,17 +97,31 @@
                                         </span>
                                         <span class="cart_price_value"></span>
                                     </p>
+                                    <p class="cart_total text-dark">
+                                        <strong>TVA:</strong> 
+                                        <span class="cart_price"> 
+                                            <span class="price_symbole"></span>
+                                        </span>
+                                        <span class="cart_price_taxe"></span>
+                                    </p>
+                                    <p class="cart_total text-dark">
+                                        <strong>Total TTC:</strong> 
+                                        <span class="cart_price"> 
+                                            <span class="price_symbole"></span>
+                                        </span>
+                                        <span class="cart_price_ttc"></span>
+                                    </p>
                                     <p class="cart_buttons">
-                                        <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a>
-                                        <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">Checkout</a>
+                                        {# <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a> #}
+                                        <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
                                     </p>
                                 </div>
                         </div>
                     </li> 
-
+                    {% endif %}
                 </ul>
-			</div>
-		</div>
-	</div>
-
-</nav> 
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>

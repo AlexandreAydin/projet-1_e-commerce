@@ -4,11 +4,10 @@
 
 
 {% block body %}
-    {{  include ("partials/_title_section.html.twig", {'name':'Caisse'}) }}
 
 <div class="section checkout">
 	<div class="container">
-        {{form_start(checkout,{action: path('app_checkout_confirm')})}}
+        {{ form_start(checkout, {action: path('app_checkout_confirm')}) }}
         <div class="row">
         	<div class="col-md-6">
                 <div class="heading_s1">
@@ -21,11 +20,17 @@
                 <div class="heading_s1">
                     <h4>Choisir Livraison</h4>
                     <div class="content">
-                         {{form_widget(checkout.carrier) | replace({'[spr]':'<br>'})| raw}}
+                    {% if cart.data.subTotalTTC >= 80 and cart.data.subTotalTTC < 100 %}
+                        <div class="d-flex">
+                            <i class="fa-solid fa-triangle-exclamation mt-1 mx-2"></i>
+                            <p>il vous restes {{ 100 - cart.data.subTotalTTC}} € pour avoir la livraison gratuites</p>
+                        </div>
+                    {% endif %}
+                         {{ form_widget(checkout.carrier)  | replace({'[spr]':'<br>'})| raw}}
                     </div>
                 </div>
                 <div class="heading_s1">
-                    <h4>Additional information</h4>
+                    <h4>Plus d'information</h4>
                     <div class="form-group mb-0">
                         {{form_widget(checkout.information)}}
                     </div>
@@ -35,35 +40,35 @@
           <div class="col-md-6">
                 <div class="order_review">
                     <div class="heading_s1">
-                        <h4>Your Orders</h4>
+                        <h4>Vos Commandes</h4>
                     </div>
                     <div class="table-responsive order_table">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Total</th>
+                                    <th>Produit</th>
+                                    <th>Prix TTC</th>
                                 </tr>
                             </thead>
                             <tbody>
                                     {% for element in cart.products %}
-                                        <tr>
+                                    <tr>
                                         <td> {{element.product.name}} <span class="product-qty"> x {{element.quantity}}</span></td>
-                                        <td> {{(element.product.price/100)|number_format (2, '.', ',')}}€</td>
+                                        <td> {{ ((element.product.price / 100) ) | number_format(2, '.', ',') }} € </td>
                                     </tr>
                                     {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th>SubTotal HT</th>
+                                    <th>Total HT</th>
                                     <td class="product-subtotal"> {{cart.data.subTotalHT | number_format(2, '.', ',')}}€</td>
                                 </tr>
                                 <tr>
-                                    <th>Taxe</th>
+                                    <th>Total TVA 20%</th>
                                     <td class="product-subtotal"> {{cart.data.Taxe | number_format(2, '.', ',')}}€</td>
                                 </tr>
                                 <tr>
-                                    <th>Total</th>
+                                    <th>Total TTC : </th>
                                     <td class="product-subtotal">  {{cart.data.subTotalTTC | number_format(2, '.', ',')}}€</td>
                                 </tr>
                             </tfoot>
@@ -84,3 +89,12 @@
 </div>
 
 {% endblock %}
+
+
+
+
+
+
+
+
+

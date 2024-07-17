@@ -1,27 +1,17 @@
 <div class="col-lg-3 col-md-4 col-6">
-    <div class="product">
-        <div class="product_img">
-            <a href="">
-        <div class="product_img">
-    <a href="">
-        {% if product.images|length > 0 %}
-            {% set firstImage = product.images|first %}
-            <img src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" width="100%" object-fit="cover"  height="300"  />
-        {% endif %}
-    </a>
-</div>
-            </a>
-            <div class="product_action_box">
-                <ul class="list_none pr_action_btn">
-                    <li class="add-to-cart"><a href="{{ path ('app_add_to_cart', {'id': product.id}) }}"><i class="icon-basket-loaded"></i></a></li>
-                    <li><a href="#" class=""><i class="icon-shuffle"></i></a></li>
-                    <li><a  href="{{ path('app_single_product', { 'slug': product.slug }) }}" class=""><i class="icon-magnifier-add"></i></a></li>
-                    <li><a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a></li>
-                </ul>
-            </div>
+    <div class="product"> 
+        <div class="product" onclick="location.href='{{ path('app_single_product', { 'slug': product.slug }) }}';" style="cursor: pointer;">
+                <div class="product_img">
+                    <a href="{{ path('app_single_product', { 'slug': product.slug }) }}">
+                        {% if product.images|length > 0 %}
+                            {% set firstImage = product.images|first %}
+                            <img src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" width="100%" object-fit="cover"  height="300"  />
+                        {% endif %}
+                    </a>
+                </div>
         </div>
         <div class="product_info">
-           <h6 class="product_title"><a href="{{ path('app_single_product', { 'slug': product.slug }) }}">{{product.name}}</a></h6>
+           <h6 class="product_title"><a href="{{ path('app_single_product', { 'slug': product.slug })}}">{{product.name}}</a></h6>
             <div class="product_price">
                 <span class="price">{{ ((product.price/100) - (product.price/100 * product.off/100)) | number_format(2, ',', '.') }} €</span>
                  {% if product.off is defined and product.off > 0 %}
@@ -41,6 +31,24 @@
             <div class="pr_desc">
                 <p>{{product.description}}</p>
             </div>
+            <ul class='d-flex justify-content-between mt-4'>
+            <!-- Icône à gauche pour ajouter au panier -->
+                <li class="add-to-cart style-none list-unstyled">
+                    {% if product.quantity > 0 %}
+                        <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
+                            <i class="icon-basket-loaded"></i>
+                        </a>
+                    {% else %}
+                        Produit non disponible
+                    {% endif %}
+                </li>
+                <!-- Icône à droite pour ajouter à la liste de souhaits -->
+                <li class="add-to-wishlist list-unstyled">
+                    <a href="{{ path('app_add_to_wishList', {'id': product.id}) }}">
+                        <i class="icon-heart"></i>
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

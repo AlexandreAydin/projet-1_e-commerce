@@ -1,26 +1,18 @@
 <div class="item">
     <div class="product"> 
-        <div class="product_img">
-            <a href="">
-            {% if product.images|length > 0 %}
-    {% set firstImage = product.images|first %}
-                <img id="main_product_img" src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{firstImage.imageName}}">
-                {% endif %}
-            </a>
-            <div class="product_action_box">
-                <ul class="list_none pr_action_btn">
-                    <li class="add-to-cart"><a href="{{ path ('app_add_to_cart',{'id':product.id})}}"><i class="icon-basket-loaded"></i> Add To Cart</a></li>
-                    <li><a href=""><i class="icon-shuffle"></i></a></li>
-                    <li><a href="{{ path('app_single_product', { 'slug': product.slug }) }}" class=""><i class="icon-magnifier-add"></i></a></li>
-                    {# <li><a class="add-to-wishlist" href="/mes-favoris/{{product.id}}/ajouter"><i class="icon-heart"></i></a></li> #}
-                    <li><a class="add-to-wishlist" href="/mes-favoris/{{product.id}}/ajouter" data-id="{{product.id}}"><i class="icon-heart"></i></a></li>
-                     
-                </ul>
-            </div>
+        <div class="product" onclick="location.href='{{ path('app_single_product', { 'slug': product.slug }) }}';" style="cursor: pointer;">
+                <div class="product_img">
+                    <a href="{{ path('app_single_product', { 'slug': product.slug }) }}">
+                        {% if product.images|length > 0 %}
+                            {% set firstImage = product.images|first %}
+                            <img src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" width="100%" object-fit="cover"  height="300"  />
+                        {% endif %}
+                    </a>
+                </div>
         </div>
         <div class="product_info">
-            <h6 class="product_title"><a href="">{{product.name}}</a></h6>
-             <div class="product_price">
+           <h6 class="product_title"><a href="{{ path('app_single_product', { 'slug': product.slug })}}">{{product.name}}</a></h6>
+            <div class="product_price">
                 <span class="price">{{ ((product.price/100) - (product.price/100 * product.off/100)) | number_format(2, ',', '.') }} €</span>
                  {% if product.off is defined and product.off > 0 %}
                 <del>{{ (product.price / 100)|number_format(2, ',', '.') }} €</del>
@@ -29,22 +21,34 @@
                     </div>
                 {% endif %}
             </div>
-            {# <div class="rating_wrap">
-                <div class="rating">
-                    <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
-                </div>
-                <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
-            </div> #}
-            {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
+            {% set currentProductRating = productRatings[product.id] ?? 0 %}
             <div class="rating_wrap">
                 <div class="rating">
-                    <div class="product_rate" style="width: {{ (productRating * 20) | round(0, 'floor') }}%"></div>
+                    <div class="product_rate" style="width: {{ (currentProductRating * 20) | round(0, 'floor') }}%"></div>
                 </div>
                 <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
             </div>
             <div class="pr_desc">
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus blandit massa enim. Nullam id varius nunc id varius nunc.</p>
+                <p>{{product.description}}</p>
             </div>
+            <ul class='d-flex justify-content-between mt-4'>
+            <!-- Icône à gauche pour ajouter au panier -->
+                <li class="add-to-cart style-none list-unstyled">
+                    {% if product.quantity > 0 %}
+                        <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
+                            <i class="icon-basket-loaded"></i>
+                        </a>
+                    {% else %}
+                        Produit non disponible
+                    {% endif %}
+                </li>
+                <!-- Icône à droite pour ajouter à la liste de souhaits -->
+                <li class="add-to-wishlist list-unstyled">
+                    <a href="{{ path('app_add_to_wishList', {'id': product.id}) }}">
+                        <i class="icon-heart"></i>
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

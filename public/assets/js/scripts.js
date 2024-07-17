@@ -818,3 +818,27 @@
 	});	
 	
 })(jQuery);
+
+
+
+
+
+
+
+
+
+$(document).ready(function() {
+  // Lorsque le bouton est cliqué
+  $('.navbar-toggler').click(function() {
+    // Vérifie si le menu est en train de s'ouvrir
+    var isExpanded = $(this).attr('aria-expanded') == 'false'; // false signifie qu'il va s'ouvrir
+    if(isExpanded) {
+      // Change la couleur de fond en noir
+      $('.my-navbar-nav').css('background-color', 'black');
+    } else {
+      // Remet la couleur de fond initiale ou la laisse transparente si désiré
+      $('.my-navbar-nav').css('background-color', 'transparent'); // Ou une autre couleur de fond initiale
+    }
+  });
+});
+

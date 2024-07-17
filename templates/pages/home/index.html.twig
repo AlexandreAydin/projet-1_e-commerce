@@ -4,7 +4,6 @@
 
 
 {% block body %}
-    {{  include ("partials/_title_section.html.twig", {'name':"Page D'Accueil"}) }}
 <div class="container">
 
     <div class="section small_pt pb_70">
@@ -41,7 +40,6 @@
                             {% for product in productNewArrival %}
                                  {% include "partials/_product.html.twig" with {'product':product} %}
                             {% endfor %}
-
                             </div>
                         </div>
                         <div class="tab-pane fade" id="sellers" role="tabpanel" aria-labelledby="sellers-tab">

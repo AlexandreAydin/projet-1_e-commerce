@@ -25,7 +25,6 @@ class ContactController extends AbstractController
 
             // Envoi d'email
 
-
               // on vide le formulaire apré avoir validé le formulaire
             $contact = new Contact();
             $form = $this->createForm(ContactType::class, $contact);

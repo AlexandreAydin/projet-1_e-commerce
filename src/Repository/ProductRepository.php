@@ -74,6 +74,54 @@ class ProductRepository extends ServiceEntityRepository
    }
 
 
+   public function findAllOrderedByIdDesc()
+   {
+       return $this->createQueryBuilder('p')
+           ->orderBy('p.id', 'DESC')
+           ->getQuery()
+           ->getResult();
+   }
+
+   public function findByIsBestSellerDesc()
+   {
+       return $this->createQueryBuilder('p')
+           ->where('p.isBestSeller = :bestSeller')
+           ->setParameter('bestSeller', 1)
+           ->orderBy('p.id', 'DESC')
+           ->getQuery()
+           ->getResult();
+   }
+
+   public function findByIsNewArrivalDesc()
+   {
+       return $this->createQueryBuilder('p')
+           ->where('p.isNewArrival = :newArrival')
+           ->setParameter('newArrival', 1)
+           ->orderBy('p.id', 'DESC')
+           ->getQuery()
+           ->getResult();
+   }
+
+   public function findByIsFeaturedDesc()
+   {
+       return $this->createQueryBuilder('p')
+           ->where('p.isFeatured = :featured')
+           ->setParameter('featured', 1)
+           ->orderBy('p.id', 'DESC')
+           ->getQuery()
+           ->getResult();
+   }
+
+   public function findByIsSpacialOfferDesc()
+   {
+       return $this->createQueryBuilder('p')
+           ->where('p.isSpacialOffer = :specialOffer')
+           ->setParameter('specialOffer', 1)
+           ->orderBy('p.id', 'DESC')
+           ->getQuery()
+           ->getResult();
+   }
+
 
 
 //    /**

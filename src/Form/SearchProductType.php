@@ -20,6 +20,7 @@ class SearchProductType extends AbstractType
                 'label'=> false,
                 'required'=> false,
                 'multiple'=>true,
+                'expanded' => true, 
                 'attr'=>[
                     'class'=> 'js-categories-multiple'
                 ]

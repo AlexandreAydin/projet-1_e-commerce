@@ -25,12 +25,13 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo): Response
     {
-        $products = $repoProduct->findAll();
+        // Utiliser la méthode avec tri pour récupérer les produits par ID décroissant
+        $products = $repoProduct->findAllOrderedByIdDesc();
 
-        $productBestSeller = $repoProduct->findByIsBestSeller(1);
-        $productNewArrival = $repoProduct->findByIsNewArrival(1);
-        $productFeatured = $repoProduct->findByIsFeatured(1);
-        $productSpecialOffer = $repoProduct->findByIsSpacialOffer(1);
+        $productBestSeller = $repoProduct->findByIsBestSellerDesc();
+        $productNewArrival = $repoProduct->findByIsNewArrivalDesc();
+        $productFeatured = $repoProduct->findByIsFeaturedDesc();
+        $productSpecialOffer = $repoProduct->findByIsSpacialOfferDesc();
 
         $reviews = []; // Array to store reviews for all products.
         $totalRating = 0; // Initialize total rating.
@@ -43,7 +44,7 @@ class HomeController extends AbstractController
         
         foreach ($products as $product) {
             // Adjust this logic based on your actual data model and relationships.
-            $productReviews = $product->getrewiewsProducts(); 
+            $productReviews = $product->getRewiewsProducts(); 
             $reviews = array_merge($reviews, $productReviews->toArray());
         
             foreach ($productReviews as $review) {
@@ -52,7 +53,6 @@ class HomeController extends AbstractController
         }
         
         $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
-        
 
         return $this->render('pages/home/index.html.twig', [
             'controller_name' => 'HomeController',
@@ -60,7 +60,7 @@ class HomeController extends AbstractController
             'productBestSeller'=> $productBestSeller,
             'productNewArrival'=> $productNewArrival,
             'productFeatured' => $productFeatured,
-            'productSpecialOffer'=>$productSpecialOffer,
+            'productSpecialOffer'=> $productSpecialOffer,
             'averageRating' => $averageRating,
             'productRatings' => $productRatings,
         ]);
@@ -163,7 +163,7 @@ class HomeController extends AbstractController
     #[Route('/boutique', name: 'app_shop')]
     public function shop(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo,Request $request): Response
     {
-        $products = $repoProduct->findAll();
+        $products = $repoProduct->findAllOrderedByIdDesc();
 
         $search = new SearchProduct();
         $form = $this->createForm(SearchProductType::class,$search);
@@ -174,32 +174,6 @@ class HomeController extends AbstractController
             $products= $repoProduct->findWithSearch($search);
             
         }
-        
-        // $reviews = []; // Array to store reviews for all products.
-        // $totalRating = 0; // Initialize total rating.
-
-        // $reviews = []; // Array to store reviews for all products.
-        // $totalRating = 0; // Initialize total rating.
-        
-        // foreach ($products as $product) {
-        //     // Adjust this logic based on your actual data model and relationships.
-        //     $productReviews = $product->getrewiewsProducts(); 
-        //     $reviews = array_merge($reviews, $productReviews->toArray());
-        
-        //     foreach ($productReviews as $review) {
-        //         $totalRating += $review->getNote(); // Assuming each review has a getNote method that returns the rating.
-        //     }
-        // }
-        
-        // $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
-
-        //    $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
-        // $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
-        // // $reviewsWithComments = array_filter($reviews, fn($review) => !empty($review->getComment()));
-        // // $reviewCount = count($reviewsWithComments);
-        // // $totalReviews = count($reviews);
-
-        // $averageRating = $reviewsRepo->getAverageRatingForProduct($product);
 
         $productRatings = []; // Create a new array to hold the average rating for each product.
 

@@ -1766,10 +1766,10 @@ button:focus {
 	line-height: 36px;
 	transition: none;
 }
-.navbar-toggler[aria-expanded="true"] span::before {
+/* .navbar-toggler[aria-expanded="true"] span::before {
     content: "\f129";
     font-size: 16px;
-}
+} */
 .navbar-toggler[aria-expanded="true"] {
 	line-height: 32px;
 	font-size: 20px;
@@ -7099,3 +7099,24 @@ blockquote p:last-child {
 	height: 80px;
 	border-radius: 15px;
 }
+
+#menu-btn {
+    display: none;
+}
+
+
+.navbar-dark {
+    background-color: black !important; /* Utilisez !important pour vous assurer que cela surpasse les autres styles. */
+}
+
+
+
+	@media (max-width: 991px) {
+		header .icon-heart{
+			padding: 23px 30px 23px 30px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+	}
+	

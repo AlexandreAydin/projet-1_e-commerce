@@ -136,15 +136,17 @@ export const displayWishlist = (wishlist = null) => {
         <td class="product-name" data-title="Product"><a href="#">${product.name}</a></td>
         <td class="product-price" data-title="Price">${(product.price / 100).toFixed(2)}</td>
         <td data-title="Stock Status" class="product-stock-status">
-            ${
-                product.quantity > 10 
-                ? '<span class="badge badge-pill badge-success">En Stock</span>'
-                : `Il reste plus que ${product.quantity || 0} articles dans le stock`
-            }
+        ${
+            product.quantity > 10 
+            ? '<span class="badge badge-pill badge-success">En Stock</span>'
+            : product.quantity > 0 
+                ? `Il reste plus que ${product.quantity} articles dans le stock`
+                : 'Ce produit n\'est plus disponible pour le moment'
+        }
         </td>
         <td class="add-to-cart ">
         <a href="/panier/${product.id}/ajouter" class="btn btn-fill-out btn-addtocart">
-            <i class="icon-basket-loaded"></i> Add to Cart
+            <i class="icon-basket-loaded"></i> Ajouter Au Panier
         </a>
         </td>
         <td class="remove-to-wishlist" data-title="Remove">
@@ -183,7 +185,7 @@ async function manageLink(event) {
 }
 
 function addEventListenerToLink() {
-    const links = document.querySelectorAll('.shop_cart_table tbody a, li.add-to-cart a, li add-to-wishlist, a.item_remove, a.btn-addtocart, a.ion-close, .view-details');
+    const links = document.querySelectorAll('.shop_cart_table tbody a, li.add-to-cart a, li add-to-wishlist, a.item_remove,a.minus, a.plus, a.btn-addtocart, a.ion-close, .view-details');
     links.forEach(link => link.addEventListener('click', manageLink));
 }
 
@@ -272,9 +274,13 @@ async function updateHeaderCart() {
         const cart_count = document.querySelector('.cart_count');
         const cart_list = document.querySelector('.cart_list');
         const cart_price_value = document.querySelector('.cart_price_value');
+        const cart_price_taxe = document.querySelector('.cart_price_taxe');
+        const cart_price_ttc = document.querySelector('.cart_price_ttc');
 
         cart_count.innerHTML = cart.data.cart_count;
-        cart_price_value.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
+        cart_price_value.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
+        cart_price_taxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
+        cart_price_ttc.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
 
         let contenuDuPanier = '';
         cart.products.forEach(item => {
@@ -292,9 +298,9 @@ async function updateHeaderCart() {
                     <a href="/mon-panier/${product.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
                     <div class="cart-product-quantity">
                         <div class="quantity">
-                            <a type="button" class="minus"> - </a>
+                            <a href="/mon-panier/${product.id}/diminuer" type="button" class="minus"> - </a>
                             <input type="text" name="quantity" value="${quantity}" title="Qty" size="4" class="qty">
-                            <a type="button" class="plus"> + </a>
+                            <a  href="/panier/${product.id}/ajouter" type="button" class="plus"> + </a>
                         </div>
                     </div>
                     <span class="cart_quantity text-dark"> ${quantity} x <span class="cart_amount">${(product.price / 100).toFixed(2)} €</span>
@@ -335,14 +341,14 @@ document.addEventListener('DOMContentLoaded', function() {
     initCart();
 });
 
-document.addEventListener('click', async function(event) {
-    if (event.target && event.target.classList.contains('plus')) {
-        const productId = event.target.closest('li').getAttribute('data-product-id');
-        await updateCart(`/panier/${productId}/ajouter`);
-    }
+// document.addEventListener('click', async function(event) {
+//     if (event.target && event.target.classList.contains('plus')) {
+//         const productId = event.target.closest('li').getAttribute('data-product-id');
+//         await updateCart(`/panier/${productId}/ajouter`);
+//     }
 
-    if (event.target && event.target.classList.contains('minus')) {
-        const productId = event.target.closest('li').getAttribute('data-product-id');
-        await updateCart(`/mon-panier/${productId}/diminuer`);
-    }
-});
+//     if (event.target && event.target.classList.contains('minus')) {
+//         const productId = event.target.closest('li').getAttribute('data-product-id');
+//         await updateCart(`/mon-panier/${productId}/diminuer`);
+//     }
+// });
