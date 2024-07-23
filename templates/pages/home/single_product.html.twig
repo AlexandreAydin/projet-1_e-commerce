@@ -8,7 +8,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
-                    <div class="product-image">
+                    {# <div class="product-image">
                         {% if product.images|length > 0 %}
                         {% set lastMedia = product.images|last %}   
                             {% set firstImage = product.images|first %}
@@ -46,7 +46,46 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                    </div>   
+                    </div>    #}
+                    <div class="product-image">
+    {% if product.images|length > 0 %}
+        {% set lastMedia = product.images|last %}
+        {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}  <!-- Déterminer si la dernière média est une vidéo -->
+        <div class="main_image_container">
+            <div class="mb-3" style="width: 100%; height: 600px">
+                <a href="{{ asset('images/products/' ~ product.images|first.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
+                    <img id="main_product_img" src="{{ asset('images/products/' ~ product.images|first.imageName) }}" alt="{{ product.name }}" style="height: 100%; width: 100%; object-fit: cover;" />
+                </a>
+            </div>
+        </div>
+        <div class="row">
+            {% for media in product.images %}
+                {% if loop.index > 1 %}
+                    <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
+                        <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                            {% if loop.last and isLastMediaVideo %}
+                                <!-- C'est la dernière itération et c'est une vidéo -->
+                                <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" data-type="video" data-width="640" data-height="360">
+                                    <video controls style="width: 100%; height: 100%; object-fit: cover;">
+                                        <source src="{{ asset('images/products/' ~ media.imageName) }}" type="video/mp4">
+                                        Votre navigateur ne prend pas en charge la balise vidéo.
+                                    </video>
+                                    <i class="fas fa-play-circle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 2rem;"></i>
+                                </a>
+                            {% else %}
+                                <!-- Ce n'est pas la dernière itération, donc c'est une image -->
+                                <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
+                                    <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ media.imageName) }}" data-large-src="{{ asset('images/products/' ~ media.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
                 </div>
                 <div class="col-lg-6 col-md-6">
                     <div class="pr_detail">

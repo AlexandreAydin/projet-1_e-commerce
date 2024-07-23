@@ -2,42 +2,44 @@
 
 {% block title %}Amanoz Caisse{% endblock %}
 
-
 {% block body %}
-
 <div class="section checkout">
-	<div class="container">
+    <div class="container">
         {{ form_start(checkout, {action: path('app_checkout_confirm')}) }}
         <div class="row">
-        	<div class="col-md-6">
+            <div class="col-md-6">
                 <div class="heading_s1">
-                        <h4>Votre Adresse de Livraison</h4>
-                        <div class="content">
-                            {{form_widget(checkout.address) | replace({'[spr]':'<br>'})| raw}}
-                        </div>
-                        <a href="{{ path('app_address_new')}}" class="btn btn-fill-out btn-block mt-1">Ajouter une nouvelle adresse</a>
+                    <h4>Votre Adresse de Livraison</h4>
+                    <div class="content">
+                           {{ form_widget(checkout.address, {'attr': { 'style': 'font-size: 1rem; height: 2.25rem;'}}) }}
+                    </div>
+                    <h4 class ="mt-4">Votre Adresse de Facturation</h4>
+                     <div class="content">
+                           {{ form_widget(checkout.billingAddress, {'attr': { 'style': 'font-size: 1rem; height: 2.25rem;'}}) }}
+                    </div>
+                    <a href="{{ path('app_address_new') }}" class="btn btn-fill-out btn-block mt-1">Ajouter une nouvelle adresse</a>
                 </div>
                 <div class="heading_s1">
                     <h4>Choisir Livraison</h4>
                     <div class="content">
-                    {% if cart.data.subTotalTTC >= 80 and cart.data.subTotalTTC < 100 %}
-                        <div class="d-flex">
-                            <i class="fa-solid fa-triangle-exclamation mt-1 mx-2"></i>
-                            <p>il vous restes {{ 100 - cart.data.subTotalTTC}} € pour avoir la livraison gratuites</p>
-                        </div>
-                    {% endif %}
-                         {{ form_widget(checkout.carrier)  | replace({'[spr]':'<br>'})| raw}}
+                        {% if cart.data.subTotalTTC >= 80 and cart.data.subTotalTTC < 100 %}
+                            <div class="d-flex">
+                                <i class="fa-solid fa-triangle-exclamation mt-1 mx-2"></i>
+                                <p>Il vous reste {{ 100 - cart.data.subTotalTTC  | number_format(2, '.', ',')}} € pour avoir la livraison gratuite</p>
+                            </div>
+                        {% endif %}
+                        {{ form_widget(checkout.carrier) | replace({'[spr]': '<br>'}) | raw }}
                     </div>
                 </div>
                 <div class="heading_s1">
                     <h4>Plus d'information</h4>
                     <div class="form-group mb-0">
-                        {{form_widget(checkout.information)}}
+                        {{ form_widget(checkout.information) }}
                     </div>
                 </div>
-          </div>
+            </div>
 
-          <div class="col-md-6">
+            <div class="col-md-6">
                 <div class="order_review">
                     <div class="heading_s1">
                         <h4>Vos Commandes</h4>
@@ -51,25 +53,25 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                    {% for element in cart.products %}
+                                {% for element in cart.products %}
                                     <tr>
-                                        <td> {{element.product.name}} <span class="product-qty"> x {{element.quantity}}</span></td>
-                                        <td> {{ ((element.product.price / 100) ) | number_format(2, '.', ',') }} € </td>
+                                        <td>{{ element.product.name }} <span class="product-qty"> x {{ element.quantity }}</span></td>
+                                        <td>{{ (element.product.price / 100) | number_format(2, '.', ',') }} €</td>
                                     </tr>
-                                    {% endfor %}
+                                {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th>Total HT</th>
-                                    <td class="product-subtotal"> {{cart.data.subTotalHT | number_format(2, '.', ',')}}€</td>
+                                    <td class="product-subtotal">{{ cart.data.subTotalHT | number_format(2, '.', ',') }} €</td>
                                 </tr>
                                 <tr>
                                     <th>Total TVA 20%</th>
-                                    <td class="product-subtotal"> {{cart.data.Taxe | number_format(2, '.', ',')}}€</td>
+                                    <td class="product-subtotal">{{ cart.data.Taxe | number_format(2, '.', ',') }} €</td>
                                 </tr>
                                 <tr>
-                                    <th>Total TTC : </th>
-                                    <td class="product-subtotal">  {{cart.data.subTotalTTC | number_format(2, '.', ',')}}€</td>
+                                    <th>Total TTC :</th>
+                                    <td class="product-subtotal">{{ cart.data.subTotalTTC | number_format(2, '.', ',') }} €</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -78,23 +80,49 @@
                         <div class="heading_s1">
                             <h4>Payment</h4>
                         </div>
-
                     </div>
                     <button type="submit" id="checkout-button" class="btn btn-fill-out btn-block">Confirmer la commande</button>
                 </div>
-          </div>
+            </div>
         </div>
-        {{form_end(checkout)}}
+        {{ form_end(checkout) }}
     </div>
 </div>
-
 {% endblock %}
 
 
+{% block javascripts %}
+<script>
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Utilisation d'une valeur injectée par Twig pour le sous-total
+    var subtotal = {{ cart.data.subTotalTTC }}; // Assurez-vous que cette valeur est en euros et non en centimes si nécessaire
 
+    var freeDeliveryOption = document.getElementById('checkout_carrier_1');
 
+    function updateFreeDeliveryAvailability() {
+        if (subtotal >= 100) {
+            freeDeliveryOption.disabled = false;
+        } else {
+            freeDeliveryOption.disabled = true;
+            if (freeDeliveryOption.checked) {
+                freeDeliveryOption.checked = false;
+                // Cochez une autre option par défaut si nécessaire
+                document.getElementById('checkout_carrier_2').checked = true;
+            }
+        }
+    }
 
+    updateFreeDeliveryAvailability(); // Initial update based on the current cart value
 
+    // Écouter les changements de panier si applicable
+    // Si vous avez une fonction qui met à jour le panier, assurez-vous d'appeler `updateFreeDeliveryAvailability` après chaque mise à jour.
+    // Cela pourrait ressembler à ceci:
+    // updateCartFunction = function(newSubtotal) {
+    //     subtotal = newSubtotal;
+    //     updateFreeDeliveryAvailability();
+    // };
 
-
+});
+</script>
+{% endblock %}

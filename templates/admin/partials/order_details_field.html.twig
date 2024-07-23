@@ -8,7 +8,7 @@
         {% set isNumericSubTotalTTC = (detail.subTotalTTC is not empty and detail.subTotalTTC ~ '' matches '/^-?\\d+$/') %} #}
         
         - Sub Total HT : 
-            {{ (detail.subtotalHT/100) | number_format(2, ",", ".") }} €
+            {{ (detail.subtotalHT /1.2/100) | number_format(2, ",", ".") }} €
         <br>    
         - Taxe : 
            {{ (detail.taxe/100) | number_format(2, ",", ".") }} €

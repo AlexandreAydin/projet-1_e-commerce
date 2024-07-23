@@ -30,6 +30,7 @@ class OrderServices{
                 ->setFullName($cart->getFullName()) 
                 ->setProductName($cart->getProductName())
                 ->setDeliveryAddress($cart->getDeliveryAddress())
+                ->setBillingAddress($cart->getBillingAddress())
                 ->setMoreInformations($cart->getMoreInformations())
                 ->setQuantity($cart->getQuantity())
                 ->setSubTotalHT($cart->getSubTotalHT()/100)
@@ -165,6 +166,7 @@ class OrderServices{
 {
     $reference = $this->generateUuid();
     $address = $data['checkout']['address'];
+    $billingAddress = $data['checkout']['billingAddress'];
     $carrier = $data['checkout']['carrier'];
     $informations = $data['checkout']['information'];
     
@@ -174,6 +176,7 @@ class OrderServices{
         ->setCarrierPrice($carrier->getPrice() / 100)
         ->setFullName($address->getFullName()) 
         ->setDeliveryAddress($address)
+        ->setBillingAddress($billingAddress)
         ->setMoreInformations($informations)
         ->setQuantity($data['data']['cart_count'])
         ->setSubTotalHT($data['data']['subTotalHT'])
@@ -201,7 +204,7 @@ class OrderServices{
             ->setProduct($productEntity)
             ->setQuantity($productData['quantity'])
             ->setSubTotalHT($subTotal)
-            ->setTaxe($subTotal * 0.2)
+            ->setTaxe($subTotal/1.2 * 0.2)
             ->setSubTotalTTC($subTotal * 1.2);
         
         $this->manager->persist($cartDetails);

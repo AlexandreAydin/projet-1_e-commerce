@@ -13,7 +13,7 @@
         </div>
         <div style="text-align: right;">
             {# <strong>Nom Complet:</strong> {{ order.fullName }} <br> #}
-            {{ order.deliveryAddress | replace({'[spr]':'<br>'})| raw }} <br>
+            {{ order.billingAddress | replace({'[spr]':'<br>'})| raw }} <br>
         </div>
     </div> <br> <br><br> <br>
     <strong>Date de la commande:</strong> {{ order.createdAt |date('d-m-Y') }} <br>
@@ -23,8 +23,8 @@
     <table border="1" style="width:100%; margin-top: 20px;">
         <thead>
             <tr>
+                <th>Numéro de produit</th>
                 <th>Nom du Produit</th>
-                <th>Prix du Produit</th>
                 <th>Quantité</th>
                 <th>Sous Total HT</th>
             </tr>
@@ -32,10 +32,10 @@
         <tbody>
             {% for detail in order.orderDetails %}
             <tr>
+                <td> EAN: </td>
                 <td>{{ detail.productName }}</td>
-                <td>{{ detail.productPrice  | number_format(2, '.', ',') }} €</td>
                 <td>{{ detail.quantity }}</td>
-                <td>{{ (detail.subTotalHt/100) | number_format(2, '.', ',') }} €</td>
+                <td>{{ (detail.subTotalHt/1.2/100) | number_format(2, '.', ',') }} €</td>
             </tr>
             {% endfor %}
         </tbody>

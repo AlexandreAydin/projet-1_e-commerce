@@ -32,6 +32,10 @@ class Cart
     #[ORM\Column(type: Types::TEXT)]
     private ?string $deliveryAddress = null;
 
+    
+    #[ORM\Column(type: Types::TEXT)]
+    private ?string $billingAddress = null;
+
     #[ORM\Column]
     private ?bool $isPaid = false;
 
@@ -136,6 +140,18 @@ class Cart
     public function setDeliveryAddress(string $deliveryAddress): self
     {
         $this->deliveryAddress = $deliveryAddress;
+
+        return $this;
+    }
+
+    public function getBillingAddress(): ?string
+    {
+        return $this->billingAddress;
+    }
+
+    public function setBillingAddress(string $billingAddress): self
+    {
+        $this->billingAddress = $billingAddress;
 
         return $this;
     }

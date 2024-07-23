@@ -47,13 +47,10 @@ class CheckoutController extends AbstractController
         //     $this->addFlash('checkout_message', "Merci d'ajouter votre adresse avant de continuer");
         //     return $this->redirectToRoute("app_address_new");
         // }
-    
-        //Corrigez l'accès à subTotalTTC ici
-        $isFreeDeliveryAvailable = ($cart['data']['subTotalTTC'] ?? 0) >= 100;
+
     
         $form = $this->createForm(CheckoutType::class, null, [
             'user' => $user,
-            'is_free_delivery_available' => $isFreeDeliveryAvailable,
         ]);
     
         return $this->render('pages/checkout/index.html.twig', [

@@ -20,8 +20,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use Symfony\Component\Routing\RouterInterface;
-use Doctrine\ORM\Mapping as ORM;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
@@ -182,7 +180,9 @@ class OrderCrudController extends AbstractCrudController
             TextField::new('user.FullName', 'Client Nom')->hideOnIndex(),
             TextField::new('user.lastName', 'Client prénom')->hideOnIndex(),
             TextField::new('user.email', 'Client email')->hideOnIndex(),
-            TextField::new('CarrierName', 'Nom de Livreur'),
+            TextField::new('CarrierName', 'Nom de Livreur')->hideOnIndex(),
+            TextField::new('deliveryAddress', "Addresse de la livraison")->hideOnIndex(),
+            TextField::new('billingAddress', "Addresse de facturation")->hideOnIndex(),
             CollectionField::new('orderDetails', 'Détails de la commande')
                 ->setTemplatePath('admin/partials/order_details_field.html.twig')
                 ->hideOnIndex(),

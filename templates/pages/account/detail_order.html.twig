@@ -37,9 +37,9 @@
                                 <td class="product-name" data-title="Product"><a href="#">{{element.productName}}</a></td>
                                 <td class="product-price" data-title="Price">{{element.productPrice | number_format(2, '.', ',')}}</td>
                                 <td class="product-quantity" data-title="Quantity">{{element.quantity }}</td>
-                                <td class="product-subtotal" data-title="Total">{{(element.subtotalHT/100) | number_format(2, '.', ',')}}</td>
+                                <td class="product-subtotal" data-title="Total">{{(element.subtotalHT/1.2/100) | number_format(2, '.', ',')}}</td>
                                 <td class="product-subtotal" data-title="Total">{{(element.taxe/100) | number_format(2, '.', ',')}}</td>
-                                <td class="product-subtotal" data-title="Total">{{(element.subTotalTTC/100) | number_format(2, '.', ',')}}</td>
+                                <td class="product-subtotal" data-title="Total">{{(element.subTotalTTC/1.2/100) | number_format(2, '.', ',')}}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
