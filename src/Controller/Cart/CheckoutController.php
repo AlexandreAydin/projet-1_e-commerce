@@ -8,6 +8,7 @@ use App\Form\CheckoutType;
 use App\Repository\AddressRepository;
 use App\Repository\CarrierRepository;
 use App\Service\CartService;
+use App\Services\StripeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -61,71 +62,79 @@ class CheckoutController extends AbstractController
     }
     
 
-    #[Route('/caisse/confirmer', name:'app_checkout_confirm')]
+    #[Route('/caisse/confirmer', name: 'app_checkout_confirm')]
     public function checkout_confirm(
-    CartService $cartService,
-    Request $request,
-    SessionInterface $session,
-    AddressRepository $addressRepository,
-    OrderServices $orderServices
-    ): Response
-    {
-        //on récupére le panier de l'utilisateur
+        CartService $cartService,
+        Request $request,
+        SessionInterface $session,
+        AddressRepository $addressRepository,
+        StripeService $stripeService,
+        // PaypalService $paypalService,
+        OrderServices $orderServices
+    ): Response {
+        // On récupère le panier de l'utilisateur
         $cart = $cartService->getFullCart();
-
-        if(!count($cart['products'])) {
+    
+        if (!count($cart['products'])) {
             return $this->redirectToRoute('app_home');
         }
     
         if (!isset($cart['products'])) {
             return $this->redirectToRoute("app_home");
         }
-
+    
         $user = $this->getUser();
-
+    
         if (!$user) {
             // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
             return $this->redirectToRoute('app_login');
         }
-        
+    
         $address = $addressRepository->findByUser($user);
-
-        $form=$this->createForm(CheckoutType::class,null,['user'=>$user]);
-
+    
+        $form = $this->createForm(CheckoutType::class, null, ['user' => $user]);
+    
         $form->handleRequest($request);
-        if($form->isSubmitted() && $form->isValid()||$session->get('checkout_data')){
-            // Pour envoyé au chekout si l'utilisateur décide de modifierl'adresse au dernier moments
-            //  on ajout  ||$this->session->get('checkout_data' pour renvoyer l'uilisateur au chekckout
-            //  faire le changement aussi sur addresse controller sur controller edit
-            if($session->get('checkout_data')){
+        if ($form->isSubmitted() && $form->isValid() || $session->get('checkout_data')) {
+            // Pour envoyer au checkout si l'utilisateur décide de modifier l'adresse au dernier moment
+            // on ajoute ||$this->session->get('checkout_data' pour renvoyer l'utilisateur au checkout
+            // faire le changement aussi sur l'adresse controller sur controller edit
+            if ($session->get('checkout_data')) {
                 $data = $session->get('checkout_data');
-            }else{
-                $data= $form->getData();
-                $session->set('checkout_data',$data);
+            } else {
+                $data = $form->getData();
+                $session->set('checkout_data', $data);
             }
-            
+    
             $address = $data['address'];
             $carrier = $data['carrier'];
-            $information=$data['information'];
-
-            // sauvegarder le panier 
-            $cart['checkout']= $data;
-           $reference = $orderServices->saveCart($cart, $user, $address);
-
-
-
-            return $this->render('pages/checkout/confirm.html.twig',[
-                'cart'=> $cart,
-                'address'=>$address,
-                'carrier'=>$carrier,
-                'information'=>$information,
+            $information = $data['information'];
+    
+            // Sauvegarder le panier
+            $cart['checkout'] = $data;
+            $reference = $orderServices->saveCart($cart, $user, $address);
+    
+            $stripe_public_Key = $stripeService->getPublicKey();
+            // $paypal_public_Key = $paypalService->getPublicKey();
+    
+            // Vider les informations de la session après la confirmation de l'achat
+            $session->remove('checkout_data');
+    
+            return $this->render('pages/checkout/confirm.html.twig', [
+                'cart' => $cart,
+                'address' => $address,
+                'carrier' => $carrier,
+                'information' => $information,
                 'reference' => $reference,
-                'checkout'=> $form->createView()
+                'stripe_public_Key' => $stripe_public_Key,
+                // 'paypal_public_Key' => $paypal_public_Key,
+                'checkout' => $form->createView()
             ]);
         }
-
+    
         return $this->redirectToRoute('app_checkout');
     }
+    
 
     #[Route('/caisse/modifier', name:'app_checkout_edit')]
     public function checkoutEdit(SessionInterface $session): Response

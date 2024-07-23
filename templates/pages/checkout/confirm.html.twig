@@ -53,7 +53,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="section">
+<div class="section main_content" data-stripe_public_Key="{{stripe_public_Key}}">
     <div class="container">
         <div class="row">
             <div class="col-md-6">
@@ -224,8 +224,15 @@
     });
 
 
+    const main_content = document.querySelector('.main_content');
+    const stripe_public_key = main_content?.dataset?.stripe_public_key || ""
 
-    var stripe = Stripe('pk_test_51NKYgcB8m10ZC3XdY1MjpOVXjljPmAVUSImix36u8UK01qfX3BeoXf2hfqAXmdOWYiHv5U9ioFEz8DlzejFfjWhg00dg4lqGOe');
+
+    const stripe = Stripe(stripe_public_key);
+
+
+
+    {# var stripe = Stripe('pk_test_51NKYgcB8m10ZC3XdY1MjpOVXjljPmAVUSImix36u8UK01qfX3BeoXf2hfqAXmdOWYiHv5U9ioFEz8DlzejFfjWhg00dg4lqGOe'); #}
     var checkoutButton = document.getElementById("checkout-stripe-button");
     checkoutButton.addEventListener("click", function () {
         fetch("/commande/creation-session/{{ reference }}", {

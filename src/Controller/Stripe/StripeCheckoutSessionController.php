@@ -4,6 +4,7 @@ namespace App\Controller\Stripe;
 
 use App\Classe\OrderServices;
 use App\Entity\Cart;
+use App\Services\StripeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,10 +17,11 @@ class StripeCheckoutSessionController extends AbstractController
     #[Route('/commande/creation-session/{reference}', name: 'app_create_checkout_session')]
     public function index(
         ?Cart $cart,
+        StripeService $stripeService,
         OrderServices $orderServices,
         EntityManagerInterface $manager
     ): JsonResponse {
-        $stripeSecretKey = 'sk_test_51NKYgcB8m10ZC3XdC8i88ZoKozHjY1TFeTlxl2Tlue2EZ1fdnoe1j9naP5XXiXDcblZlP4xQSatmNtCyyaXgh6fd00DW3fvzF8';
+        $stripeSecretKey = $stripeService->getPrivateKey();
         $YOUR_DOMAIN = 'http://127.0.0.1:8000';
         Stripe::setApiKey($stripeSecretKey);
 

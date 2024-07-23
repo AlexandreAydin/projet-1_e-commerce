@@ -32,7 +32,6 @@ class Order
     #[ORM\Column(type: Types::TEXT)]
     private ?string $deliveryAddress = null;
 
-    
     #[ORM\Column(type: Types::TEXT)]
     private ?string $billingAddress = null;
 
@@ -72,6 +71,16 @@ class Order
 
     #[ORM\Column(length: 255)]
     private ?string $productName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeClientSecret = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $paypalClientSecret = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $paymentMethod = null;
+
 
     public function __construct()
     {
@@ -316,5 +325,42 @@ class Order
 
         return $this;
     }
+
+    public function getStripeClientSecret(): ?string
+    {
+        return $this->stripeClientSecret;
+    }
+
+    public function setStripeClientSecret(?string $stripeClientSecret): static
+    {
+        $this->stripeClientSecret = $stripeClientSecret;
+
+        return $this;
+    }
+
+    public function getPaypalClientSecret(): ?string
+    {
+        return $this->paypalClientSecret;
+    }
+
+    public function setPaypalClientSecret(?string $paypalClientSecret): static
+    {
+        $this->paypalClientSecret = $paypalClientSecret;
+
+        return $this;
+    }
+
+    public function getPaymentMethod(): ?string
+    {
+        return $this->paymentMethod;
+    }
+
+    public function setPaymentMethod(?string $paymentMethod): static
+    {
+        $this->paymentMethod = $paymentMethod;
+
+        return $this;
+    }
+
 
 }

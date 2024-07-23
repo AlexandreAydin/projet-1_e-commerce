@@ -9,6 +9,7 @@ use App\Entity\Categorie;
 use App\Entity\Contact;
 use App\Entity\Order;
 use App\Entity\OrderDetails;
+use App\Entity\PaymentMethod;
 use App\Entity\Product;
 use App\Entity\ProductImage;
 use App\Entity\RewiewsProduct;
@@ -55,6 +56,7 @@ class DashboardController extends AbstractDashboardController
             MenuItem::linkToCrud('Contact', 'fas fa-user', Contact::class),
         ]);
         yield MenuItem::subMenu('Commande, Factures et panier', 'fas fa-shopping-bag')->setSubItems([
+            MenuItem::linkToCrud('Payment methods', 'fas fa-landmark', PaymentMethod::class),
             MenuItem::linkToCrud('Commandes et Factures', 'fas fa-shopping-bag', Order::class),
             MenuItem::linkToCrud('Commande Détaillé', 'fas fa-shopping-bag', OrderDetails::class),
             MenuItem::linkToCrud('Panier', 'fas fa-boxes', Cart::class),
