@@ -43,6 +43,9 @@ class StripeSuccessPayementController extends AbstractController
                        "<br><br/>Vous recevrez bientôt votre colis.<br/> Vous pouvez suivre le statut de votre commande dans votre espace personnel.";
             $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
         }
+
+        $order->setIsPaid(true);
+        $order->setPaymentMethod("STRIPE");
          
     
         // Si l'état est 0, passez-le à 1

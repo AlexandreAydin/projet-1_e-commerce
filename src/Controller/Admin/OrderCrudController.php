@@ -181,6 +181,7 @@ class OrderCrudController extends AbstractCrudController
             TextField::new('user.lastName', 'Client prénom')->hideOnIndex(),
             TextField::new('user.email', 'Client email')->hideOnIndex(),
             TextField::new('CarrierName', 'Nom de Livreur')->hideOnIndex(),
+            TextField::new('paymentMethod'),
             TextField::new('deliveryAddress', "Addresse de la livraison")->hideOnIndex(),
             TextField::new('billingAddress', "Addresse de facturation")->hideOnIndex(),
             CollectionField::new('orderDetails', 'Détails de la commande')
