@@ -8,6 +8,7 @@ use App\Form\CheckoutType;
 use App\Repository\AddressRepository;
 use App\Repository\CarrierRepository;
 use App\Service\CartService;
+use App\Services\PaypalService;
 use App\Services\StripeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,7 +70,7 @@ class CheckoutController extends AbstractController
         SessionInterface $session,
         AddressRepository $addressRepository,
         StripeService $stripeService,
-        // PaypalService $paypalService,
+        PaypalService $paypalService,
         OrderServices $orderServices
     ): Response {
         // On récupère le panier de l'utilisateur
@@ -115,7 +116,7 @@ class CheckoutController extends AbstractController
             $reference = $orderServices->saveCart($cart, $user, $address);
     
             $stripe_public_Key = $stripeService->getPublicKey();
-            // $paypal_public_Key = $paypalService->getPublicKey();
+            $paypal_public_Key = $paypalService->getPublicKey();
     
             // Vider les informations de la session après la confirmation de l'achat
             $session->remove('checkout_data');
@@ -127,7 +128,7 @@ class CheckoutController extends AbstractController
                 'information' => $information,
                 'reference' => $reference,
                 'stripe_public_Key' => $stripe_public_Key,
-                // 'paypal_public_Key' => $paypal_public_Key,
+                'paypal_public_Key' => $paypal_public_Key,
                 'checkout' => $form->createView()
             ]);
         }
