@@ -2,6 +2,7 @@
 
 namespace App\Controller\Paypal;
 
+use App\Classe\Mail;
 use App\Classe\OrderServices;
 use App\Entity\Cart;
 use App\Repository\OrderRepository;
@@ -67,39 +68,51 @@ class PaypalCheckoutSessionController extends AbstractController
         $reference,
         Request $req,
         OrderRepository $orderRepo,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        \App\Classe\Mail $mailService  // Assurez-vous d'injecter votre service de Mail ici
     ): JsonResponse
     {
         try {
             $order = $orderRepo->findOneByReference($reference);
-
+    
             if (!$order) {
                 return $this->json(['error' => "Order not found!"], 404);
             }
-
+    
             $paypalClientSecret = $order->getPaypalClientSecret();
             $result = $this->captureOrder($paypalClientSecret);
-
+    
             if (isset($result['jsonResponse']['id']) && isset($result['jsonResponse']['status'])) {
                 $id = $result['jsonResponse']['id'];
                 $status = $result['jsonResponse']['status'];
-
+    
                 if ($status === "COMPLETED") {
                     $order->setIsPaid(true);
                     $order->setPaymentMethod("PAYPAL");
-
+    
                     $em->persist($order);
                     $em->flush();
+    
+                    // Préparation du contenu du mail
+                    $content = "Bonjour " . $order->getUser()->getFirstname() . 
+                               "<br/> <br/> Merci pour votre commande." .
+                               "<br/><br/>Numéro de Commande: " . $order->getId() .
+                               "<br/><br/>Référence de Commande: " . $order->getReference() .
+                               "<br><br/>Vous recevrez bientôt votre colis.<br/> Vous pouvez suivre le statut de votre commande dans votre espace personnel.";
+    
+                    // Envoi du mail
+                    $mailService->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
                 }
             }
-
+    
             return $this->json($result['jsonResponse']);
-
+    
         } catch (Exception $error) {
             error_log("Failed to capture order: " . $error->getMessage());
             return $this->json(["error" => "Failed to capture order."], 500);
         }
     }
+    
 
     public function generateAccessToken()
     {

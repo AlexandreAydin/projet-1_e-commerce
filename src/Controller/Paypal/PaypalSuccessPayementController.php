@@ -20,8 +20,6 @@ class PaypalSuccessPayementController extends AbstractController
         ?Order $order,
         CartService $cartServices,
         ClasseStockManagerServices $stockManager,
-        UrlGeneratorInterface $router,
-        ProductRepository $productRepository,
         EntityManagerInterface $manager
     ): Response {
 
@@ -30,7 +28,9 @@ class PaypalSuccessPayementController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
     
-        $mail = new Mail();
+
+        $order->setIsPaid(true);
+        
         
         // Commande payée
         if (!$order->getIsPaid()) {
@@ -38,16 +38,7 @@ class PaypalSuccessPayementController extends AbstractController
             $stockManager->deStock($order);
             $manager->flush();
             $cartServices->deleteCart();
-            $content = "Bonjour " . $order->getUser()->getFirstname() . 
-                       "<br/> <br/> Merci pour votre commande." .
-                       "<br/><br/>Numéro de Commande: " . $order->getId() .
-                       "<br/><br/>Référence de Commande: " . $order->getReference() .
-                       "<br><br/>Vous recevrez bientôt votre colis.<br/> Vous pouvez suivre le statut de votre commande dans votre espace personnel.";
-            $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
         }
-
-        $order->setIsPaid(true);
-         
     
         // Si l'état est 0, passez-le à 1
         if ($order->getState() == 0) {
