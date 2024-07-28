@@ -20,10 +20,6 @@ class CheckoutController extends AbstractController
 {
     #[Route('/caisse', name: 'app_checkout')]
     public function index(CartService $cartService,
-    Request $request,
-    SessionInterface $session,
-    OrderServices $orderServices,
-    CarrierRepository $carrierRepository,
      AddressRepository $addressRepository): Response
     {
         $cart = $cartService->getFullCart();
@@ -63,6 +59,39 @@ class CheckoutController extends AbstractController
     }
     
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     #[Route('/caisse/confirmer', name: 'app_checkout_confirm')]
     public function checkout_confirm(
         CartService $cartService,
@@ -73,6 +102,7 @@ class CheckoutController extends AbstractController
         PaypalService $paypalService,
         OrderServices $orderServices
     ): Response {
+        
         // On récupère le panier de l'utilisateur
         $cart = $cartService->getFullCart();
     
@@ -136,6 +166,32 @@ class CheckoutController extends AbstractController
         return $this->redirectToRoute('app_checkout');
     }
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     #[Route('/caisse/modifier', name:'app_checkout_edit')]
     public function checkoutEdit(SessionInterface $session): Response
