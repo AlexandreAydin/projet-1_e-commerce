@@ -55,10 +55,10 @@ class ProductRepository extends ServiceEntityRepository
         $query= $query->andWhere('p.price <=' .$search->getMaxPrice()*100);
     }
 
-    // Tags
-    if($search->getTags()){
-        $query = $query->andWhere('p.tags like :val')
-                ->setParameter('val', "%{$search->getTags()}%");
+    if (!empty($search->string)) {
+        $query = $query
+        ->andWhere('p.name LIKE :string')
+        ->setParameter('string', "%{$search->string}%");
     }
 
     // Categories

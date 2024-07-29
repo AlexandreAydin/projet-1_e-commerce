@@ -40,7 +40,7 @@ class ResetPasswordController extends AbstractController
                     'token' => $reset_password->getToken()
                 ]);
 
-                $content = "Bonjour ".$user->getFirstname()."<br/>Vous avez demandé à réinitialiser votre mot de passe sur le site Amanoz.<br/><br/>";
+                $content = "Bonjour ".$user->getFirstname()."<br/>Vous avez demandé à réinitialiser votre mot de passe sur le site Yilmi Market.<br/><br/>";
                 $content .= "Merci de bien vouloir cliquer sur le lien suivant pour <a href='".$url."'>mettre à jour votre mot de passe</a>.";
 
                 $mail = new Mail();

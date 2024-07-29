@@ -4,11 +4,10 @@
 
 
 {% block body %}
-    {{  include ("partials/_title_section.html.twig", {'name':"Boutique"}) }}
-    <div class="section">
-        <div class="container">
+    <div class="">
+        <div class="m-4">
             <div class="row">
-                <div class="col-lg-9">
+                <div class="col-lg-10">
                     <div class="row shop_container">
                             {% if not products %}
                                 <p>Désolé, aucun produit ne correspond au résultat de votre recherche</p>
@@ -18,9 +17,15 @@
                             {% endfor %}
                     </div>
                 </div>
-            <div class="col-lg-3 order-lg-first mt-4 pt-2 mt-lg-0 pt-lg-0">
+            <div class="col-lg-2 order-lg-first mt-4 pt-2 mt-lg-0 pt-lg-0">
                     <div class="sidebar">
 {{ form_start(search) }}
+<div class="widget">
+    <h5 class="widget_title">Rechercher</h5>
+    <div class="scrollable-checkbox">
+        {{ form_row(search.string) }}
+    </div>
+</div>
 <div class="widget">
     <h5 class="widget_title">Categories</h5>
     <div class="scrollable-checkbox">
@@ -38,10 +43,6 @@
             {{ form_row(search.maxPrice) }}
         </div>
     </div>
-</div>
-<div class="widget">
-    <h5 class="widget_title">Tags</h5>
-    {{ form_row(search.tags) }}
 </div>
 <button class="btn btn-border-fill btn-block">Search</button>
 {{ form_end(search) }}

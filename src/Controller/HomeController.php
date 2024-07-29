@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class HomeController extends AbstractController
 {
+    
     #[Route('/', name: 'app_home')]
     public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo): Response
     {
@@ -170,9 +171,7 @@ class HomeController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-       
-            $products= $repoProduct->findWithSearch($search);
-            
+            $products= $repoProduct->findWithSearch($search);  
         }
 
         $productRatings = []; // Create a new array to hold the average rating for each product.

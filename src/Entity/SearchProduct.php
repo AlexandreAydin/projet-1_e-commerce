@@ -5,6 +5,11 @@ namespace App\Entity;
 class SearchProduct
 {
 
+    /**
+     * @var string
+     */
+    public $string = '';
+
     private ?int $minPrice = null;
 
     private ?int $maxPrice = null;
@@ -16,7 +21,6 @@ class SearchProduct
      */
     private array $categories = [];
 
-    private ?string $tags = null;
 
     public function getMinPrice(): ?int
     {
@@ -54,15 +58,4 @@ class SearchProduct
         return $this;
     }
 
-    public function getTags(): ?string
-    {
-        return $this->tags;
-    }
-
-    public function setTags(?string $tags): self
-    {
-        $this->tags = $tags;
-
-        return $this;
-    }
 }

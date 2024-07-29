@@ -15,6 +15,14 @@ class SearchProductType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('string', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Votre recherche ...',
+                    'class' => 'form-control-sm'
+                ]
+            ])
             ->add('categories',EntityType::class,[
                 'class'=>Categorie::class,
                 'label'=> false,
@@ -39,13 +47,7 @@ class SearchProductType extends AbstractType
                     'placeholder'=>'max...'
                 ]
             ])
-            ->add('tags',TextType::class,[
-                'label'=>false,
-                'required'=>false,
-                'attr'=> [
-                    'placeholder' => "Tags..."
-                ]
-            ]);
+            ; 
     }
 
     public function configureOptions(OptionsResolver $resolver): void
