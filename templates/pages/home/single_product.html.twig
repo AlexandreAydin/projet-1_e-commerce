@@ -8,25 +8,24 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
-                    {# <div class="product-image">
+                    <div class="product-image">
                         {% if product.images|length > 0 %}
-                        {% set lastMedia = product.images|last %}   
-                            {% set firstImage = product.images|first %}
-                            <div class="main_image_containe">
-                                <div class="mb-3" style="width: 100%; height:600px">
-                                    <a href="{{ asset('images/products/' ~ firstImage.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                        <img id="main_product_img" src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" style="height:100% ;width: 100%; object-fit: cover;" />
+                            {% set lastMedia = product.images|last %}
+                            {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}  <!-- Déterminer si la dernière média est une vidéo -->
+                            <div class="main_image_container">
+                                <div class="mb-3" style="width: 100%; height: 600px">
+                                    <a href="{{ asset('images/products/' ~ product.images|first.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
+                                        <img id="main_product_img" src="{{ asset('images/products/' ~ product.images|first.imageName) }}" alt="{{ product.name }}" style="height: 100%; width: 100%; object-fit: cover;" />
                                     </a>
                                 </div>
                             </div>
-                            {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}
                             <div class="row">
                                 {% for media in product.images %}
                                     {% if loop.index > 1 %}
                                         <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
                                             <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                                                {% if loop.last %}
-                                                    <!-- C'est la dernière itération, donc c'est une vidéo -->
+                                                {% if loop.last and isLastMediaVideo %}
+                                                    <!-- C'est la dernière itération et c'est une vidéo -->
                                                     <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" data-type="video" data-width="640" data-height="360">
                                                         <video controls style="width: 100%; height: 100%; object-fit: cover;">
                                                             <source src="{{ asset('images/products/' ~ media.imageName) }}" type="video/mp4">
@@ -46,45 +45,7 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                    </div>    #}
-                    <div class="product-image">
-    {% if product.images|length > 0 %}
-        {% set lastMedia = product.images|last %}
-        {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}  <!-- Déterminer si la dernière média est une vidéo -->
-        <div class="main_image_container">
-            <div class="mb-3" style="width: 100%; height: 600px">
-                <a href="{{ asset('images/products/' ~ product.images|first.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                    <img id="main_product_img" src="{{ asset('images/products/' ~ product.images|first.imageName) }}" alt="{{ product.name }}" style="height: 100%; width: 100%; object-fit: cover;" />
-                </a>
-            </div>
-        </div>
-        <div class="row">
-            {% for media in product.images %}
-                {% if loop.index > 1 %}
-                    <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
-                        <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                            {% if loop.last and isLastMediaVideo %}
-                                <!-- C'est la dernière itération et c'est une vidéo -->
-                                <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" data-type="video" data-width="640" data-height="360">
-                                    <video controls style="width: 100%; height: 100%; object-fit: cover;">
-                                        <source src="{{ asset('images/products/' ~ media.imageName) }}" type="video/mp4">
-                                        Votre navigateur ne prend pas en charge la balise vidéo.
-                                    </video>
-                                    <i class="fas fa-play-circle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 2rem;"></i>
-                                </a>
-                            {% else %}
-                                <!-- Ce n'est pas la dernière itération, donc c'est une image -->
-                                <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                    <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ media.imageName) }}" data-large-src="{{ asset('images/products/' ~ media.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
-                                </a>
-                            {% endif %}
-                        </div>
                     </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    {% endif %}
-</div>
 
                 </div>
                 <div class="col-lg-6 col-md-6">
@@ -256,9 +217,6 @@
                                         {% for review in reviews %}
                                             {% if review.comment %}
                                                 <li>
-                                                    {# <div class="comment_img">
-                                                        <img src="{{ review.user.profilePicturePath | default('http://placehold.it/50') }}" alt="{{ review.user.username }}" />
-                                                    </div> #}
                                                     <div class="comment_block">
                                                         <div class="rating_wrap">
                                                             <div class="rating">
@@ -272,94 +230,49 @@
                                                         <div class="description">
                                                             <p>{{ review.comment }}</p>
                                                         </div>
+                                                        <div class="review_images mt-4">
+                                                            {% if review.rewiewImage %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImage) }}" alt="Image 1" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages2 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 2">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" alt="Image 2" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages3 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 3">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" alt="Image 3" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages4 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 4">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" alt="Image 4" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages5 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 5">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" alt="Image 5" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="review_video">
+                                                            {% if review.reviewVideo %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.reviewVideo) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Video" data-type="video">
+                                                                    <video id="video-{{ review.id }}" controls style="width: 300px; height: auto;">
+                                                                        <source src="{{ asset('uploads/images/' ~ review.reviewVideo) }}" type="video/mp4">
+                                                                        Your browser does not support the video tag.
+                                                                    </video>
+                                                                </a>
+                                                            {% endif %}
+                                                        </div>
                                                     </div>
                                                 </li>
                                             {% endif %}
                                         {% endfor %}
                                     </ul>
-
                                 </div>                       
-                                {# <div class="review_form field_form">
-                                    {% if orders|length == 0 %}
-                                        Vous devez avoir acheté ce produit pour laisser un commentaire!
-                                    {% else %}
-                                    {% for order in orders %}
-                                    {% if order and order.state == 4 %}
-                                    <h5>Ajoutez un commentaire</h5>
-                                
-                                    {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
-                                
-                                    <div class="form-group col-12">
-                                        <div class="star_rating">
-                                            <span data-value="1"><i class="far fa-star"></i></span>
-                                            <span data-value="2"><i class="far fa-star"></i></span>
-                                            <span data-value="3"><i class="far fa-star"></i></span>
-                                            <span data-value="4"><i class="far fa-star"></i></span>
-                                            <span data-value="5"><i class="far fa-star"></i></span>
-                                            {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group col-12">
-                                        {{ form_widget(form.comment) }}
-                                        {# {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
-                                    </div>
-                                
-                                    <div class="form-group col-12">
-                                        {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
-                                    </div>
-                                
-                                    {{ form_end(form) }}
-                                    {% elseif order.state == 1 or order.state == 2 or order.state == 3 %}
-                                        Vous devez recevoir le produit pour laisser un commentaire!
-                                    {% endif %}
-                                    {% endfor %}
-                                    {% endif %}
-                                </div> #}
-    
-{# <div class="review_form field_form">
-    {% set hasPermissionToComment = false %}
-    
-    {% for order in orders %}
-        {% if order.state == 4 %}
-            {% for orderDetail in order.orderDetails %}
-                {% if orderDetail.productName == product.name %}
-                    {% set hasPermissionToComment = true %}
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    {% endfor %}
-
-    {% if hasPermissionToComment %}
-        <h5>Ajoutez un commentaire</h5>
-
-        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
-
-        <div class="form-group col-12">
-            <div class="star_rating">
-                <span data-value="1"><i class="far fa-star"></i></span>
-                <span data-value="2"><i class="far fa-star"></i></span>
-                <span data-value="3"><i class="far fa-star"></i></span>
-                <span data-value="4"><i class="far fa-star"></i></span>
-                <span data-value="5"><i class="far fa-star"></i></span>
-                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
-            </div>
-        </div>
-
-        <div class="form-group col-12">
-            {{ form_widget(form.comment) }}
-        </div>
-
-        <div class="form-group col-12">
-            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
-        </div>
-
-        {{ form_end(form) }}
-    {% else %}
-        Vous n'avez pas la permission de commenter ce produit.
-    {% endif %}
-</div> #}
-
 <div class="review_form field_form">
     {% set hasBoughtProduct = false %}
     {% set hasReceivedProduct = false %}
@@ -397,6 +310,17 @@
 
         <div class="form-group col-12">
             {{ form_widget(form.comment) }}
+        </div>
+
+        <div class="form-group p-4">
+            <h5>Ajouter des images</h5>
+                {{ form_widget(form.rewiewImage) }}
+                {{ form_widget(form.rewiewImages2) }}
+                {{ form_widget(form.rewiewImages3) }}
+                {{ form_widget(form.rewiewImages4) }}
+                {{ form_widget(form.rewiewImages5) }}
+             <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
+            {{ form_widget(form.reviewVideo) }}
         </div>
 
         <div class="form-group col-12">
@@ -442,7 +366,7 @@
         </div>
     </div>
 
- {% block javascripts %}
+
 <script>
     (function() {  // IIFE pour encapsuler le code
         // Fonctionnalité : Elevate Zoom
@@ -506,8 +430,12 @@
 
 
     })();
+
+
+    
+    
 </script>
-{% endblock %}
+
 
 {% endblock %}
 

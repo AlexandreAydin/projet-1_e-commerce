@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Entity\RewiewsProduct;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -29,8 +30,61 @@ class RewiewsProductType extends AbstractType
                     'rows' => 4,
                 ]
             ])
+            ->add('rewiewImage', FileType::class, [
+                'label' => 'Image',
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'mt-2'
+                ],
+                'mapped' => false,
+                'required' => false,
+            ])
+            ->add('rewiewImages2', FileType::class, [
+                'label' => 'Images 2',
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'mt-2'
+                ],
+                'mapped' => false,
+                'required' => false,
+            ])
+            ->add('rewiewImages3', FileType::class, [
+                'label' => 'Images 3',
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'mt-2'
+                ],
+                'mapped' => false,
+                'required' => false,
+            ])
+            ->add('rewiewImages4', FileType::class, [
+                'label' => 'Images 4',
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'mt-2'
+                ],
+                'mapped' => false,
+                'required' => false,
+            ])
+            ->add('rewiewImages5', FileType::class, [
+                'label' => 'Images 5',
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'mt-2'
+                ],
+                'mapped' => false,
+                'required' => false,
+            ])
+            ->add('reviewVideo', FileType::class, [
+                'label' => 'Video',
+                'attr' => [
+                    'accept' => 'video/*'
+                ],
+                'mapped' => false,
+                'required' => false,
+            ])
             ->add('submit', SubmitType::class, [
-                'label' => 'Submit Review',
+                'label' => 'Publier',
                 'attr' => [
                     'class' => 'btn btn-fill-out'
                 ]

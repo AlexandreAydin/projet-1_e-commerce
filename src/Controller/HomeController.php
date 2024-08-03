@@ -19,6 +19,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Filesystem\Filesystem;
+use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
+
+
 
 class HomeController extends AbstractController
 {
@@ -66,7 +72,7 @@ class HomeController extends AbstractController
             'productRatings' => $productRatings,
         ]);
     }
-
+    
     #[Route('/produit/{slug}', name: 'app_single_product')]
     public function single_product(
         ?Product $product,
@@ -75,13 +81,14 @@ class HomeController extends AbstractController
         EntityManagerInterface $em,
         Request $request,
         OrderRepository $orderRepo
-    ): Response {
-    
+    ): Response 
+    {
+
         if (!$product) { 
             return $this->redirectToRoute('app_home');
         }
         
-        // permet aux clients de noter uniquement le produit qu'il a acheté 
+        // Permet aux clients de noter uniquement le produit qu'ils ont acheté 
         $orders = $orderRepo->findBy([
             'isPaid' => true, 
             'user' => $this->getUser(),
@@ -96,7 +103,6 @@ class HomeController extends AbstractController
             1 => 0
         ];
         
-        
         foreach ($reviews as $review) {
             $note = $review->getNote();  
             if (isset($starCounts[$note])) {
@@ -106,35 +112,76 @@ class HomeController extends AbstractController
         $newReview = new RewiewsProduct();
         $form = $this->createForm(RewiewsProductType::class, $newReview);
         $form->handleRequest($request);
-    
+
         if ($form->isSubmitted() && $form->isValid()) {
             $newReview->setUser($this->getUser())
                     ->setProduct($product)
                     ->setCreatedAt(new \DateTimeImmutable());
-    
+
             $existingReview = $reviewsRepo->findOneBy([
                 'user' => $this->getUser(),
                 'product' => $product
             ]);
-    
+
+            // Gestion des fichiers image
+            $imageFiles = [
+                'rewiewImage' => $form->get('rewiewImage')->getData(),
+                'rewiewImages2' => $form->get('rewiewImages2')->getData(),
+                'rewiewImages3' => $form->get('rewiewImages3')->getData(),
+                'rewiewImages4' => $form->get('rewiewImages4')->getData(),
+                'rewiewImages5' => $form->get('rewiewImages5')->getData(),
+                'reviewVideo' => $form->get('reviewVideo')->getData(),
+            ];
+
+            foreach ($imageFiles as $property => $file) {
+                $setter = 'set' . ucfirst($property);
+                if ($file) {
+                    $newFilename = uniqid().'.'.$file->guessExtension();
+                    try {
+                        $file->move(
+                            $this->getParameter('images_directory'), // Chemin où stocker les fichiers
+                            $newFilename
+                        );
+                        if ($existingReview) {
+                            $existingReview->$setter($newFilename);
+                        } else {
+                            $newReview->$setter($newFilename);
+                        }
+                    } catch (FileException $e) {
+                        // Gérer l'erreur
+                    }
+                } else {
+                    // Si aucun fichier n'est soumis et qu'une image existe, la supprimer
+                    if ($existingReview) {
+                        $getter = 'get' . ucfirst($property);
+                        $currentImage = $existingReview->$getter();
+                        if ($currentImage) {
+                            $existingReview->$setter(null); // Supprimer l'image actuelle
+                            // Supprimez le fichier du serveur
+                            $filesystem = new Filesystem();
+                            $filesystem->remove($this->getParameter('images_directory').'/'.$currentImage);
+                        }
+                    }
+                }
+            }
+
             if (!$existingReview) {
                 $em->persist($newReview);
             } else {
                 $existingReview->setComment($newReview->getComment());
                 $existingReview->setNote($newReview->getNote());
+                $existingReview->setUpdatedAt(new \DateTimeImmutable());
             }
-    
+
             $em->flush();
             return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
         }
-    
+
         $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
         $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
         $reviewsWithComments = array_filter($reviews, fn($review) => !empty($review->getComment()));
         $reviewCount = count($reviewsWithComments);
         $totalReviews = count($reviews);
-
-        $averageRating = $reviewsRepo->getAverageRatingForProduct($product);
 
         $relatedRatings = [];
         foreach ($product->getCategorie()->getProducts() as $relatedProduct) {
@@ -143,21 +190,20 @@ class HomeController extends AbstractController
             }
         }
 
-    
         return $this->render('pages/home/single_product.html.twig', [
             'product' => $product,   
             'cart' => $cartService->getFullCart(),
             'reviews' => $reviews,
-            'averageRating' => $averageRating,// permet d'affiché la moyen des étoiles et la note de d'un seul utilisateur
+            'averageRating' => $averageRating, // Afficher la moyenne des étoiles et la note d'un seul utilisateur
             'form' => $form->createView(),
             'reviewCount' => $reviewCount,
             'orders' => $orders,
-            'starCounts' => $starCounts,//permet de d'affiché le % des personnes qui ont mis combien d'étoile
+            'starCounts' => $starCounts, // Afficher le % des personnes qui ont mis combien d'étoiles
             'totalReviews' => $totalReviews,
-            'relatedRatings' => $relatedRatings//permet d'affiché les étoiles des autres produit qui se trouve dans details_product
+            'relatedRatings' => $relatedRatings // Afficher les étoiles des autres produits dans details_product
         ]);
     }
-    
+
     
 
 
