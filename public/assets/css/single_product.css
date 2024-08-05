@@ -1,0 +1,7 @@
+.comment_list .description p {
+    color: black;
+}
+
+.panel-heading h5:hover  {
+    color: #E439A1;
+}

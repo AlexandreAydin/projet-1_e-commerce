@@ -1,9 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Ama noz poruduit{% endblock %}
+{% block stylesheets %}
+    {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
+    <link rel="stylesheet" href="{{ asset('assets/css/single_product.css') }}">
+{% endblock %}
 
 {% block body %}
-
+     <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
     <div class="section">
         <div class="container">
             <div class="row">
@@ -166,7 +170,7 @@
                                   
                                     <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
                                         <div class="a-row">
-                                            <h2>Commentaires client</h2>
+                                            <h3>Commentaires client</h3>
                                         </div>
                                         <div class="rating_wrap mb-2">
                                             <div class="rating">
@@ -227,9 +231,11 @@
                                                             <span class="review_author">{{ review.user.username }}</span>
                                                             <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
                                                         </p>
+                                                        <hr>
                                                         <div class="description">
                                                             <p>{{ review.comment }}</p>
                                                         </div>
+                                                        <hr>
                                                         <div class="review_images mt-4">
                                                             {% if review.rewiewImage %}
                                                                 <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
@@ -312,7 +318,7 @@
             {{ form_widget(form.comment) }}
         </div>
 
-        <div class="form-group p-4">
+        {# <div class="form-group p-4">
             <h5>Ajouter des images</h5>
                 {{ form_widget(form.rewiewImage) }}
                 {{ form_widget(form.rewiewImages2) }}
@@ -321,6 +327,59 @@
                 {{ form_widget(form.rewiewImages5) }}
              <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
             {{ form_widget(form.reviewVideo) }}
+        </div> #}
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div class="panel-heading" role="tab" id="headingImages"> 
+                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
+                            <div class="d-flex">
+                                <h5> Ajouter des images </h5>
+                                <i class="fa-solid fa-chevron-down m-1"></i>
+                            </div>
+                        </a>
+                    </div>
+                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <div id="filter_article_numberOfPlaces">
+                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                        <div class="">
+                                            {{ form_widget(form.rewiewImage) }}
+                                            {{ form_widget(form.rewiewImages2) }}
+                                            {{ form_widget(form.rewiewImages3) }}
+                                            {{ form_widget(form.rewiewImages4) }}
+                                            {{ form_widget(form.rewiewImages5) }}
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <hr>
+                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
+                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
+                            <div class="d-flex">
+                                <h5> Ajouter une vidéo </h5>
+                                <i class="fa-solid fa-chevron-down m-1"></i>
+                            <hr>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <div id="filter_article_numberOfPlaces">
+                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                        <div class="">
+                                            {{ form_widget(form.reviewVideo) }}
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="form-group col-12">
@@ -365,7 +424,6 @@
             </div>
         </div>
     </div>
-
 
 <script>
     (function() {  // IIFE pour encapsuler le code
