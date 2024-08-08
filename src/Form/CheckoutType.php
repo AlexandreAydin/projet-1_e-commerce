@@ -24,7 +24,7 @@ class CheckoutType extends AbstractType
                 return  $address->getfullName() . ', ' . $address->getAddress() . ', ' . $address->getCity() . ', ' . $address->getCodePostal();
             },
             'required' => true,
-            'placeholder' => 'Choose an address',
+            'placeholder' => '-- Choisir une adresse -- ',
             'multiple' => false,
             'expanded' => false, 
             'query_builder' => function ($repo) use ($user) {
@@ -39,7 +39,7 @@ class CheckoutType extends AbstractType
                 return  $address->getFullName() . ', ' . $address->getAddress() . ', ' . $address->getCity() . ', ' . $address->getCodePostal();
             },
             'required' => true,
-            'placeholder' => 'Choose an address',
+            'placeholder' => '-- Choisir une adresse -- ',
             'multiple' => false,
             'expanded' => false, 
             'query_builder' => function ($repo) use ($user) {
