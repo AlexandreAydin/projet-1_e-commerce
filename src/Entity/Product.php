@@ -35,7 +35,7 @@ class Product
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $moreInformations = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type:"integer", nullable: true)]
     private ?float $price = null;
 
     #[ORM\Column(nullable: false)]
@@ -59,7 +59,7 @@ class Product
     #[ORM\ManyToOne(inversedBy: 'products')]
     private ?Categorie $categorie = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type:"integer", nullable: true)]
     private ?int $quantity = null;
 
     /**
@@ -73,7 +73,7 @@ class Product
     #[ORM\Column(length: 255, unique:true)]
     private ?string $slug = null;
 
-     /**
+    /**
      * @ORM\Column(type="datetime")
      */
     private $updatedAt;
@@ -99,6 +99,9 @@ class Product
     #[ORM\ManyToMany(targetEntity: Wishlist::class, mappedBy: 'products')]
     private Collection $wishlists;
 
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductVariant::class, cascade: ['persist', 'remove'])]
+    private Collection $productVariants;
+
 
         public function __construct()
         {
@@ -110,6 +113,7 @@ class Product
             $this->rewiewsProducts = new ArrayCollection();
             $this->cartDetails = new ArrayCollection();
             $this->wishlists = new ArrayCollection();
+            $this->productVariants = new ArrayCollection();
         }
 
         public function __toString(): string
@@ -503,6 +507,36 @@ class Product
     {
         if ($this->wishlists->removeElement($wishlist)) {
             $wishlist->removeProduct($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ProductVariant>
+     */
+    public function getProductVariants(): Collection
+    {
+        return $this->productVariants;
+    }
+
+    public function addProductVariant(ProductVariant $productVariant): static
+    {
+        if (!$this->productVariants->contains($productVariant)) {
+            $this->productVariants->add($productVariant);
+            $productVariant->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProductVariant(ProductVariant $productVariant): static
+    {
+        if ($this->productVariants->removeElement($productVariant)) {
+            // set the owning side to null (unless already changed)
+            if ($productVariant->getProduct() === $this) {
+                $productVariant->setProduct(null);
+            }
         }
 
         return $this;

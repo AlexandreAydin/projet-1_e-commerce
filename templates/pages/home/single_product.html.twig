@@ -5,65 +5,46 @@
     {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
     <link rel="stylesheet" href="{{ asset('assets/css/single_product.css') }}">
 {% endblock %}
-
+ 
 {% block body %}
      <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
     <div class="section">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
-                    <div class="product-image">
-                        {% if product.images|length > 0 %}
-                            {% set lastMedia = product.images|last %}
-                            {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}  <!-- Déterminer si la dernière média est une vidéo -->
-                            <div class="main_image_container">
-                                <div class="mb-3" style="width: 100%; height: 600px">
-                                    <a href="{{ asset('images/products/' ~ product.images|first.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                        <img id="main_product_img" src="{{ asset('images/products/' ~ product.images|first.imageName) }}" alt="{{ product.name }}" style="height: 100%; width: 100%; object-fit: cover;" />
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="row">
-                                {% for media in product.images %}
-                                    {% if loop.index > 1 %}
-                                        <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
-                                            <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                                                {% if loop.last and isLastMediaVideo %}
-                                                    <!-- C'est la dernière itération et c'est une vidéo -->
-                                                    <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" data-type="video" data-width="640" data-height="360">
-                                                        <video controls style="width: 100%; height: 100%; object-fit: cover;">
-                                                            <source src="{{ asset('images/products/' ~ media.imageName) }}" type="video/mp4">
-                                                            Votre navigateur ne prend pas en charge la balise vidéo.
-                                                        </video>
-                                                        <i class="fas fa-play-circle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 2rem;"></i>
-                                                    </a>
-                                                {% else %}
-                                                    <!-- Ce n'est pas la dernière itération, donc c'est une image -->
-                                                    <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                                        <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ media.imageName) }}" data-large-src="{{ asset('images/products/' ~ media.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
-                                                    </a>
-                                                {% endif %}
+
+
+
+
+                                        <div class="product-image">
+                                        <div class="main_image_container">
+                                            <div class="mb-3" style="width: 100%; height: 600px">
+                                                <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
                                             </div>
                                         </div>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
+
+                                        <div id="thumbnails" class="row">
+                                            <!-- Les miniatures seront générées dynamiquement avec JS -->
+                                        </div>
+                                    </div>
+
+
+            
 
                 </div>
+
                 <div class="col-lg-6 col-md-6">
                     <div class="pr_detail">
                         <div class="product_description">
                             <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
                             <div class="product_price">
                                 <span class="price">{{ ((product.price/100) - (product.price/100 * product.off/100)) | number_format(2, ',', '.') }} €</span>
-                 {% if product.off is defined and product.off > 0 %}
-                <del>{{ (product.price / 100)|number_format(2, ',', '.') }} €</del>
-                    <div class="on_sale">
-                        <span>{{product.off}}% réduction</span>
-                    </div>
-                {% endif %}
+                                {% if product.off is defined and product.off > 0 %}
+                                <del>{{ (product.price / 100)|number_format(2, ',', '.') }} €</del>
+                                    <div class="on_sale">
+                                        <span>{{product.off}}% réduction</span>
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="rating_wrap">
                                 <div class="rating">
@@ -86,43 +67,83 @@
                             </div>
                         </div>
                         <hr />
-                        {# <div class="product-quantity mt-4" data-title="Quantity">
-                            <div class="quantity">
-                                <input type="button" value="-" class="minus">  </input>
-                                <input type="text" name="quantity" value="" title="Qty" class="qty" size="4">
-                                <a type="button" value="+" class="plus"> + </a>
+
+                        {% set displayed_sizes = [] %}
+                        {% set displayed_colors = [] %}
+                        
+                        <!-- Sélection de la couleur -->
+                        <div class="d-flex variant-product">
+                            <!-- Sélection de la couleur -->
+                            <div class="form-group">
+                                <label for="color">Couleur :</label>
+                                <select name="color" id="color" class="form-control">
+                                    {% set displayed_colors = [] %}
+                                    {% for variant in product.productVariants %}
+                                        {% if variant.color not in displayed_colors %}
+                                            <option value="{{ variant.color }}">{{ variant.color }}</option>
+                                            {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
                             </div>
-                        </div> #}
-                        {% if product.quantity == 0  %}
-                            <div>
-                                <br>
-                                <span> 
-                                    Ce produit est indisponible pour le moment.
-                                </span>
-                                <br>
-                                <br>
+                            <div class="form-group mx-4">
+                                <label for="size">Taille :</label>
+                                <select name="size" id="size" class="form-control">
+                                    {% for variant in product.productVariants %}
+                                        {% for size in variant.sizes %}
+                                            <option value="{{ size }}" data-color="{{ variant.color }}">{{ size }}</option>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </select>
                             </div>
-                        {% else %}
-                        <div class="cart-product-quantity">
-                            <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
+                        </div>
+
+                         <div class="product_price d-flex variant-price">
+                                    <span id="variant-price" class="price">-- €</span> <!-- Prix après réduction -->
+                                    <del id="old-price" style="display: none;">-- €</del> <!-- Prix original barré -->
+                                    <div id="variant-off" class="on_sale" style="display: none;">
+                                    <span>--% réduction</span> <!-- Réduction affichée -->
+                                </div>
+                            </div>
+                        
+             
+                        <div class="cart_extra col-12  ">
+                                {% if product.quantity == 0  %}
+                                    <div>
+                                        <br>
+                                        <span> 
+                                            Ce produit est indisponible pour le moment.
+                                        </span>
+                                        <br>
+                                        <br>
+                                    </div>
+                                {% else %}
+                                <div class="cart-product-quantity mb-4">
+                                    <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
                                         name="quantity" value="1" title="Qty" size="4" class="qty"><input type="button"
-                                        value="+" class="plus"></div>
+                                        value="+" class="plus">
+                                    </div>
+                                </div>
+                                {# TODO: Implement product quantity selection #}
+                                <div class="cart_btn mb-4">
+                                    <a href="/panier/{{product.id}}/ajouter/1" class="btn btn-fill-out btn-addtocart" type="button">
+                                        <i class="icon-basket-loaded"></i>
+                                        Ajouter au panier
+                                    </a>
+                                    <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
+                                    <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
+                                </div>
                         </div>
-                        <div class="cart_extra mt-4">
-                            {# TODO: Implement product quantity selection #}
-                            <div class="cart_btn">
-                            
-                                <a href="/panier/{{product.id}}/ajouter/1" class="btn btn-fill-out btn-addtocart" type="button">
-                                    <i class="icon-basket-loaded"></i>
-                                    Ajouter au panier
-                                </a>
-                                <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
-                                <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
-                            </div>
-                        </div>
+                   
+                    
+                {# <pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                <pre>{{ product.productVariants | json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+
+
+                        <pre>{{ dump(variants) }}</pre> #}
                         {% endif %}
                         <hr />
-                        <ul class="product-meta">
+                        <ul class="product-meta col-12">
                             <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
                             {# <li>Tags: {{ product.tags }}</li> #}
                         </ul>
@@ -269,118 +290,116 @@
                                         {% endfor %}
                                     </ul>
                                 </div>                       
-<div class="review_form field_form">
-    {% set hasBoughtProduct = false %}
-    {% set hasReceivedProduct = false %}
-    
-    {% for order in orders %}
-        {% for orderDetail in order.orderDetails %}
-            {% if orderDetail.productName == product.name %}
-                {% set hasBoughtProduct = true %}
-                {% if order.state == 4 %}
-                    {% set hasReceivedProduct = true %}
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    {% endfor %}
+                                <div class="review_form field_form">
+                                    {% set hasBoughtProduct = false %}
+                                    {% set hasReceivedProduct = false %}
+                                    
+                                    {% for order in orders %}
+                                        {% for orderDetail in order.orderDetails %}
+                                            {% if orderDetail.productName == product.name %}
+                                                {% set hasBoughtProduct = true %}
+                                                {% if order.state == 4 %}
+                                                    {% set hasReceivedProduct = true %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
 
-    {% if not hasBoughtProduct %}
-        Vous devez avoir acheté ce produit pour laisser un commentaire!
-    {% elseif not hasReceivedProduct %}
-        Vous devez recevoir le produit pour laisser un commentaire!
-    {% else %}
-        <h5>Ajoutez un commentaire</h5>
+                                    {% if not hasBoughtProduct %}
+                                        Vous devez avoir acheté ce produit pour laisser un commentaire!
+                                    {% elseif not hasReceivedProduct %}
+                                        Vous devez recevoir le produit pour laisser un commentaire!
+                                    {% else %}
+                                        <h5>Ajoutez un commentaire</h5>
 
-        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+                                        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
 
-        <div class="form-group col-12">
-            <div class="star_rating">
-                <span data-value="1"><i class="far fa-star"></i></span>
-                <span data-value="2"><i class="far fa-star"></i></span>
-                <span data-value="3"><i class="far fa-star"></i></span>
-                <span data-value="4"><i class="far fa-star"></i></span>
-                <span data-value="5"><i class="far fa-star"></i></span>
-                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
-            </div>
-        </div>
-
-        <div class="form-group col-12">
-            {{ form_widget(form.comment) }}
-        </div>
-
-        {# <div class="form-group p-4">
-            <h5>Ajouter des images</h5>
-                {{ form_widget(form.rewiewImage) }}
-                {{ form_widget(form.rewiewImages2) }}
-                {{ form_widget(form.rewiewImages3) }}
-                {{ form_widget(form.rewiewImages4) }}
-                {{ form_widget(form.rewiewImages5) }}
-             <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
-            {{ form_widget(form.reviewVideo) }}
-        </div> #}
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <div class="panel-heading" role="tab" id="headingImages"> 
-                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
-                            <div class="d-flex">
-                                <h5> Ajouter des images </h5>
-                                <i class="fa-solid fa-chevron-down m-1"></i>
-                            </div>
-                        </a>
-                    </div>
-                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <div id="filter_article_numberOfPlaces">
-                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
-                                        <div class="">
-                                            {{ form_widget(form.rewiewImage) }}
-                                            {{ form_widget(form.rewiewImages2) }}
-                                            {{ form_widget(form.rewiewImages3) }}
-                                            {{ form_widget(form.rewiewImages4) }}
-                                            {{ form_widget(form.rewiewImages5) }}
+                                        <div class="form-group col-12">
+                                            <div class="star_rating">
+                                                <span data-value="1"><i class="far fa-star"></i></span>
+                                                <span data-value="2"><i class="far fa-star"></i></span>
+                                                <span data-value="3"><i class="far fa-star"></i></span>
+                                                <span data-value="4"><i class="far fa-star"></i></span>
+                                                <span data-value="5"><i class="far fa-star"></i></span>
+                                                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                                            </div>
                                         </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                     <hr>
-                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
-                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
-                            <div class="d-flex">
-                                <h5> Ajouter une vidéo </h5>
-                                <i class="fa-solid fa-chevron-down m-1"></i>
-                            <hr>
-                            </div>
-                        </a>
-                    </div>
 
-                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <div id="filter_article_numberOfPlaces">
-                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
-                                        <div class="">
+                                        <div class="form-group col-12">
+                                            {{ form_widget(form.comment) }}
+                                        </div>
+
+                                        {# <div class="form-group p-4">
+                                            <h5>Ajouter des images</h5>
+                                                {{ form_widget(form.rewiewImage) }}
+                                                {{ form_widget(form.rewiewImages2) }}
+                                                {{ form_widget(form.rewiewImages3) }}
+                                                {{ form_widget(form.rewiewImages4) }}
+                                                {{ form_widget(form.rewiewImages5) }}
+                                            <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
                                             {{ form_widget(form.reviewVideo) }}
+                                        </div> #}
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="panel-heading" role="tab" id="headingImages"> 
+                                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
+                                                            <div class="d-flex">
+                                                                <h5> Ajouter des images </h5>
+                                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+                                                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
+                                                        <div class="panel-body">
+                                                            <div class="form-group">
+                                                                <div id="filter_article_numberOfPlaces">
+                                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                                        <div class="">
+                                                                            {{ form_widget(form.rewiewImage) }}
+                                                                            {{ form_widget(form.rewiewImages2) }}
+                                                                            {{ form_widget(form.rewiewImages3) }}
+                                                                            {{ form_widget(form.rewiewImages4) }}
+                                                                            {{ form_widget(form.rewiewImages5) }}
+                                                                        </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
+                                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
+                                                            <div class="d-flex">
+                                                                <h5> Ajouter une vidéo </h5>
+                                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                                            <hr>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+
+                                                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
+                                                        <div class="panel-body">
+                                                            <div class="form-group">
+                                                                <div id="filter_article_numberOfPlaces">
+                                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                                        <div class="">
+                                                                            {{ form_widget(form.reviewVideo) }}
+                                                                        </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        <div class="form-group col-12">
+                                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+                                        </div>
+
+                                        {{ form_end(form) }}
+                                    {% endif %}
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-group col-12">
-            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
-        </div>
-
-        {{ form_end(form) }}
-    {% endif %}
-</div>
-
-
 
 
                             </div>
@@ -415,17 +434,26 @@
         </div>
     </div>
 
+
+
+
+<script>
+    const variants = {{ product.productVariants|json_encode()|raw }};
+    console.log('Variants:', variants); // Vérification des variantes dans la console
+</script>
+
+
 <script>
     (function() {  // IIFE pour encapsuler le code
         // Fonctionnalité : Elevate Zoom
         function initElevateZoom() {
-            $('#main_product_img').elevateZoom({
+            $('#main_product_imgs').elevateZoom({
                 zoomType: "inner",
                 cursor: "crosshair"
             });
 
             {% for image in product.images %}
-            $('#thumbnail_{{ loop.index }}').elevateZoom({
+            $('#thumbnails_{{ loop.index }}').elevateZoom({
                 zoomType: "inner",
                 cursor: "crosshair"
             });
@@ -470,7 +498,6 @@
             });
         }
 
-
         document.addEventListener("DOMContentLoaded", function() {
             handleStarRating();
         
@@ -480,8 +507,496 @@
     })();
 
 
+    {# TODO: si nous avons L disponible avec Red ce la permet d'affiché uniquement L quand on choisi la couleur  #}
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorSelect = document.getElementById('color');
+        const sizeSelect = document.getElementById('size');
+        const variants = {{ product.productVariants|json_encode()|raw }};
+
+        // Fonction pour mettre à jour les tailles en fonction de la couleur sélectionnée
+        function updateSizes() {
+            const selectedColor = colorSelect.value;
+
+            // Affiche toutes les tailles d'abord
+            Array.from(sizeSelect.options).forEach(option => {
+                option.disabled = false; // Active toutes les options
+                option.hidden = false; // Affiche toutes les options
+            });
+
+            // Désactiver les tailles qui ne correspondent pas à la couleur sélectionnée
+            Array.from(sizeSelect.options).forEach(option => {
+                const optionColor = option.getAttribute('data-color'); // Récupérer l'attribut "data-color"
+                if (optionColor !== selectedColor) {
+                    option.disabled = true; // Désactiver l'option
+                    option.hidden = true; // Masquer l'option
+                }
+            });
+
+            // Sélectionner la première taille disponible après mise à jour
+            const firstAvailableOption = Array.from(sizeSelect.options).find(option => !option.disabled);
+            if (firstAvailableOption) {
+                firstAvailableOption.selected = true;
+            }
+        }
+
+        // Mettre à jour les tailles lors de la sélection d'une couleur
+        colorSelect.addEventListener('change', updateSizes);
+
+        // Appel initial pour afficher les tailles dès le chargement de la page
+        updateSizes();
+    });
+
+
+
+
+
+
+
+    {# document.addEventListener('DOMContentLoaded', function() {
+        const sizeSelect = document.getElementById('size');
+        const colorSelect = document.getElementById('color');
+        const priceDisplay = document.getElementById('variant-price');
+
+        // Injecter les variantes préparées depuis PHP en utilisant json_encode
+        let variants = {{ variants|json_encode()|raw }};
+        
+        console.log('Variants:', variants); // Vérifie la structure dans la console
+
+        // Fonction pour obtenir une variante par taille et couleur
+        function getVariantBySizeAndColor(selectedSize, selectedColor) {
+            return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+        }
+
+        // Fonction pour mettre à jour le prix selon la sélection de taille et de couleur
+        function updatePrice() {
+            const selectedSize = sizeSelect.value;
+            const selectedColor = colorSelect.value;
+
+            const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+            if (selectedVariant) {
+                priceDisplay.textContent = `${selectedVariant.price} €`;
+            } else {
+                priceDisplay.textContent = 'Prix indisponible';
+            }
+        }
+
+        // Mettre à jour le prix lors des changements de taille et de couleur
+        sizeSelect.addEventListener('change', updatePrice);
+        colorSelect.addEventListener('change', updatePrice);
+
+        // Initialiser avec la première variante sélectionnée
+        updatePrice();
+    }); #}
     
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const priceDisplay = document.getElementById('variant-price');
+    const variantImages = document.querySelectorAll('.product-variant-image'); // Sélectionner toutes les images des variantes
+
+    // Injecter les variantes préparées depuis PHP en utilisant json_encode
+    let variants = {{ variants|json_encode()|raw }};
     
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+    }
+
+    // Fonction pour mettre à jour le prix selon la sélection de taille et de couleur
+    function updatePrice() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            priceDisplay.textContent = `${selectedVariant.price} €`;
+        } else {
+            priceDisplay.textContent = 'Prix indisponible';
+        }
+    }
+
+    // Fonction pour mettre à jour les images selon la variante sélectionnée
+    function updateVariantImages() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        // Trouver la variante correspondant à la taille et couleur choisies
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            // Masquer toutes les images des variantes
+            variantImages.forEach(image => {
+                image.style.display = 'none';  // Masquer toutes les images
+
+                // Afficher uniquement les images qui sont associées à la variante sélectionnée
+                if (image.getAttribute('data-variant-id') === String(selectedVariant.id)) {
+                    image.style.display = 'block';  // Afficher les images correspondant à la variante sélectionnée
+                }
+            });
+        }
+    }
+
+    // Mettre à jour les images lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updateVariantImages);
+    colorSelect.addEventListener('change', updateVariantImages);
+
+    // Mettre à jour les prix lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updatePrice);
+    colorSelect.addEventListener('change', updatePrice);
+
+    // Initialiser avec la première variante sélectionnée
+    updatePrice();
+    updateVariantImages();
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const priceDisplay = document.getElementById('variant-price');
+    const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
+    const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
+
+    // Injecter les variantes préparées depuis PHP en utilisant json_encode
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+    }
+
+    // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
+    function updatePrice() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+
+            // Affiche le prix réduit
+            priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+            // Affiche l'ancien prix barré si une réduction existe
+            if (selectedVariant.offVariant > 0) {
+                oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
+                oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
+
+                discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
+                discountDisplay.style.display = 'block'; // Affiche la réduction
+            } else {
+                oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
+                discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+            }
+        } else {
+            priceDisplay.textContent = 'Prix indisponible';
+            oldPriceDisplay.style.display = 'none';
+            discountDisplay.style.display = 'none';
+        }
+    }
+
+    // Mettre à jour les prix lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updatePrice);
+    colorSelect.addEventListener('change', updatePrice);
+
+    // Initialiser avec la première variante sélectionnée
+    updatePrice();
+});
+
+
+
+{# document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const mainImageDisplay = document.getElementById('main_product_img');
+    const thumbnailsContainer = document.getElementById('thumbnails'); // Conteneur pour les miniatures des images
+
+    // Injecter les variantes préparées depuis PHP en utilisant json_encode
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+    }
+
+    // Fonction pour mettre à jour les images selon la variante sélectionnée
+    function updateVariantImages() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant && selectedVariant.images.length > 0) {
+            // Mettre à jour l'image principale avec la première image de la variante
+            const firstImage = selectedVariant.images[0].imageName;
+            mainImageDisplay.src = `/images/products/${firstImage}`;
+            mainImageDisplay.setAttribute('data-zoom-image', `/images/products/${firstImage}`);
+
+            // Afficher les miniatures
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures précédentes
+            selectedVariant.images.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'ml-3');
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover;" data-large-src="/images/products/${image.imageName}" />
+                        </a>
+                    </div>
+                `;
+
+                // Ajouter un événement de clic pour changer l'image principale
+                thumbnail.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    changeMainImage(thumbnail.querySelector('img'));
+                });
+
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+
+            // Réinitialiser et appliquer Elevate Zoom sur l'image principale
+            initElevateZoom();
+        } else {
+            // Réinitialiser si aucune image disponible pour la variante
+            mainImageDisplay.src = `/images/products/default.jpg`;
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
+        }
+    }
+
+    // Fonction pour appliquer Elevate Zoom sur l'image principale
+    function initElevateZoom() {
+        $('#main_product_img').elevateZoom({
+            zoomType: "inner",
+            cursor: "crosshair"
+        });
+    }
+
+    // Fonction pour changer l'image principale
+    function changeMainImage(thumbnail) {
+        const mainImage = $('#main_product_img');
+        const largeSrc = thumbnail.getAttribute('data-large-src');
+        mainImage.attr('src', largeSrc);
+        mainImage.data('zoom-image', largeSrc);
+
+        mainImage.removeData('elevateZoom');
+        $('.zoomContainer').remove();
+        initElevateZoom();
+    }
+
+    // Mettre à jour les images lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updateVariantImages);
+    colorSelect.addEventListener('change', updateVariantImages);
+
+    // Initialiser avec la première variante sélectionnée
+    updateVariantImages();
+}); #}
+
+
+
+{# document.addEventListener('DOMContentLoaded', function() {
+    const colorSelect = document.getElementById('color');
+    const mainImage = document.getElementById('main_product_img');
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    
+    // Variantes injectées depuis Twig
+    const variants = {{ variants|json_encode()|raw }};
+    
+    function updateImages(selectedColor) {
+        // Trouver la variante correspondant à la couleur sélectionnée
+        const selectedVariant = variants.find(variant => variant.color === selectedColor);
+
+        if (selectedVariant && selectedVariant.images.length > 0) {
+            // Mettre à jour l'image principale
+            const firstImage = selectedVariant.images[0].imageName;
+            mainImage.src = `/images/products/${firstImage}`;
+
+            // Vider les miniatures précédentes
+            thumbnailsContainer.innerHTML = '';
+
+            // Générer les miniatures
+            selectedVariant.images.forEach(image => {
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3');
+
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                `;
+
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+        } else {
+            // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
+            mainImage.src = `/images/products/default.jpg`;
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
+        }
+    }
+
+    // Mettre à jour les images quand la couleur change
+    colorSelect.addEventListener('change', function() {
+        const selectedColor = this.value;
+        updateImages(selectedColor);
+    });
+
+    // Initialiser avec la première couleur sélectionnée
+    if (colorSelect.value) {
+        updateImages(colorSelect.value);
+    }
+}); #}
+
+
+
+
+
+
+
+
+{# TODO: Qaund on séléction une couleur ce la affiches l'image qui correspondes à la variante#}
+document.addEventListener('DOMContentLoaded', function() {
+    const colorSelect = document.getElementById('color');
+    const mainImage = document.getElementById('main_product_img');
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    
+    // Variantes injectées depuis Twig
+    const variants = {{ variants|json_encode()|raw }};
+    
+    function updateImages(selectedColor) {
+        // Trouver la variante correspondant à la couleur sélectionnée
+        const selectedVariant = variants.find(variant => variant.color === selectedColor);
+
+        if (selectedVariant && selectedVariant.images.length > 0) {
+            // Mettre à jour l'image principale
+            const firstImage = selectedVariant.images[0].imageName;
+            console.log(`Chemin de l'image: /images/products/${firstImage}`);  // Vérifiez ici l'URL générée
+            mainImage.src = `/images/products/${firstImage}`;
+
+            // Vider les miniatures précédentes
+            thumbnailsContainer.innerHTML = '';
+
+            // Générer les miniatures
+            selectedVariant.images.forEach(image => {
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'mx-2');
+
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                `;
+
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+        } else {
+            // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
+            mainImage.src = `/images/products/default.jpg`;
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
+        }
+    }
+
+    // Mettre à jour les images quand la couleur change
+    colorSelect.addEventListener('change', function() {
+        const selectedColor = this.value;
+        updateImages(selectedColor);
+    });
+
+    // Initialiser avec la première couleur sélectionnée
+    if (colorSelect.value) {
+        updateImages(colorSelect.value);
+    }
+});
+
+
+
+
+
+
+
+
+
+
+{# TODO: Affiche le prix et bar le prix de off#}
+document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const priceDisplay = document.getElementById('variant-price');
+    const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
+    const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
+
+    // Variantes injectées depuis PHP via Twig
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.color === selectedColor && variant.sizes.includes(selectedSize));
+    }
+
+    // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
+    function updatePrice() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+
+            // Affiche le prix réduit
+            priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+            // Affiche l'ancien prix barré si une réduction existe
+            if (selectedVariant.offVariant > 0) {
+                oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
+                oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
+
+                discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
+                discountDisplay.style.display = 'block'; // Affiche la réduction
+            } else {
+                oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
+                discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+            }
+        } else {
+            priceDisplay.textContent = 'Prix indisponible';
+            oldPriceDisplay.style.display = 'none';
+            discountDisplay.style.display = 'none';
+        }
+    }
+
+    // Mettre à jour les prix lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updatePrice);
+    colorSelect.addEventListener('change', updatePrice);
+
+    // Initialiser avec la première variante sélectionnée
+    updatePrice();
+});
+
+
+
+
+
+
+
+
+
 </script>
 
 

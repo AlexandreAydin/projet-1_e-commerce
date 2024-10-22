@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ProductImageRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 
@@ -27,9 +28,24 @@ class ProductImage
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'images')]
-    #[ORM\JoinColumn(nullable: false)]
+    // #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'images')]
+    // #[ORM\JoinColumn(nullable: false)]
+    // private ?Product $product = null;
+
+    // #[ORM\ManyToOne(targetEntity: ProductVariant::class, inversedBy: 'variantImages')]
+    // #[ORM\JoinColumn(nullable: false)]
+    // private ?ProductVariant $variantProduct = null;
+
+    #[ORM\ManyToOne(inversedBy: 'images')] // Pour les images associées au produit parent
+    #[ORM\JoinColumn(nullable: true)] // Autorise null car une image peut être associée uniquement à une variante
     private ?Product $product = null;
+
+    #[ORM\ManyToOne(targetEntity: ProductVariant::class, inversedBy: 'variantImages')] // Pour les images associées aux variantes
+    #[ORM\JoinColumn(nullable: true)] // Autorise null pour les mêmes raisons
+    private ?ProductVariant $variantProduct = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $color = null; 
 
 
     public function __toString(): string
@@ -93,6 +109,32 @@ class ProductImage
     public function setProduct(?Product $product): self
     {
         $this->product = $product;
+
+        return $this;
+    }
+
+
+    public function getVariantProduct(): ?ProductVariant
+    {
+        return $this->variantProduct;
+    }
+
+    public function setVariantProduct(?ProductVariant $variantProduct): self
+    {
+        $this->variantProduct = $variantProduct;
+
+        return $this;
+    }
+
+
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(?string $color): self
+    {
+        $this->color = $color;
 
         return $this;
     }

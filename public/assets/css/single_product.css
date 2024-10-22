@@ -2,6 +2,20 @@
     color: black;
 }
 
-.panel-heading h5:hover  {
+/* .panel-heading h5:hover  {
     color: #E439A1;
+} */
+
+
+.variant-product, .variant-price {
+    margin-top: 50px;
+}
+
+.variant-price {
+    margin-left: 40px;
+}
+
+
+.cart_extra{
+    margin-top: 140px;
 }
