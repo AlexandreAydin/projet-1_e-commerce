@@ -58,4 +58,6 @@ class SearchProduct
         return $this;
     }
 
+
+
 }
