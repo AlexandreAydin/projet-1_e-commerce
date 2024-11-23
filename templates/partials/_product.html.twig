@@ -33,7 +33,7 @@
             </div>
             <ul class='d-flex justify-content-between mt-4'>
             <!-- Icône à gauche pour ajouter au panier -->
-                <li class="add-to-cart style-none list-unstyled">
+                {# <li class="add-to-cart style-none list-unstyled">
                     {% if product.quantity > 0 %}
                         <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
                             <i class="icon-basket-loaded"></i>
@@ -41,7 +41,7 @@
                     {% else %}
                         Produit non disponible
                     {% endif %}
-                </li>
+                </li> #}
                 <!-- Icône à droite pour ajouter à la liste de souhaits -->
                 <li class="add-to-wishlist list-unstyled">
                     <a href="{{ path('app_add_to_wishList', {'id': product.id}) }}">

@@ -100,7 +100,7 @@ class Product
     private Collection $wishlists;
 
     #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductVariant::class, cascade: ['persist', 'remove'])]
-    private Collection $productVariants;
+    private Collection $variants;
 
 
         public function __construct()
@@ -113,7 +113,7 @@ class Product
             $this->rewiewsProducts = new ArrayCollection();
             $this->cartDetails = new ArrayCollection();
             $this->wishlists = new ArrayCollection();
-            $this->productVariants = new ArrayCollection();
+            $this->variants = new ArrayCollection();
         }
 
         public function __toString(): string
@@ -515,27 +515,27 @@ class Product
     /**
      * @return Collection<int, ProductVariant>
      */
-    public function getProductVariants(): Collection
+    public function getVariants(): Collection
     {
-        return $this->productVariants;
+        return $this->variants;
     }
 
-    public function addProductVariant(ProductVariant $productVariant): static
+    public function addVariant(ProductVariant $variant): self
     {
-        if (!$this->productVariants->contains($productVariant)) {
-            $this->productVariants->add($productVariant);
-            $productVariant->setProduct($this);
+        if (!$this->variants->contains($variant)) {
+            $this->variants[] = $variant;
+            $variant->setProduct($this);
         }
 
         return $this;
     }
 
-    public function removeProductVariant(ProductVariant $productVariant): static
+    public function removeVariant(ProductVariant $variant): self
     {
-        if ($this->productVariants->removeElement($productVariant)) {
-            // set the owning side to null (unless already changed)
-            if ($productVariant->getProduct() === $this) {
-                $productVariant->setProduct(null);
+        if ($this->variants->removeElement($variant)) {
+            // Set the owning side to null (unless already changed)
+            if ($variant->getProduct() === $this) {
+                $variant->setProduct(null);
             }
         }
 

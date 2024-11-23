@@ -1,0 +1,2887 @@
+<?php
+
+namespace App\Service;
+
+use App\Repository\ProductRepository;
+use App\Repository\ProductVariantRepository;
+use Symfony\Component\HttpFoundation\RequestStack;
+
+class CartService
+{
+    private $requestStack;
+    private $repoProduct;
+    private $repoProductVariant;
+    private $tva = 0.2;
+
+    public function __construct(RequestStack $requestStack, ProductRepository $repoProduct, ProductVariantRepository $repoProductVariant)
+    {
+        $this->requestStack = $requestStack;
+        $this->repoProduct = $repoProduct;
+        $this->repoProductVariant = $repoProductVariant;
+    }
+
+    /**
+     * Obtenir la session courante
+     */
+    private function getSession()
+    {
+        return $this->requestStack->getSession();
+    }
+
+
+
+
+
+
+
+
+
+
+  public function addToCart($variantId, $quantity = 1, $selectedSize = null, $selectedColor = null)
+{
+    $cart = $this->getCart();  // Récupérer le panier de la session
+    
+    // Clé unique basée sur l'ID de la variante, la taille et la couleur
+    $cartKey = $variantId . '_' . $selectedSize . '_' . $selectedColor;
+
+    // Si l'élément existe déjà dans le panier, augmenter la quantité
+    if (!empty($cart[$cartKey])) {
+        $cart[$cartKey]['quantity'] += $quantity;
+    } else {
+        // Sinon, ajouter un nouvel élément avec la taille et la couleur sélectionnées
+        $cart[$cartKey] = [
+            'variantId' => $variantId,
+            'quantity' => $quantity,
+            'selectedSize' => $selectedSize,
+            'selectedColor' => $selectedColor // Enregistrer la couleur sélectionnée
+        ];
+    }
+
+    // Mettre à jour le panier dans la session
+    $this->updateCart($cart);
+}
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+    public function cleanCart()
+{
+    $cart = $this->getCart();
+
+    foreach ($cart as $variantId => $item) {
+        // Si l'élément est un scalaire, on le transforme en tableau avec une quantité par défaut
+        if (!is_array($item)) {
+            $cart[$variantId] = [
+                'quantity' => $item,
+                'selectedSize' => null
+            ];
+        }
+    }
+
+    $this->updateCart($cart);  // Mettre à jour le panier
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Supprimer une quantité spécifique d'un produit du panier
+     */
+    public function deleteFromCart($variantId, $count = 1)
+    {
+        $cart = $this->getCart();
+
+        if (isset($cart[$variantId])) {
+            // Réduire la quantité ou supprimer le produit si quantité atteinte à 0
+            if ($cart[$variantId]['quantity'] <= $count) {
+                unset($cart[$variantId]);
+            } else {
+                $cart[$variantId]['quantity'] -= $count;
+            }
+            $this->updateCart($cart);
+        }
+    }
+
+    /**
+     * Supprimer complètement un produit du panier
+     */
+    public function deleteAllFromCart($variantId)
+    {
+        $cart = $this->getCart();
+
+        if (isset($cart[$variantId])) {
+            unset($cart[$variantId]);
+            $this->updateCart($cart);
+        }
+    }
+
+    /**
+     * Vider complètement le panier
+     */
+    public function deleteCart()
+    {
+        $this->updateCart([]); // Réinitialiser le panier
+    }
+
+    /**
+     * Mettre à jour le panier dans la session
+     */
+    public function updateCart($cart)
+    {
+        $this->getSession()->set('cart', $cart);  // Mettre à jour le panier dans la session
+    }
+    /**
+     * Récupérer le panier depuis la session
+     */
+    public function getCart()
+    {
+        return $this->getSession()->get('cart', []);  // Retourne un tableau vide si le panier n'existe pas encore
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Calculer le panier complet avec les détails des produits, quantités et prix
+     */
+
+
+
+
+     public function getFullCart(): array
+     {
+         $cart = $this->getCart();
+         $fullCart = [];
+         $fullCart['products'] = [];  // Initialisation d'un tableau vide pour 'products'
+         
+         $cart_count = 0;
+         $subTotalTTC = 0;
+     
+         foreach ($cart as $cartKey => $item) {
+             // Vérification que $item est bien un tableau avant d'accéder à ses clés
+             if (is_array($item) && isset($item['variantId'])) {
+                 // Récupérer l'ID de la variante
+                 $variantId = $item['variantId'];
+                 
+                 $variant = $this->repoProductVariant->find($variantId);
+                 if ($variant) {
+                     $product = $variant->getProduct();
+                     $price = $variant->getPrice();
+                     $quantity = $item['quantity'];       // Quantité dans le panier
+                     $selectedSize = $item['selectedSize']; // Taille sélectionnée
+                     $selectedColor = $item['selectedColor']; // Couleur sélectionnée
+     
+                     $fullCart['products'][] = [
+                         'product' => $product,
+                         'variant' => $variant,
+                         'quantity' => $quantity,
+                         'selectedSize' => $selectedSize, // Ajout de la taille sélectionnée dans le tableau
+                         'selectedColor' => $selectedColor // Ajout de la couleur sélectionnée dans le tableau
+                     ];
+     
+                     // Calcul des totaux
+                     $cart_count += $quantity;
+                     $subTotalTTC += $price * $quantity;
+                 }
+             } else {
+                 // Gérer le cas où $item n'est pas un tableau ou n'a pas la structure attendue
+                 // Vous pouvez ajouter un log ou un message d'erreur ici si nécessaire
+                 continue;
+             }
+         }
+     
+         // Calcul des taxes et du sous-total HT
+         $taxes = $subTotalTTC * 0.2;
+         $subTotalHT = $subTotalTTC - $taxes;
+     
+         // Renvoyer le tableau avec 'products' même si vide
+         return [
+             'products' => $fullCart['products'],  // 'products' est toujours présent
+             'data' => [
+                 'cart_count' => $cart_count,
+                 'subTotalHT' => $subTotalHT,
+                 'Taxe' => $taxes,
+                 'subTotalTTC' => $subTotalTTC,
+             ]
+         ];
+     }
+     
+     
+     
+     
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Récupérer la quantité totale de produits dans le panier
+     */
+    public function getCartQuantity(): int
+    {
+        $fullCart = $this->getFullCart();
+        return $fullCart['data']['cart_count'];
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 2. sayfa Cart Controller -->
+
+
+<?php
+
+namespace App\Controller\Cart;
+
+use App\Repository\ProductVariantRepository;
+use App\Service\CartService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+class CartController extends AbstractController
+{
+    private $cartService;
+
+    public function __construct(CartService $cartService)
+    {
+        $this->cartService = $cartService;
+    }
+
+    /**
+     * Affichage du panier
+     */
+    #[Route('/panier', name: 'app_cart')]
+    public function index(): JsonResponse
+    {
+        $cart = $this->cartService->getFullCart();
+
+        dump($cart);exit();
+        // Suppression des données utilisateurs ou d'autres objets non nécessaires
+        foreach ($cart['products'] as &$product) {
+            unset($product['variant']['user']);  // Exemple : suppression de la propriété user
+        }
+        
+        return $this->json($cart);
+    }
+
+
+
+
+
+    
+    /**
+     * Ajouter une variante de produit au panier
+     */
+
+
+     #[Route('/panier/{variantId}/ajouter/{quantity}', name: 'app_add_to_cart')]
+     public function addToCart($variantId, $quantity, Request $request, ProductVariantRepository $repoProductVariant): JsonResponse
+     {
+         // Vérification de la variante
+         $variant = $repoProductVariant->find($variantId);
+         if (!$variant) {
+             return $this->json(['error' => 'Variante non trouvée'], 404);
+         }
+     
+         // Récupération de la taille et de la couleur sélectionnées
+         $selectedSize = $request->query->get('size');
+         $selectedColor = $request->query->get('color');
+         
+         if (!$selectedSize || !$selectedColor) {
+             return $this->json(['error' => 'La taille ou la couleur sélectionnée est manquante'], 400);
+         }
+     
+         // Ajout au panier
+         try {
+             $this->cartService->addToCart($variantId, $quantity, $selectedSize, $selectedColor);
+             return $this->json([
+                 'message' => 'Produit ajouté au panier',
+                 'cart' => $this->cartService->getFullCart(),
+             ]);
+         } catch (\Exception $e) {
+             return $this->json(['error' => 'Erreur lors de l\'ajout au panier: ' . $e->getMessage()], 500);
+         }
+     }
+     
+     
+     
+     
+     
+     
+     
+     
+
+
+
+
+
+    
+
+    /**
+     * Réduire la quantité d'un produit dans le panier
+     */
+    #[Route('/mon-panier/{variantId}/diminuer', name: 'app_delete_to_cart')]
+    public function decreaseFromCart($variantId): JsonResponse
+    {
+        try {
+            $this->cartService->deleteFromCart($variantId);
+            return $this->json([
+                'message' => 'Produit retiré du panier',
+                'cart' => $this->cartService->getFullCart(),
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur lors du retrait du produit: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Supprimer un produit complètement du panier
+     */
+    #[Route('/mon-panier/{variantId}/supprimer', name: 'app_cart_delete')]
+    public function removeFromCart($variantId): JsonResponse
+    {
+        try {
+            $this->cartService->deleteAllFromCart($variantId);
+            return $this->json([
+                'message' => 'Produit supprimé du panier',
+                'cart' => $this->cartService->getFullCart(),
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur lors de la suppression du produit: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Supprimer tous les produits du panier
+     */
+    #[Route('/mon-panier/{variantId}/tout-supprimer', name: 'app_cart_clear')]
+    public function clearCart($variantId, CartService $cartService): JsonResponse
+    {
+        $cartService->deleteAllFromCart($variantId);
+        
+        return $this->json([
+            'message' => 'Produit supprimé du panier',
+            'cart' => $cartService->getFullCart(),
+        ]);
+    }
+
+    /**
+     * Récupérer le panier actuel
+     */
+    #[Route('/mon-panier/obtenir', name: 'app_get_cart')]
+    public function getCart(): JsonResponse
+    {
+        return $this->json($this->cartService->getFullCart());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 3. Home Controller  -->
+
+<?php
+
+namespace App\Controller;
+
+
+use App\Entity\OrderDetails;
+use App\Entity\Product;
+use App\Entity\ProductVariant;
+use App\Entity\RewiewsProduct;
+use App\Entity\SearchProduct;
+use App\Form\RewiewsProductType;
+use App\Form\SearchProductType;
+use App\Repository\OrderRepository;
+use App\Repository\ProductRepository;
+use App\Repository\ProductVariantRepository;
+use App\Repository\RewiewsProductRepository;
+use App\Service\CartService;
+use App\Service\PdfService;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Filesystem\Filesystem;
+use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
+
+
+
+class HomeController extends AbstractController
+{
+    
+    #[Route('/', name: 'app_home')]
+    public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo): Response
+    {
+        // Utiliser la méthode avec tri pour récupérer les produits par ID décroissant
+        $products = $repoProduct->findAllOrderedByIdDesc();
+
+        $productBestSeller = $repoProduct->findByIsBestSellerDesc();
+        $productNewArrival = $repoProduct->findByIsNewArrivalDesc();
+        $productFeatured = $repoProduct->findByIsFeaturedDesc();
+        $productSpecialOffer = $repoProduct->findByIsSpacialOfferDesc();
+
+        $reviews = []; // Array to store reviews for all products.
+        $totalRating = 0; // Initialize total rating.
+
+        $productRatings = []; // Create a new array to hold the average rating for each product.
+
+        foreach ($products as $product) {
+            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+        }
+        
+        foreach ($products as $product) {
+            // Adjust this logic based on your actual data model and relationships.
+            $productReviews = $product->getRewiewsProducts(); 
+            $reviews = array_merge($reviews, $productReviews->toArray());
+        
+            foreach ($productReviews as $review) {
+                $totalRating += $review->getNote(); // Assuming each review has a getNote method that returns the rating.
+            }
+        }
+        
+        $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
+
+        return $this->render('pages/home/index.html.twig', [
+            'controller_name' => 'HomeController',
+            'products' => $products, 
+            'productBestSeller'=> $productBestSeller,
+            'productNewArrival'=> $productNewArrival,
+            'productFeatured' => $productFeatured,
+            'productSpecialOffer'=> $productSpecialOffer,
+            'averageRating' => $averageRating,
+            'productRatings' => $productRatings,
+        ]);
+    }
+    
+    // #[Route('/produit/{slug}', name: 'app_single_product')]
+    // public function single_product(
+    //     ?Product $product,
+    //     CartService $cartService,
+    //     RewiewsProductRepository $reviewsRepo,
+    //     EntityManagerInterface $em,
+    //     Request $request,
+    //     OrderRepository $orderRepo
+    // ): Response 
+    // {
+
+    //     if (!$product) { 
+    //         return $this->redirectToRoute('app_home');
+    //     }
+        
+    //     // Permet aux clients de noter uniquement le produit qu'ils ont acheté 
+    //     $orders = $orderRepo->findBy([
+    //         'isPaid' => true, 
+    //         'user' => $this->getUser(),
+    //     ]);
+            
+    //     $reviews = $reviewsRepo->findBy(['product' => $product]);
+    //     $starCounts = [
+    //         5 => 0,
+    //         4 => 0,
+    //         3 => 0,
+    //         2 => 0,
+    //         1 => 0
+    //     ];
+        
+    //     foreach ($reviews as $review) {
+    //         $note = $review->getNote();  
+    //         if (isset($starCounts[$note])) {
+    //             $starCounts[$note]++;
+    //         }
+    //     }
+    //     $newReview = new RewiewsProduct();
+    //     $form = $this->createForm(RewiewsProductType::class, $newReview);
+    //     $form->handleRequest($request);
+
+    //     if ($form->isSubmitted() && $form->isValid()) {
+    //         $newReview->setUser($this->getUser())
+    //                 ->setProduct($product)
+    //                 ->setCreatedAt(new \DateTimeImmutable());
+
+    //         $existingReview = $reviewsRepo->findOneBy([
+    //             'user' => $this->getUser(),
+    //             'product' => $product
+    //         ]);
+
+    //         // Gestion des fichiers image
+    //         $imageFiles = [
+    //             'rewiewImage' => $form->get('rewiewImage')->getData(),
+    //             'rewiewImages2' => $form->get('rewiewImages2')->getData(),
+    //             'rewiewImages3' => $form->get('rewiewImages3')->getData(),
+    //             'rewiewImages4' => $form->get('rewiewImages4')->getData(),
+    //             'rewiewImages5' => $form->get('rewiewImages5')->getData(),
+    //             'reviewVideo' => $form->get('reviewVideo')->getData(),
+    //         ];
+
+    //         foreach ($imageFiles as $property => $file) {
+    //             $setter = 'set' . ucfirst($property);
+    //             if ($file) {
+    //                 $newFilename = uniqid().'.'.$file->guessExtension();
+    //                 try {
+    //                     $file->move(
+    //                         $this->getParameter('images_directory'), // Chemin où stocker les fichiers
+    //                         $newFilename
+    //                     );
+    //                     if ($existingReview) {
+    //                         $existingReview->$setter($newFilename);
+    //                     } else {
+    //                         $newReview->$setter($newFilename);
+    //                     }
+    //                 } catch (FileException $e) {
+    //                     // Gérer l'erreur
+    //                 }
+    //             } else {
+    //                 // Si aucun fichier n'est soumis et qu'une image existe, la supprimer
+    //                 if ($existingReview) {
+    //                     $getter = 'get' . ucfirst($property);
+    //                     $currentImage = $existingReview->$getter();
+    //                     if ($currentImage) {
+    //                         $existingReview->$setter(null); // Supprimer l'image actuelle
+    //                         // Supprimez le fichier du serveur
+    //                         $filesystem = new Filesystem();
+    //                         $filesystem->remove($this->getParameter('images_directory').'/'.$currentImage);
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         if (!$existingReview) {
+    //             $em->persist($newReview);
+    //         } else {
+    //             $existingReview->setComment($newReview->getComment());
+    //             $existingReview->setNote($newReview->getNote());
+    //             $existingReview->setUpdatedAt(new \DateTimeImmutable());
+    //         }
+
+    //         $em->flush();
+    //         return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
+    //     }
+
+    //     $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
+    //     $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
+    //     $reviewsWithComments = array_filter($reviews, fn($review) => !empty($review->getComment()));
+    //     $reviewCount = count($reviewsWithComments);
+    //     $totalReviews = count($reviews);
+
+    //     $relatedRatings = [];
+    //     foreach ($product->getCategorie()->getProducts() as $relatedProduct) {
+    //         if ($relatedProduct->getId() != $product->getId()) {
+    //             $relatedRatings[$relatedProduct->getId()] = $reviewsRepo->getAverageRatingForProduct($relatedProduct);
+    //         }
+    //     }
+
+    //     return $this->render('pages/home/single_product.html.twig', [
+    //         'product' => $product,   
+    //         'cart' => $cartService->getFullCart(),
+    //         'reviews' => $reviews,
+    //         'averageRating' => $averageRating, // Afficher la moyenne des étoiles et la note d'un seul utilisateur
+    //         'form' => $form->createView(),
+    //         'reviewCount' => $reviewCount,
+    //         'orders' => $orders,
+    //         'starCounts' => $starCounts, // Afficher le % des personnes qui ont mis combien d'étoiles
+    //         'totalReviews' => $totalReviews,
+    //         'relatedRatings' => $relatedRatings // Afficher les étoiles des autres produits dans details_product
+    //     ]);
+    // }
+
+
+
+
+
+
+
+    // #[Route('/produit/{slug}', name: 'app_single_product')]
+    // public function singleProduct(
+    //     ?Product $product,
+    //     CartService $cartService,
+    //     RewiewsProductRepository $reviewsRepo,
+    //     EntityManagerInterface $em,
+    //     Request $request,
+    //     ProductRepository $productRepository,
+    //     OrderRepository $orderRepo
+    // ): Response {
+    //     // Si le produit n'existe pas, redirige vers la page d'accueil
+    //     if (!$product) {
+    //         return $this->redirectToRoute('app_home');
+    //     }
+
+    //     // Récupération des variantes du produit et formatage pour la vue
+    //     $variants = $product->getProductVariants()->toArray();
+    //     $formattedVariants = array_map(function ($variant) {
+    //         return [
+    //             'id' => $variant->getId(),
+    //             'color' => $variant->getColor(),
+    //             'sizes' => $variant->getSizes(), // Tableau des tailles
+    //             'price' => $variant->getPrice(),
+    //             'offVariant' => $variant->getOffVariant(),
+    //             'images' => array_map(function ($image) {
+    //                 return [
+    //                     'id' => $image->getId(),
+    //                     'imageName' => $image->getImageName(),
+    //                 ];
+    //             }, $variant->getVariantImages()->toArray())
+    //         ];
+    //     }, $variants);
+
+    //     // Permet aux clients de noter uniquement le produit qu'ils ont acheté
+    //     $orders = $orderRepo->findBy([
+    //         'isPaid' => true,
+    //         'user' => $this->getUser(),
+    //     ]);
+
+    //     // Récupération des avis clients
+    //     $reviews = $reviewsRepo->findBy(['product' => $product]);
+    //     $starCounts = [
+    //         5 => 0,
+    //         4 => 0,
+    //         3 => 0,
+    //         2 => 0,
+    //         1 => 0
+    //     ];
+    //     foreach ($reviews as $review) {
+    //         $note = $review->getNote();
+    //         if (isset($starCounts[$note])) {
+    //             $starCounts[$note]++;
+    //         }
+    //     }
+
+    //     // Gestion du formulaire de commentaire
+    //     $newReview = new RewiewsProduct();
+    //     $form = $this->createForm(RewiewsProductType::class, $newReview);
+    //     $form->handleRequest($request);
+
+    //     if ($form->isSubmitted() && $form->isValid()) {
+    //                 $newReview->setUser($this->getUser())
+    //                         ->setProduct($product)
+    //                         ->setCreatedAt(new \DateTimeImmutable());
+        
+    //                 $existingReview = $reviewsRepo->findOneBy([
+    //                     'user' => $this->getUser(),
+    //                     'product' => $product
+    //                 ]);
+        
+    //                 // Gestion des fichiers image
+    //                 $imageFiles = [
+    //                     'rewiewImage' => $form->get('rewiewImage')->getData(),
+    //                     'rewiewImages2' => $form->get('rewiewImages2')->getData(),
+    //                     'rewiewImages3' => $form->get('rewiewImages3')->getData(),
+    //                     'rewiewImages4' => $form->get('rewiewImages4')->getData(),
+    //                     'rewiewImages5' => $form->get('rewiewImages5')->getData(),
+    //                     'reviewVideo' => $form->get('reviewVideo')->getData(),
+    //                 ];
+        
+    //                 foreach ($imageFiles as $property => $file) {
+    //                     $setter = 'set' . ucfirst($property);
+    //                     if ($file) {
+    //                         $newFilename = uniqid().'.'.$file->guessExtension();
+    //                         try {
+    //                             $file->move(
+    //                                 $this->getParameter('images_directory'), // Chemin où stocker les fichiers
+    //                                 $newFilename
+    //                             );
+    //                             if ($existingReview) {
+    //                                 $existingReview->$setter($newFilename);
+    //                             } else {
+    //                                 $newReview->$setter($newFilename);
+    //                             }
+    //                         } catch (FileException $e) {
+    //                             // Gérer l'erreur
+    //                         }
+    //                     } else {
+    //                         // Si aucun fichier n'est soumis et qu'une image existe, la supprimer
+    //                         if ($existingReview) {
+    //                             $getter = 'get' . ucfirst($property);
+    //                             $currentImage = $existingReview->$getter();
+    //                             if ($currentImage) {
+    //                                 $existingReview->$setter(null); // Supprimer l'image actuelle
+    //                                 // Supprimez le fichier du serveur
+    //                                 $filesystem = new Filesystem();
+    //                                 $filesystem->remove($this->getParameter('images_directory').'/'.$currentImage);
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+        
+    //                 if (!$existingReview) {
+    //                     $em->persist($newReview);
+    //                 } else {
+    //                     $existingReview->setComment($newReview->getComment());
+    //                     $existingReview->setNote($newReview->getNote());
+    //                     $existingReview->setUpdatedAt(new \DateTimeImmutable());
+    //                 }
+        
+    //                 $em->flush();
+    //                 return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
+    //             }
+
+    //     // Calcul des moyennes de notes et comptage des avis
+    //     $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
+    //     $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
+    //     $reviewsWithComments = array_filter($reviews, fn($review) => !empty($review->getComment()));
+    //     $reviewCount = count($reviewsWithComments);
+    //     $totalReviews = count($reviews);
+
+    //     // Calcul des produits similaires avec leur notation moyenne
+    //     $relatedRatings = [];
+    //     foreach ($product->getCategorie()->getProducts() as $relatedProduct) {
+    //         if ($relatedProduct->getId() != $product->getId()) {
+    //             $relatedRatings[$relatedProduct->getId()] = $reviewsRepo->getAverageRatingForProduct($relatedProduct);
+    //         }
+    //     }
+
+    //     // Extraction des tailles et couleurs disponibles
+    //     $sizes = [];
+    //     $colors = [];
+    //     foreach ($variants as $variant) {
+    //         foreach ($variant->getSizes() as $size) {
+    //             if (!in_array($size, $sizes)) {
+    //                 $sizes[] = $size;
+    //             }
+    //         }
+    //         if (!in_array($variant->getColor(), $colors)) {
+    //             $colors[] = $variant->getColor();
+    //         }
+    //     }
+
+    //     $variants = $product->getProductVariants()->toArray();
+    //     // Rendu de la vue avec les informations récupérées
+    //     return $this->render('pages/home/single_product.html.twig', [
+    //         'product' => $product,
+    //         'cart' => $cartService->getFullCart(),
+    //         'reviews' => $reviews,
+    //         'variants' => $formattedVariants,
+    //         'averageRating' => $averageRating,
+    //         'form' => $form->createView(),
+    //         'reviewCount' => $reviewCount,
+    //         'orders' => $orders,
+    //         'starCounts' => $starCounts,
+    //         'totalReviews' => $totalReviews,
+    //         'sizes' => $variant->getSizes(), 
+    //         'colors' => $colors,
+    //         'relatedRatings' => $relatedRatings,
+    //     ]);
+    // }
+
+
+
+
+
+
+
+    #[Route('/produit/{slug}', name: 'app_single_product')]
+    public function singleProduct(
+        ?Product $product,
+        CartService $cartService,
+        RewiewsProductRepository $reviewsRepo,
+        EntityManagerInterface $em,
+        Request $request,
+        ProductRepository $productRepository,
+        OrderRepository $orderRepo
+    ): Response {
+        // Rediriger vers l'accueil si le produit n'existe pas
+        if (!$product) {
+            return $this->redirectToRoute('app_home');
+        }
+    
+        // Récupérer les variantes du produit et les formater pour le template
+        $formattedVariants = array_map(function ($variant) {
+            return [
+                'id' => $variant->getId(),
+                'color' => $variant->getColor(),
+                'sizes' => $variant->getSizes(),
+                'price' => $variant->getPrice(),
+                'offVariant' => $variant->getOffVariant(),
+                'images' => array_map(function ($image) {
+                    return ['id' => $image->getId(), 'imageName' => $image->getImageName()];
+                }, $variant->getVariantImages()->toArray())
+            ];
+        }, $product->getProductVariants()->toArray());
+    
+        // Permettre aux clients de noter uniquement les produits qu'ils ont achetés
+        $orders = $orderRepo->findBy([
+            'isPaid' => true,
+            'user' => $this->getUser(),
+        ]);
+    
+        // Récupérer les avis et calculer les notes moyennes et le total d'avis
+        $reviews = $reviewsRepo->findBy(['product' => $product]);
+        $starCounts = array_fill(1, 5, 0);
+        foreach ($reviews as $review) {
+            $note = $review->getNote();
+            $starCounts[$note]++;
+        }
+    
+        // Formulaire pour soumettre un avis
+        $newReview = new RewiewsProduct();
+        $form = $this->createForm(RewiewsProductType::class, $newReview);
+        $form->handleRequest($request);
+    
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->handleReviewForm($form, $newReview, $product, $reviewsRepo, $em);
+            return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
+        }
+    
+        // Calcul des moyennes des notes
+        $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
+        $averageRating = count($reviews) > 0 ? $totalRating / count($reviews) : 0;
+        $reviewCount = count(array_filter($reviews, fn($review) => !empty($review->getComment())));
+        $totalReviews = count($reviews);
+    
+        // Récupérer les tailles et couleurs disponibles
+        $sizes = [];
+        $colors = [];
+        foreach ($product->getProductVariants() as $variant) {
+            $sizes = array_unique(array_merge($sizes, $variant->getSizes()));
+            if (!in_array($variant->getColor(), $colors)) {
+                $colors[] = $variant->getColor();
+            }
+        }
+    
+        // Récupérer les produits similaires et leurs notes moyennes
+        $relatedRatings = [];
+        foreach ($product->getCategorie()->getProducts() as $relatedProduct) {
+            if ($relatedProduct->getId() !== $product->getId()) {
+                $relatedRatings[$relatedProduct->getId()] = $reviewsRepo->getAverageRatingForProduct($relatedProduct);
+            }
+        }
+
+        $variant = $product->getProductVariants()->first();
+
+        if (!$variant) {
+            throw $this->createNotFoundException('Aucune variante disponible pour ce produit.');
+        }
+    
+        // Rendu du template
+        return $this->render('pages/home/single_product.html.twig', [
+            'product' => $product,
+            'cart' => $cartService->getFullCart(),
+            'reviews' => $reviews,
+            'variant' => $variant,
+            'variants' => $formattedVariants,
+            'averageRating' => $averageRating,
+            'form' => $form->createView(),
+            'reviewCount' => $reviewCount,
+            'orders' => $orders,
+            'starCounts' => $starCounts,
+            'totalReviews' => $totalReviews,
+            'sizes' => $sizes,
+            'colors' => $colors,
+            'relatedRatings' => $relatedRatings,
+        ]);
+    }
+
+
+
+
+
+
+
+    
+    
+    /**
+     * Gérer la soumission du formulaire d'avis.
+     */
+    private function handleReviewForm($form, RewiewsProduct $newReview, Product $product, RewiewsProductRepository $reviewsRepo, EntityManagerInterface $em)
+    {
+        $newReview->setUser($this->getUser())
+            ->setProduct($product)
+            ->setCreatedAt(new \DateTimeImmutable());
+    
+        $existingReview = $reviewsRepo->findOneBy([
+            'user' => $this->getUser(),
+            'product' => $product
+        ]);
+    
+        // Gestion des fichiers image
+        $imageFiles = [
+            'rewiewImage' => $form->get('rewiewImage')->getData(),
+            'rewiewImages2' => $form->get('rewiewImages2')->getData(),
+            'rewiewImages3' => $form->get('rewiewImages3')->getData(),
+            'rewiewImages4' => $form->get('rewiewImages4')->getData(),
+            'rewiewImages5' => $form->get('rewiewImages5')->getData(),
+            'reviewVideo' => $form->get('reviewVideo')->getData(),
+        ];
+    
+        foreach ($imageFiles as $property => $file) {
+            $setter = 'set' . ucfirst($property);
+            if ($file) {
+                $newFilename = uniqid() . '.' . $file->guessExtension();
+                try {
+                    $file->move(
+                        $this->getParameter('images_directory'), // Chemin de stockage
+                        $newFilename
+                    );
+                    $newReview->$setter($newFilename);
+                } catch (FileException $e) {
+                    // Gérer l'erreur
+                }
+            } elseif ($existingReview) {
+                $getter = 'get' . ucfirst($property);
+                $currentImage = $existingReview->$getter();
+                if ($currentImage) {
+                    $filesystem = new Filesystem();
+                    $filesystem->remove($this->getParameter('images_directory') . '/' . $currentImage);
+                    $existingReview->$setter(null);
+                }
+            }
+        }
+    
+        if ($existingReview) {
+            $existingReview->setComment($newReview->getComment());
+            $existingReview->setNote($newReview->getNote());
+            $existingReview->setUpdatedAt(new \DateTimeImmutable());
+        } else {
+            $em->persist($newReview);
+        }
+    
+        $em->flush();
+    }
+    
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+    
+
+
+    #[Route('/boutique', name: 'app_shop')]
+    public function shop(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo,Request $request): Response
+    {
+        $products = $repoProduct->findAllOrderedByIdDesc();
+
+        $search = new SearchProduct();
+        $form = $this->createForm(SearchProductType::class,$search);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $products= $repoProduct->findWithSearch($search);  
+        }
+
+        $productRatings = []; // Create a new array to hold the average rating for each product.
+
+        foreach ($products as $product) {
+            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+        }
+    
+        
+        return $this->render('pages/home/shop.html.twig', [
+            'products' => $products, 
+            'search' => $form->createView(),
+            'productRatings' => $productRatings
+        ]);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 4. library.js -->
+
+
+
+
+
+
+// Fonction pour formater le prix
+export const formatPrice = (price) => {
+    return Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' })
+        .format(price);
+}
+
+// Fonction générique pour récupérer les données d'une requête
+async function fetchData(requestUrl) {
+    try {
+        const response = await fetch(requestUrl);
+        if (!response.ok) {
+            throw new Error('Erreur réseau');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données:', error.message);
+        return null;
+    }
+}
+
+// Fonction pour ajouter un écouteur d'événement à chaque lien de la wishlist
+function addEventListenerToLink() {
+    let links = document.querySelectorAll(".add-to-wishlist, .wishlist_table .remove-to-wishlist");
+    links.forEach(link => {
+        link.addEventListener("click", manageWishListLink);
+    });
+}
+
+// Fonction pour gérer la wishlist
+export const manageWishListLink = async (event) => {
+    event.preventDefault();
+    const link = event.target.closest('a');
+    if (!link) return;
+
+    const requestUrl = link.href;
+    if (link.classList.contains('view-details')) {
+        window.location.href = requestUrl;
+        return;
+    }
+
+    if (requestUrl.includes('/mes-favoris/supprimer/')) {
+        try {
+            const data = await fetchDataWithMethod(requestUrl, 'DELETE');
+            if (data && data.success) {
+                const tableRow = link.closest('tr');
+                tableRow.parentNode.removeChild(tableRow);
+                addFlashMessage(`Produit supprimé de la liste de souhaits !`, "danger");
+            }
+        } catch (err) {
+            console.error('Erreur lors de la suppression des favoris:', err);
+        }
+        return;
+    }
+
+    try {
+        const wishlist = await fetchData(requestUrl);
+        initCart();
+        updateHeaderCart();
+        displayWishlist(wishlist);
+    } catch (err) {
+        console.error('Erreur lors de la gestion de la liste de souhaits:', err);
+    }
+}
+
+// Fonction pour afficher la wishlist
+export const displayWishlist = (wishlist = null) => {
+    addEventListenerToLink();
+
+    if (!wishlist) return;
+
+    let tbody = document.querySelector('.wishlist_table tbody');
+    if (tbody) {
+        tbody.innerHTML = "";
+        wishlist.forEach((product) => {
+            const imageUrl = product.images ? `/images/products/${product.images}` : '/images/placeholder-image.jpg';
+            let content = `
+                <tr>
+                    <td class="product-thumbnail"><a href="#"><img src="${imageUrl}" alt="${product.name}"></a></td>
+                    <td class="product-name"><a href="#">${product.name}</a></td>
+                    <td class="product-price">${(product.price / 100).toFixed(2)}</td>
+                    <td class="add-to-cart"><a href="/panier/${product.id}/ajouter" class="btn-addtocart">Ajouter Au Panier</a></td>
+                    <td class="remove-to-wishlist"><a href="/mes-favoris/${product.id}/supprimer"><i class="ti-close"></i></a></td>
+                </tr>
+            `;
+            tbody.innerHTML += content;
+        });
+    }
+}
+
+// Fonction pour initialiser le panier
+export const initCart = (cart = null) => {
+    const tbody = document.querySelector('tbody');
+    if (!cart || !cart.products) {
+        addEventListenerToLink();
+        return;
+    }
+
+    if (tbody) {
+        tbody.innerHTML = '';
+        const cartDataElement = document.querySelector('#cart-data');
+        if (cartDataElement) {
+            cart.products.forEach(item => {
+                const { product, quantity } = item;
+                const imageUrl = product.images ? `images/products/${product.images[0].imageName}` : 'images/placeholder-image.jpg';
+                const deletePath = generatePath(cartDataElement.getAttribute('data-delete-path'), product.id);
+                const addPath = generatePath(cartDataElement.getAttribute('data-add-path'), product.id);
+                const deleteAllPath = generatePath(cartDataElement.getAttribute('data-delete-all-path'), product.id);
+
+                const content = `
+                    <tr>
+                        <td class="product-thumbnail"><a href="#"><img src="${imageUrl}" alt="${product.name}"></a></td>
+                        <td class="product-name"><a href="#">${product.name}</a></td>
+                        <td class="product-price">${(product.price / 100).toFixed(2)}</td>
+                        <td class="product-quantity">
+                            <div class="quantity">
+                                <a href="${deletePath}" class="minus"> - </a>
+                                <input type="text" name="quantity" value="${quantity}" class="qty">
+                                <a href="${addPath}" class="plus"> + </a>
+                            </div>
+                        </td>
+                        <td class="product-subtotal">${(quantity * product.price / 100).toFixed(2)}</td>
+                        <td class="product-remove"><a href="${deleteAllPath}"><i class="ti-close"></i></a></td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', content);
+            });
+        }
+    }
+}
+
+// Fonction pour mettre à jour le header du panier
+// Fonction pour mettre à jour le header du panier
+async function updateHeaderCart() {
+    let cart;
+    try {
+        // Récupérer les données du panier via l'API
+        cart = await fetchData("/mon-panier/obtenir");
+
+        if (!cart || !cart.products || !cart.data) {
+            throw new Error("Le panier ou les éléments du panier sont manquants.");
+        }
+
+        // Sélection des éléments HTML à mettre à jour
+        const cartCountElement = document.querySelector('.cart_count');
+        const cartListElement = document.querySelector('.cart_list');
+        const cartPriceValueElement = document.querySelector('.cart_price_value');
+        const cartPriceTaxeElement = document.querySelector('.cart_price_taxe');
+        const cartPriceTTCElement = document.querySelector('.cart_price_ttc');
+
+        // Mise à jour des valeurs dans le header
+        cartCountElement.innerHTML = cart.data.cart_count; // Compteur de produits
+        cartPriceValueElement.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`; // Sous-total HT
+        cartPriceTaxeElement.innerHTML = `${cart.data.Taxe.toFixed(2)} €`; // TVA
+        cartPriceTTCElement.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`; // Total TTC
+
+        // Réinitialisation du contenu du panier
+        let cartContent = '';
+
+        // Parcourir chaque produit dans le panier
+        cart.products.forEach(item => {
+            const { product, variant, quantity, selectedSize, selectedColor } = item;
+            const imageUrl = product.images.length > 0 ? `/images/products/${product.images[0].imageName}` : '/images/placeholder-image.jpg';
+
+            cartContent += `
+                <li data-product-id="${product.id}">
+                    <a href="/produit/${product.slug}" class="product-thumbnail">
+                        <img src="${imageUrl}" alt="${product.name}">
+                        ${product.name}
+                    </a>
+                    <a href="/mon-panier/${product.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
+                    <div class="cart-product-quantity">
+                        <p>Couleur : ${selectedColor} - Taille : ${selectedSize}</p>
+                        <div class="quantity">
+                            <a href="/mon-panier/${product.id}/diminuer" class="minus"> - </a>
+                            <input type="text" name="quantity" value="${quantity}" class="qty">
+                            <a href="/panier/${product.id}/ajouter" class="plus"> + </a>
+                        </div>
+                    </div>
+                    <span class="cart_quantity text-dark">
+                        ${quantity} x <span class="cart_amount">${(variant.price / 100).toFixed(2)} €</span>
+                    </span>
+                </li>
+            `;
+        });
+
+        // Injecter le contenu dans le panier du header
+        cartListElement.innerHTML = cartContent;
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour du panier:", error);
+    }
+}
+
+
+
+// Fonction pour gérer l'ajout au panier avec la taille sélectionnée
+document.querySelectorAll('.btn-addtocart').forEach(button => {
+    button.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        const variantId = event.target.getAttribute('data-variant-id');
+        const selectedSize = document.querySelector('select[name="size"]').value;
+        const selectedColor = document.querySelector('select[name="color"]').value;
+        const quantity = document.querySelector('#quantity') ? document.querySelector('#quantity').value : 1;
+
+        const url = `/panier/${variantId}/ajouter/${quantity}?size=${selectedSize}&color=${selectedColor}`;
+        console.log("URL de la requête:", url);
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Erreur lors de l\'ajout au panier');
+            }
+
+            const cart = await response.json();
+            console.log('Panier mis à jour:', cart);
+            updateHeaderCart(); // Mettez à jour l'affichage du panier
+        } catch (error) {
+            console.error('Erreur:', error.message);
+        }
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 5. single_product -->
+
+
+
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Ama noz poruduit{% endblock %}
+{% block stylesheets %}
+    {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
+    <link rel="stylesheet" href="{{ asset('assets/css/single_product.css') }}">
+{% endblock %}
+ 
+{% block body %}
+     <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
+    <div class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
+
+
+
+
+                                        <div class="product-image">
+                                        <div class="main_image_container">
+                                            <div class="mb-3" style="width: 100%; height: 600px">
+                                                <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
+                                            </div>
+                                        </div>
+
+                                        <div id="thumbnails" class="row">
+                                            <!-- Les miniatures seront générées dynamiquement avec JS -->
+                                        </div>
+                                    </div>
+
+
+            
+
+                </div>
+
+                <div class="col-lg-6 col-md-6">
+                    <div class="pr_detail">
+                        <div class="product_description">
+                            <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
+                            <div class="product_price">
+                                <span class="price">{{ ((product.price/100) - (product.price/100 * product.off/100)) | number_format(2, ',', '.') }} €</span>
+                                {% if product.off is defined and product.off > 0 %}
+                                <del>{{ (product.price / 100)|number_format(2, ',', '.') }} €</del>
+                                    <div class="on_sale">
+                                        <span>{{product.off}}% réduction</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="rating_wrap">
+                                <div class="rating">
+                                    <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
+                                </div>
+                                <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
+                            </div>
+                            <br>
+                            <br>
+                            <div >
+                                <p>{{ product.description | raw }}</p>
+                            </div>
+
+                            <div class="product_sort_info">
+                                <ul>
+                                    <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
+                                    <li><i class="linearicons-truck"></i>Livraison Rapide</li>
+                                    <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <hr />
+
+                        {% set displayed_sizes = [] %}
+                        {% set displayed_colors = [] %}
+                        
+                        <!-- Sélection de la couleur -->
+                        <div class="d-flex variant-product">
+                            <!-- Sélection de la couleur -->
+                            <div class="form-group">
+                                <label for="color">Couleur :</label>
+                                <select name="color" id="color" class="form-control">
+                                    {% set displayed_colors = [] %}
+                                    {% for variant in product.productVariants %}
+                                        {% if variant.color not in displayed_colors %}
+                                            <option value="{{ variant.color }}">{{ variant.color }}</option>
+                                            {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group mx-4">
+                                <label for="size">Taille :</label>
+                                <select name="size" id="size" class="form-control">
+                                    {% for variant in product.productVariants %}
+                                        {% for size in variant.sizes %}
+                                            <option value="{{ size }}" data-color="{{ variant.color }}">{{ size }}</option>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                         <div class="product_price d-flex variant-price">
+                                    <span id="variant-price" class="price">-- €</span> <!-- Prix après réduction -->
+                                    <del id="old-price" style="display: none;">-- €</del> <!-- Prix original barré -->
+                                    <div id="variant-off" class="on_sale" style="display: none;">
+                                    <span>--% réduction</span> <!-- Réduction affichée -->
+                                </div>
+                            </div>
+                        
+             
+                        <div class="cart_extra col-12  ">
+                                {% if product.quantity == 0  %}
+                                    <div>
+                                        <br>
+                                        <span> 
+                                            Ce produit est indisponible pour le moment.
+                                        </span>
+                                        <br>
+                                        <br>
+                                    </div>
+                                {% else %}
+                                <div class="cart-product-quantity mb-4">
+                                    <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
+                                        name="quantity" value="1" title="Qty" size="4" class="qty"><input type="button"
+                                        value="+" class="plus">
+                                    </div>
+                                </div>
+                                {# TODO: Implement product quantity selection #}
+                                <div class="cart_btn mb-4">
+                                    {# <a href="{{ path('app_add_to_cart', { 'id': product.id, 'count': 1 }) }}" 
+                                        class="btn btn-fill-out btn-addtocart" 
+                                        type="button">
+                                        <i class="icon-basket-loaded"></i> Ajouter au panier
+                                        </a> #}
+                                        <a href="#" 
+                                            class="btn btn-fill-out btn-addtocart" 
+                                            data-variant-id="{{ variant.id }}" 
+                                            type="button">
+                                                <i class="icon-basket-loaded"></i> Ajouter au panier
+                                            </a>
+                                    <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
+                                    <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
+                                </div>
+                        </div>
+                   
+                    
+                <pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                <pre>{{ product.productVariants | json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+
+
+                        <pre>{{ dump(variants) }}</pre>
+                        {% endif %}
+                        <hr />
+                        <ul class="product-meta col-12">
+                            <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
+                            {# <li>Tags: {{ product.tags }}</li> #}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <br><br>
+             {% if product.illustrationText1 %}
+            <div class="row nav nav-tabs">
+            </div>
+                <div class="row nav nav-tabs">
+                    <div class="large_divider clearfix mt-4">
+                        {{ product.illustrationText1 | raw }}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="tab-style3">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="Description-tab" data-toggle="tab" href="#Description" role="tab" aria-controls="Description" aria-selected="true">Description</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="Reviews-tab" data-toggle="tab" href="#Reviews" role="tab" aria-controls="Reviews" aria-selected="false">Commentaire ({{ reviewCount }})</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content shop_info_tab">
+                            <div class="tab-pane fade show active" id="Description" role="tabpanel" aria-labelledby="Description-tab">
+                                <p>{{ product.description2  | raw }}</p>
+                            </div>
+
+                            <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
+                                <div class="comments">
+                                  
+                                    <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
+                                        <div class="a-row">
+                                            <h3>Commentaires client</h3>
+                                        </div>
+                                        <div class="rating_wrap mb-2">
+                                            <div class="rating">
+                                                <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
+                                            </div>
+                                                 <span class="average_rating">{{ averageRating | round(1, 'floor') }} sur 5</span>
+                                        </div>
+                                        
+                                        <!-- Display Histogram of Ratings -->
+                                        {% for review in reviews %}
+                                        {% set note = review.note %}
+                                            {# {% if note >= 1 and note <= 5 %}
+                                            
+                                            {% endif %} #}
+                                        {% endfor %}
+                                        <div class="a-fixed-left-grid a-spacing-none">
+                                            <div class="a-fixed-left-grid-inner">
+                                                <div class="a-fixed-left-grid-col a-col-left">
+                                                    <table id="histogramTable" class="a-normal a-align-center a-spacing-base">
+                                                        <tbody>
+                                                        <div class="a-row a-spacing-medium averageStarRatingNumerical mb-2">
+                                                            <span class="a-size-base a-color-secondary">{{ totalReviews }}&nbsp;évaluations globales et {{ reviewCount }} avis</span>
+                                                        </div>
+                                                        {% for star in [5, 4, 3, 2, 1] %}
+                                                        {% set percentage = totalReviews > 0 ? (starCounts[star]/totalReviews)*100 : 0 %}
+                                                        <tr class="a-histogram-row a-align-center">
+                                                            <td class="aok-nowrap a-nowrap">
+                                                                <a class="a-size-base a-link-normal">{{ star }} étoiles</a>
+                                                            </td>
+                                                            <td class="a-span10">
+                                                                <div class="a-meter" role="progressbar" aria-valuenow="{{ percentage }}">
+                                                                    <div class="a-meter-bar" style="width:{{ percentage }}%"></div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="a-text-right a-nowrap a-nowrap">
+                                                                <a class="a-size-base a-link-normal">{{ percentage | round(0, 'floor') }}%</a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h5 class="product_tab_title">({{ reviewCount }}) Commentaire <span>{{product.name}}</span></h5>
+                                    <ul class="list_none comment_list mt-4">
+                                        {% for review in reviews %}
+                                            {% if review.comment %}
+                                                <li>
+                                                    <div class="comment_block">
+                                                        <div class="rating_wrap">
+                                                            <div class="rating">
+                                                                <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
+                                                            </div>
+                                                        </div>
+                                                        <p class="customer_meta">
+                                                            <span class="review_author">{{ review.user.username }}</span>
+                                                            <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
+                                                        </p>
+                                                        <hr>
+                                                        <div class="description">
+                                                            <p>{{ review.comment }}</p>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="review_images mt-4">
+                                                            {% if review.rewiewImage %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImage) }}" alt="Image 1" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages2 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 2">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" alt="Image 2" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages3 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 3">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" alt="Image 3" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages4 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 4">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" alt="Image 4" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if review.rewiewImages5 %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 5">
+                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" alt="Image 5" class="img-fluid" width="200" height="150">
+                                                                </a>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="review_video">
+                                                            {% if review.reviewVideo %}
+                                                                <a href="{{ asset('uploads/images/' ~ review.reviewVideo) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Video" data-type="video">
+                                                                    <video id="video-{{ review.id }}" controls style="width: 300px; height: auto;">
+                                                                        <source src="{{ asset('uploads/images/' ~ review.reviewVideo) }}" type="video/mp4">
+                                                                        Your browser does not support the video tag.
+                                                                    </video>
+                                                                </a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>                       
+                                <div class="review_form field_form">
+                                    {% set hasBoughtProduct = false %}
+                                    {% set hasReceivedProduct = false %}
+                                    
+                                    {% for order in orders %}
+                                        {% for orderDetail in order.orderDetails %}
+                                            {% if orderDetail.productName == product.name %}
+                                                {% set hasBoughtProduct = true %}
+                                                {% if order.state == 4 %}
+                                                    {% set hasReceivedProduct = true %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+
+                                    {% if not hasBoughtProduct %}
+                                        Vous devez avoir acheté ce produit pour laisser un commentaire!
+                                    {% elseif not hasReceivedProduct %}
+                                        Vous devez recevoir le produit pour laisser un commentaire!
+                                    {% else %}
+                                        <h5>Ajoutez un commentaire</h5>
+
+                                        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+
+                                        <div class="form-group col-12">
+                                            <div class="star_rating">
+                                                <span data-value="1"><i class="far fa-star"></i></span>
+                                                <span data-value="2"><i class="far fa-star"></i></span>
+                                                <span data-value="3"><i class="far fa-star"></i></span>
+                                                <span data-value="4"><i class="far fa-star"></i></span>
+                                                <span data-value="5"><i class="far fa-star"></i></span>
+                                                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            {{ form_widget(form.comment) }}
+                                        </div>
+
+                                        {# <div class="form-group p-4">
+                                            <h5>Ajouter des images</h5>
+                                                {{ form_widget(form.rewiewImage) }}
+                                                {{ form_widget(form.rewiewImages2) }}
+                                                {{ form_widget(form.rewiewImages3) }}
+                                                {{ form_widget(form.rewiewImages4) }}
+                                                {{ form_widget(form.rewiewImages5) }}
+                                            <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
+                                            {{ form_widget(form.reviewVideo) }}
+                                        </div> #}
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="panel-heading" role="tab" id="headingImages"> 
+                                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
+                                                            <div class="d-flex">
+                                                                <h5> Ajouter des images </h5>
+                                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+                                                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
+                                                        <div class="panel-body">
+                                                            <div class="form-group">
+                                                                <div id="filter_article_numberOfPlaces">
+                                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                                        <div class="">
+                                                                            {{ form_widget(form.rewiewImage) }}
+                                                                            {{ form_widget(form.rewiewImages2) }}
+                                                                            {{ form_widget(form.rewiewImages3) }}
+                                                                            {{ form_widget(form.rewiewImages4) }}
+                                                                            {{ form_widget(form.rewiewImages5) }}
+                                                                        </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
+                                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
+                                                            <div class="d-flex">
+                                                                <h5> Ajouter une vidéo </h5>
+                                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                                            <hr>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+
+                                                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
+                                                        <div class="panel-body">
+                                                            <div class="form-group">
+                                                                <div id="filter_article_numberOfPlaces">
+                                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                                        <div class="">
+                                                                            {{ form_widget(form.reviewVideo) }}
+                                                                        </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+                                        </div>
+
+                                        {{ form_end(form) }}
+                                    {% endif %}
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="small_divider"></div>
+                    <div class="divider"></div>
+                    <div class="medium_divider"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="heading_s1">
+                        <h3>Produits apparentés</h3>
+                    </div>
+                    <div class="releted_product_slider carousel_slider owl-carousel owl-theme" data-margin="20" data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
+                      {% for relatedProduct in product.categorie.products %}
+                        {% if relatedProduct.id != product.id %}
+                            {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
+                            {% include 'partials/_product_item.html.twig' with {'product': relatedProduct} %}
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {# <pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> #}
+    <pre>{{ dump(product.productVariants) }}</pre>
+
+
+
+<script type="application/json" id="productVariantsData">
+    {{ variants|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}
+</script>
+
+
+<pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> <!-- Debugging -->
+
+
+
+
+{# <script type="application/json" id="productVariantsData">
+    {{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}
+</script>
+
+<pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> #}
+
+
+
+
+
+
+
+<script>
+    (function() {  // IIFE pour encapsuler le code
+        // Fonctionnalité : Elevate Zoom
+        function initElevateZoom() {
+            $('#main_product_imgs').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair"
+            });
+
+            {% for image in product.images %}
+            $('#thumbnails_{{ loop.index }}').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair"
+            });
+            {% endfor %}
+        }
+
+        function changeMainImage(thumbnail) {
+            const mainImage = $('#main_product_img');
+            const largeSrc = thumbnail.getAttribute('data-large-src');
+            mainImage.attr('src', largeSrc);
+            mainImage.data('zoom-image', largeSrc);
+
+            mainImage.removeData('elevateZoom');
+            $('.zoomContainer').remove();
+            initElevateZoom();
+        }
+
+        $(window).on('load', initElevateZoom);
+
+        // Fonctionnalité : Évaluation par étoiles
+        function handleStarRating() {
+            const stars = document.querySelectorAll(".star_rating span");
+            stars.forEach(star => {
+                star.addEventListener('click', function(e) {
+                    const value = e.currentTarget.getAttribute('data-value');
+                    document.getElementById('rewiews_product_note').value = value;  // mise à jour de l'input caché
+                    highlightStars(value);  // mise en surbrillance des étoiles
+                });
+            });
+        }
+
+        function highlightStars(value) {
+            const stars = document.querySelectorAll(".star_rating span i");
+            stars.forEach((star, index) => {
+                if (index < value) {
+                    star.classList.remove("far");
+                    star.classList.add("fas");
+                } else {
+                    star.classList.remove("fas");
+                    star.classList.add("far");
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            handleStarRating();
+        
+        });
+
+
+    })();
+
+
+    {# TODO: si nous avons L disponible avec Red ce la permet d'affiché uniquement L quand on choisi la couleur  #}
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorSelect = document.getElementById('color');
+        const sizeSelect = document.getElementById('size');
+        const variants = {{ product.productVariants|json_encode()|raw }};
+
+        // Fonction pour mettre à jour les tailles en fonction de la couleur sélectionnée
+        function updateSizes() {
+            const selectedColor = colorSelect.value;
+
+            // Affiche toutes les tailles d'abord
+            Array.from(sizeSelect.options).forEach(option => {
+                option.disabled = false; // Active toutes les options
+                option.hidden = false; // Affiche toutes les options
+            });
+
+            // Désactiver les tailles qui ne correspondent pas à la couleur sélectionnée
+            Array.from(sizeSelect.options).forEach(option => {
+                const optionColor = option.getAttribute('data-color'); // Récupérer l'attribut "data-color"
+                if (optionColor !== selectedColor) {
+                    option.disabled = true; // Désactiver l'option
+                    option.hidden = true; // Masquer l'option
+                }
+            });
+
+            // Sélectionner la première taille disponible après mise à jour
+            const firstAvailableOption = Array.from(sizeSelect.options).find(option => !option.disabled);
+            if (firstAvailableOption) {
+                firstAvailableOption.selected = true;
+            }
+        }
+
+        // Mettre à jour les tailles lors de la sélection d'une couleur
+        colorSelect.addEventListener('change', updateSizes);
+
+        // Appel initial pour afficher les tailles dès le chargement de la page
+        updateSizes();
+    });
+
+
+
+
+
+
+
+    {# document.addEventListener('DOMContentLoaded', function() {
+        const sizeSelect = document.getElementById('size');
+        const colorSelect = document.getElementById('color');
+        const priceDisplay = document.getElementById('variant-price');
+
+        // Injecter les variantes préparées depuis PHP en utilisant json_encode
+        let variants = {{ variants|json_encode()|raw }};
+        
+        console.log('Variants:', variants); // Vérifie la structure dans la console
+
+        // Fonction pour obtenir une variante par taille et couleur
+        function getVariantBySizeAndColor(selectedSize, selectedColor) {
+            return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+        }
+
+        // Fonction pour mettre à jour le prix selon la sélection de taille et de couleur
+        function updatePrice() {
+            const selectedSize = sizeSelect.value;
+            const selectedColor = colorSelect.value;
+
+            const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+            if (selectedVariant) {
+                priceDisplay.textContent = `${selectedVariant.price} €`;
+            } else {
+                priceDisplay.textContent = 'Prix indisponible';
+            }
+        }
+
+        // Mettre à jour le prix lors des changements de taille et de couleur
+        sizeSelect.addEventListener('change', updatePrice);
+        colorSelect.addEventListener('change', updatePrice);
+
+        // Initialiser avec la première variante sélectionnée
+        updatePrice();
+    }); #}
+    
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const priceDisplay = document.getElementById('variant-price');
+    const variantImages = document.querySelectorAll('.product-variant-image'); // Sélectionner toutes les images des variantes
+
+    // Injecter les variantes préparées depuis PHP en utilisant json_encode
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+    }
+
+    // Fonction pour mettre à jour le prix selon la sélection de taille et de couleur
+    function updatePrice() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            priceDisplay.textContent = `${selectedVariant.price} €`;
+        } else {
+            priceDisplay.textContent = 'Prix indisponible';
+        }
+    }
+
+    // Fonction pour mettre à jour les images selon la variante sélectionnée
+    function updateVariantImages() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        // Trouver la variante correspondant à la taille et couleur choisies
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            // Masquer toutes les images des variantes
+            variantImages.forEach(image => {
+                image.style.display = 'none';  // Masquer toutes les images
+
+                // Afficher uniquement les images qui sont associées à la variante sélectionnée
+                if (image.getAttribute('data-variant-id') === String(selectedVariant.id)) {
+                    image.style.display = 'block';  // Afficher les images correspondant à la variante sélectionnée
+                }
+            });
+        }
+    }
+
+    // Mettre à jour les images lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updateVariantImages);
+    colorSelect.addEventListener('change', updateVariantImages);
+
+    // Mettre à jour les prix lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updatePrice);
+    colorSelect.addEventListener('change', updatePrice);
+
+    // Initialiser avec la première variante sélectionnée
+    updatePrice();
+    updateVariantImages();
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const priceDisplay = document.getElementById('variant-price');
+    const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
+    const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
+
+    // Injecter les variantes préparées depuis PHP en utilisant json_encode
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+    }
+
+    // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
+    function updatePrice() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+
+            // Affiche le prix réduit
+            priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+            // Affiche l'ancien prix barré si une réduction existe
+            if (selectedVariant.offVariant > 0) {
+                oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
+                oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
+
+                discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
+                discountDisplay.style.display = 'block'; // Affiche la réduction
+            } else {
+                oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
+                discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+            }
+        } else {
+            priceDisplay.textContent = 'Prix indisponible';
+            oldPriceDisplay.style.display = 'none';
+            discountDisplay.style.display = 'none';
+        }
+    }
+
+    // Mettre à jour les prix lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updatePrice);
+    colorSelect.addEventListener('change', updatePrice);
+
+    // Initialiser avec la première variante sélectionnée
+    updatePrice();
+});
+
+
+
+{# document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const mainImageDisplay = document.getElementById('main_product_img');
+    const thumbnailsContainer = document.getElementById('thumbnails'); // Conteneur pour les miniatures des images
+
+    // Injecter les variantes préparées depuis PHP en utilisant json_encode
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
+    }
+
+    // Fonction pour mettre à jour les images selon la variante sélectionnée
+    function updateVariantImages() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant && selectedVariant.images.length > 0) {
+            // Mettre à jour l'image principale avec la première image de la variante
+            const firstImage = selectedVariant.images[0].imageName;
+            mainImageDisplay.src = `/images/products/${firstImage}`;
+            mainImageDisplay.setAttribute('data-zoom-image', `/images/products/${firstImage}`);
+
+            // Afficher les miniatures
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures précédentes
+            selectedVariant.images.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'ml-3');
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover;" data-large-src="/images/products/${image.imageName}" />
+                        </a>
+                    </div>
+                `;
+
+                // Ajouter un événement de clic pour changer l'image principale
+                thumbnail.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    changeMainImage(thumbnail.querySelector('img'));
+                });
+
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+
+            // Réinitialiser et appliquer Elevate Zoom sur l'image principale
+            initElevateZoom();
+        } else {
+            // Réinitialiser si aucune image disponible pour la variante
+            mainImageDisplay.src = `/images/products/default.jpg`;
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
+        }
+    }
+
+    // Fonction pour appliquer Elevate Zoom sur l'image principale
+    function initElevateZoom() {
+        $('#main_product_img').elevateZoom({
+            zoomType: "inner",
+            cursor: "crosshair"
+        });
+    }
+
+    // Fonction pour changer l'image principale
+    function changeMainImage(thumbnail) {
+        const mainImage = $('#main_product_img');
+        const largeSrc = thumbnail.getAttribute('data-large-src');
+        mainImage.attr('src', largeSrc);
+        mainImage.data('zoom-image', largeSrc);
+
+        mainImage.removeData('elevateZoom');
+        $('.zoomContainer').remove();
+        initElevateZoom();
+    }
+
+    // Mettre à jour les images lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updateVariantImages);
+    colorSelect.addEventListener('change', updateVariantImages);
+
+    // Initialiser avec la première variante sélectionnée
+    updateVariantImages();
+}); #}
+
+
+
+{# document.addEventListener('DOMContentLoaded', function() {
+    const colorSelect = document.getElementById('color');
+    const mainImage = document.getElementById('main_product_img');
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    
+    // Variantes injectées depuis Twig
+    const variants = {{ variants|json_encode()|raw }};
+    
+    function updateImages(selectedColor) {
+        // Trouver la variante correspondant à la couleur sélectionnée
+        const selectedVariant = variants.find(variant => variant.color === selectedColor);
+
+        if (selectedVariant && selectedVariant.images.length > 0) {
+            // Mettre à jour l'image principale
+            const firstImage = selectedVariant.images[0].imageName;
+            mainImage.src = `/images/products/${firstImage}`;
+
+            // Vider les miniatures précédentes
+            thumbnailsContainer.innerHTML = '';
+
+            // Générer les miniatures
+            selectedVariant.images.forEach(image => {
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3');
+
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                `;
+
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+        } else {
+            // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
+            mainImage.src = `/images/products/default.jpg`;
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
+        }
+    }
+
+    // Mettre à jour les images quand la couleur change
+    colorSelect.addEventListener('change', function() {
+        const selectedColor = this.value;
+        updateImages(selectedColor);
+    });
+
+    // Initialiser avec la première couleur sélectionnée
+    if (colorSelect.value) {
+        updateImages(colorSelect.value);
+    }
+}); #}
+
+
+
+
+
+
+
+
+{# TODO: Qaund on séléction une couleur ce la affiches l'image qui correspondes à la variante#}
+document.addEventListener('DOMContentLoaded', function() {
+    const colorSelect = document.getElementById('color');
+    const mainImage = document.getElementById('main_product_img');
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    
+    // Variantes injectées depuis Twig
+    const variants = {{ variants|json_encode()|raw }};
+    
+    function updateImages(selectedColor) {
+        // Trouver la variante correspondant à la couleur sélectionnée
+        const selectedVariant = variants.find(variant => variant.color === selectedColor);
+
+        if (selectedVariant && selectedVariant.images.length > 0) {
+            // Mettre à jour l'image principale
+            const firstImage = selectedVariant.images[0].imageName;
+            console.log(`Chemin de l'image: /images/products/${firstImage}`);  // Vérifiez ici l'URL générée
+            mainImage.src = `/images/products/${firstImage}`;
+
+            // Vider les miniatures précédentes
+            thumbnailsContainer.innerHTML = '';
+
+            // Générer les miniatures
+            selectedVariant.images.forEach(image => {
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'mx-2');
+
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                `;
+
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+        } else {
+            // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
+            mainImage.src = `/images/products/default.jpg`;
+            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
+        }
+    }
+
+    // Mettre à jour les images quand la couleur change
+    colorSelect.addEventListener('change', function() {
+        const selectedColor = this.value;
+        updateImages(selectedColor);
+    });
+
+    // Initialiser avec la première couleur sélectionnée
+    if (colorSelect.value) {
+        updateImages(colorSelect.value);
+    }
+});
+
+
+
+
+
+
+
+
+
+
+{# TODO: Affiche le prix et bar le prix de off#}
+document.addEventListener('DOMContentLoaded', function() {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const priceDisplay = document.getElementById('variant-price');
+    const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
+    const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
+
+    // Variantes injectées depuis PHP via Twig
+    let variants = {{ variants|json_encode()|raw }};
+    
+    console.log('Variants:', variants); // Vérifie la structure dans la console
+
+    // Fonction pour obtenir une variante par taille et couleur
+    function getVariantBySizeAndColor(selectedSize, selectedColor) {
+        return variants.find(variant => variant.color === selectedColor && variant.sizes.includes(selectedSize));
+    }
+
+    // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
+    function updatePrice() {
+        const selectedSize = sizeSelect.value;
+        const selectedColor = colorSelect.value;
+
+        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+        if (selectedVariant) {
+            const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+
+            // Affiche le prix réduit
+            priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+            // Affiche l'ancien prix barré si une réduction existe
+            if (selectedVariant.offVariant > 0) {
+                oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
+                oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
+
+                discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
+                discountDisplay.style.display = 'block'; // Affiche la réduction
+            } else {
+                oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
+                discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+            }
+        } else {
+            priceDisplay.textContent = 'Prix indisponible';
+            oldPriceDisplay.style.display = 'none';
+            discountDisplay.style.display = 'none';
+        }
+    }
+
+    // Mettre à jour les prix lors des changements de taille et de couleur
+    sizeSelect.addEventListener('change', updatePrice);
+    colorSelect.addEventListener('change', updatePrice);
+
+    // Initialiser avec la première variante sélectionnée
+    updatePrice();
+});
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  6. header 
+
+
+
+
+
+
+<header  class="header_wrap fixed-top header_with_topbar">
+    <div  class="bottom_header dark_skin main_menu_uppercase">
+        <div  class="container mt-4">
+            <nav  class="navbar navbar-expand-lg">
+                <a 
+                    routerlink="/" class="navbar-brand" ng-reflect-router-link="/" href="/">
+                    <h2 >Yilmi Market</h2>
+                </a>
+                <button id="menu-btns" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-expanded="false" class="navbar-toggler ">
+                    <span class="ion-android-menu"></span>
+                </button>
+                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse" style="margin-left: 10rem;">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{path("app_home")}}">Accueil
+                                <span class="visually-hidden"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_shop')}}">Boutique
+                            </a>
+                        </li> 
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Nouveauté 
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_contact')}}">Contact
+                            </a>
+                        </li>
+                        {% if app.user %}
+                                <li class="nav-item dropdown user-name" style="">
+                                    <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                        <i class="ti-user">  
+                                            {{ app.user.firstName }}
+                                        </i>  
+                                    </a>
+                                    <div class="dropdown-menu bg-light">
+                                        <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                                        <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item" href="/admin">Administration</a>
+                                            <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
+                                    </div>
+                                </li>
+                            {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{path("app_login")}}">Connexion
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('app_register')}}">Inscription
+                                    </a>
+                                </li>
+                            {% endif %}				
+                    </ul>
+                </div> 
+                <ul class="navbar-nav attr-nav align-items-center">
+                    <li>
+                        <a href="javascript:void(0);" class="nav-link search_trigger">
+                            <i class="linearicons-magnifier"></i>
+                        </a>
+                        <div class="search_wrap">
+                            <span class="close-search"><i class="ion-ios-close-empty"></i></span>
+                            <form>
+                                <input type="text" placeholder="Search" class="form-control" id="search_input">
+                                <button type="submit" class="search_icon"><i class="ion-ios-search-strong"></i></button>
+                            </form>
+                        </div>
+                        <div class="search_overlay"></div>
+                    </li>
+                    <li>
+                        <a class="text-decoration-none" href="{{ path('app_wishList')}}">
+                            <i class="icon-heart style-none"></i>
+                        </a>
+                    </li>
+                    <li class="dropdown cart_dropdown">
+                        <a class="nav-link cart_trigger" id="cart-btn" href="#" data-toggle="dropdown">
+                            <i class="linearicons-cart"></i>
+                            <span class="cart_count">
+                            </span>
+                        </a>
+                        {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' %}
+                        <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
+                            <ul class="cart_list">
+                                {# <div id="cart-data" 
+                                    data-delete-path="{{ path('app_delete_to_cart', {'id': 'element.product.id'}) }}" 
+                                    {# data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
+                                    data-add-path="{{ path('app_add_to_cart', {'variantId': element.variant.id}) }}"
+                                    data-delete-all-path="{{ path('app_cart_delete_all', {'id': 'element.product.id'}) }}">
+                                </div> #}
+                               {% for item in cart.products %}
+                                    {% if item.variant and item.variant.id %}
+                                        <div id="cart-data" 
+                                            data-delete-path="{{ path('app_delete_to_cart', {'variantId': item.variant.id}) }}" 
+                                            data-add-path="{{ path('app_add_to_cart', {'variantId': item.variant.id, 'quantity': item.quantity}) }}"
+                                            data-delete-all-path="{{ path('app_delete_to_cart', {'variantId': item.variant.id}) }}">
+                                        </div>
+                                    {% else %}
+                                        <p>Erreur : le variant n'est pas disponible pour ce produit.</p>
+                                    {% endif %}
+                                {% endfor %}
+
+
+                            </ul>
+                                <div class="cart_footer">
+                                    <p class="cart_total text-dark">
+                                        <strong>Sous Total HT:</strong> 
+                                        <span class="cart_price"> 
+                                            <span class="price_symbole"></span>
+                                        </span>
+                                        <span class="cart_price_value"></span>
+                                    </p>
+                                    <p class="cart_total text-dark">
+                                        <strong>TVA:</strong> 
+                                        <span class="cart_price"> 
+                                            <span class="price_symbole"></span>
+                                        </span>
+                                        <span class="cart_price_taxe"></span>
+                                    </p>
+                                    <p class="cart_total text-dark">
+                                        <strong>Total TTC:</strong> 
+                                        <span class="cart_price"> 
+                                            <span class="price_symbole"></span>
+                                        </span>
+                                        <span class="cart_price_ttc"></span>
+                                    </p>
+                                    <p class="cart_buttons">
+                                    
+                                        {# <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a> #}
+                                        <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
+                                    </p>
+                                </div>
+                        </div>
+                    </li> 
+                    {% endif %}
+                </ul>
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+

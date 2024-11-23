@@ -35,9 +35,9 @@
             <!-- Icône à gauche pour ajouter au panier -->
                 <li class="add-to-cart style-none list-unstyled">
                     {% if product.quantity > 0 %}
-                        <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
+                        {# <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
                             <i class="icon-basket-loaded"></i>
-                        </a>
+                        </a> #}
                     {% else %}
                         Produit non disponible
                     {% endif %}

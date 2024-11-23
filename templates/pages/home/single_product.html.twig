@@ -1,3 +1,4 @@
+
 {% extends 'base.html.twig' %}
 
 {% block title %}Ama noz poruduit{% endblock %}
@@ -12,21 +13,16 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
-
-
-
-
-                                        <div class="product-image">
-                                        <div class="main_image_container">
-                                            <div class="mb-3" style="width: 100%; height: 600px">
-                                                <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
-                                            </div>
-                                        </div>
-
-                                        <div id="thumbnails" class="row">
-                                            <!-- Les miniatures seront générées dynamiquement avec JS -->
-                                        </div>
-                                    </div>
+                    <div class="product-image">
+                    <div class="main_image_container">
+                        <div class="mb-3" style="width: 100%; height: 600px">
+                            <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
+                        </div>
+                    </div>
+                    <div id="thumbnails" class="row">
+                        <!-- Les miniatures seront générées dynamiquement avec JS -->
+                    </div>
+                </div>
 
 
             
@@ -78,7 +74,7 @@
                                 <label for="color">Couleur :</label>
                                 <select name="color" id="color" class="form-control">
                                     {% set displayed_colors = [] %}
-                                    {% for variant in product.productVariants %}
+                                    {% for variant in product.variants %}
                                         {% if variant.color not in displayed_colors %}
                                             <option value="{{ variant.color }}">{{ variant.color }}</option>
                                             {% set displayed_colors = displayed_colors|merge([variant.color]) %}
@@ -89,7 +85,7 @@
                             <div class="form-group mx-4">
                                 <label for="size">Taille :</label>
                                 <select name="size" id="size" class="form-control">
-                                    {% for variant in product.productVariants %}
+                                    {% for variant in product.variants %}
                                         {% for size in variant.sizes %}
                                             <option value="{{ size }}" data-color="{{ variant.color }}">{{ size }}</option>
                                         {% endfor %}
@@ -119,28 +115,31 @@
                                     </div>
                                 {% else %}
                                 <div class="cart-product-quantity mb-4">
-                                    <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
-                                        name="quantity" value="1" title="Qty" size="4" class="qty"><input type="button"
-                                        value="+" class="plus">
+                                    <div class="quantity">
+                                        <input type="button" value="-" class="minus">
+                                        <input type="number" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty">
+                                        <input type="button" value="+" class="plus">
                                     </div>
                                 </div>
+
                                 {# TODO: Implement product quantity selection #}
                                 <div class="cart_btn mb-4">
-                                    <a href="/panier/{{product.id}}/ajouter/1" class="btn btn-fill-out btn-addtocart" type="button">
-                                        <i class="icon-basket-loaded"></i>
-                                        Ajouter au panier
-                                    </a>
+                                        <a href="#" 
+                                            class="btn btn-fill-out btn-addtocart" 
+                                            data-variant-id="{{ variant.id }}" 
+                                            type="button">
+                                                <i class="icon-basket-loaded" data-variant-id="1"></i> Ajouter au panier
+                                            </a>
                                     <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
                                     <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
                                 </div>
-                        </div>
-                   
+                        </div>      
                     
-                {# <pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
-                <pre>{{ product.productVariants | json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                <pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                <pre>{{ product.variants | json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
 
 
-                        <pre>{{ dump(variants) }}</pre> #}
+                        <pre>{{ dump(variants) }}</pre>
                         {% endif %}
                         <hr />
                         <ul class="product-meta col-12">
@@ -435,12 +434,31 @@
     </div>
 
 
+    {# <pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> #}
+    <pre>{{ dump(product.variants) }}</pre>
 
 
-<script>
-    const variants = {{ product.productVariants|json_encode()|raw }};
-    console.log('Variants:', variants); // Vérification des variantes dans la console
+
+<script type="application/json" id="productVariantsData">
+    {{ variants|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}
 </script>
+
+
+<pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> <!-- Debugging -->
+
+
+
+
+{# <script type="application/json" id="productVariantsData">
+    {{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}
+</script>
+
+<pre>{{ variants|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> #}
+
+
+
+
+
 
 
 <script>
@@ -511,7 +529,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const colorSelect = document.getElementById('color');
         const sizeSelect = document.getElementById('size');
-        const variants = {{ product.productVariants|json_encode()|raw }};
+        const variants = {{ product.variants|json_encode()|raw }};
 
         // Fonction pour mettre à jour les tailles en fonction de la couleur sélectionnée
         function updateSizes() {
@@ -546,16 +564,11 @@
         updateSizes();
     });
 
-
-
-
-
-
-
-    {# document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
         const sizeSelect = document.getElementById('size');
         const colorSelect = document.getElementById('color');
         const priceDisplay = document.getElementById('variant-price');
+        const variantImages = document.querySelectorAll('.product-variant-image'); // Sélectionner toutes les images des variantes
 
         // Injecter les variantes préparées depuis PHP en utilisant json_encode
         let variants = {{ variants|json_encode()|raw }};
@@ -581,413 +594,215 @@
             }
         }
 
-        // Mettre à jour le prix lors des changements de taille et de couleur
+        // Fonction pour mettre à jour les images selon la variante sélectionnée
+        function updateVariantImages() {
+            const selectedSize = sizeSelect.value;
+            const selectedColor = colorSelect.value;
+
+            // Trouver la variante correspondant à la taille et couleur choisies
+            const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+            if (selectedVariant) {
+                // Masquer toutes les images des variantes
+                variantImages.forEach(image => {
+                    image.style.display = 'none';  // Masquer toutes les images
+
+                    // Afficher uniquement les images qui sont associées à la variante sélectionnée
+                    if (image.getAttribute('data-variant-id') === String(selectedVariant.id)) {
+                        image.style.display = 'block';  // Afficher les images correspondant à la variante sélectionnée
+                    }
+                });
+            }
+        }
+
+        // Mettre à jour les images lors des changements de taille et de couleur
+        sizeSelect.addEventListener('change', updateVariantImages);
+        colorSelect.addEventListener('change', updateVariantImages);
+
+        // Mettre à jour les prix lors des changements de taille et de couleur
         sizeSelect.addEventListener('change', updatePrice);
         colorSelect.addEventListener('change', updatePrice);
 
         // Initialiser avec la première variante sélectionnée
         updatePrice();
-    }); #}
-    
+        updateVariantImages();
+    });
 
 
+    document.addEventListener('DOMContentLoaded', function() {
+        const sizeSelect = document.getElementById('size');
+        const colorSelect = document.getElementById('color');
+        const priceDisplay = document.getElementById('variant-price');
+        const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
+        const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
 
-document.addEventListener('DOMContentLoaded', function() {
-    const sizeSelect = document.getElementById('size');
-    const colorSelect = document.getElementById('color');
-    const priceDisplay = document.getElementById('variant-price');
-    const variantImages = document.querySelectorAll('.product-variant-image'); // Sélectionner toutes les images des variantes
+        // Injecter les variantes préparées depuis PHP en utilisant json_encode
+        let variants = {{ variants|json_encode()|raw }};
+        
+        console.log('Variants:', variants); // Vérifie la structure dans la console
 
-    // Injecter les variantes préparées depuis PHP en utilisant json_encode
-    let variants = {{ variants|json_encode()|raw }};
-    
-    console.log('Variants:', variants); // Vérifie la structure dans la console
-
-    // Fonction pour obtenir une variante par taille et couleur
-    function getVariantBySizeAndColor(selectedSize, selectedColor) {
-        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
-    }
-
-    // Fonction pour mettre à jour le prix selon la sélection de taille et de couleur
-    function updatePrice() {
-        const selectedSize = sizeSelect.value;
-        const selectedColor = colorSelect.value;
-
-        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
-
-        if (selectedVariant) {
-            priceDisplay.textContent = `${selectedVariant.price} €`;
-        } else {
-            priceDisplay.textContent = 'Prix indisponible';
+        // Fonction pour obtenir une variante par taille et couleur
+        function getVariantBySizeAndColor(selectedSize, selectedColor) {
+            return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
         }
-    }
 
-    // Fonction pour mettre à jour les images selon la variante sélectionnée
-    function updateVariantImages() {
-        const selectedSize = sizeSelect.value;
-        const selectedColor = colorSelect.value;
+        // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
+        function updatePrice() {
+            const selectedSize = sizeSelect.value;
+            const selectedColor = colorSelect.value;
 
-        // Trouver la variante correspondant à la taille et couleur choisies
-        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+            const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
 
-        if (selectedVariant) {
-            // Masquer toutes les images des variantes
-            variantImages.forEach(image => {
-                image.style.display = 'none';  // Masquer toutes les images
+            if (selectedVariant) {
+                const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
 
-                // Afficher uniquement les images qui sont associées à la variante sélectionnée
-                if (image.getAttribute('data-variant-id') === String(selectedVariant.id)) {
-                    image.style.display = 'block';  // Afficher les images correspondant à la variante sélectionnée
+                // Affiche le prix réduit
+                priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+                // Affiche l'ancien prix barré si une réduction existe
+                if (selectedVariant.offVariant > 0) {
+                    oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
+                    oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
+
+                    discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
+                    discountDisplay.style.display = 'block'; // Affiche la réduction
+                } else {
+                    oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
+                    discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
                 }
-            });
-        }
-    }
-
-    // Mettre à jour les images lors des changements de taille et de couleur
-    sizeSelect.addEventListener('change', updateVariantImages);
-    colorSelect.addEventListener('change', updateVariantImages);
-
-    // Mettre à jour les prix lors des changements de taille et de couleur
-    sizeSelect.addEventListener('change', updatePrice);
-    colorSelect.addEventListener('change', updatePrice);
-
-    // Initialiser avec la première variante sélectionnée
-    updatePrice();
-    updateVariantImages();
-});
-
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    const sizeSelect = document.getElementById('size');
-    const colorSelect = document.getElementById('color');
-    const priceDisplay = document.getElementById('variant-price');
-    const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
-    const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
-
-    // Injecter les variantes préparées depuis PHP en utilisant json_encode
-    let variants = {{ variants|json_encode()|raw }};
-    
-    console.log('Variants:', variants); // Vérifie la structure dans la console
-
-    // Fonction pour obtenir une variante par taille et couleur
-    function getVariantBySizeAndColor(selectedSize, selectedColor) {
-        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
-    }
-
-    // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
-    function updatePrice() {
-        const selectedSize = sizeSelect.value;
-        const selectedColor = colorSelect.value;
-
-        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
-
-        if (selectedVariant) {
-            const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
-
-            // Affiche le prix réduit
-            priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
-
-            // Affiche l'ancien prix barré si une réduction existe
-            if (selectedVariant.offVariant > 0) {
-                oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
-                oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
-
-                discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
-                discountDisplay.style.display = 'block'; // Affiche la réduction
             } else {
-                oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
-                discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+                priceDisplay.textContent = 'Prix indisponible';
+                oldPriceDisplay.style.display = 'none';
+                discountDisplay.style.display = 'none';
             }
-        } else {
-            priceDisplay.textContent = 'Prix indisponible';
-            oldPriceDisplay.style.display = 'none';
-            discountDisplay.style.display = 'none';
         }
-    }
 
-    // Mettre à jour les prix lors des changements de taille et de couleur
-    sizeSelect.addEventListener('change', updatePrice);
-    colorSelect.addEventListener('change', updatePrice);
+        // Mettre à jour les prix lors des changements de taille et de couleur
+        sizeSelect.addEventListener('change', updatePrice);
+        colorSelect.addEventListener('change', updatePrice);
 
-    // Initialiser avec la première variante sélectionnée
-    updatePrice();
-});
+        // Initialiser avec la première variante sélectionnée
+        updatePrice();
+    });
 
+    {# TODO: Qaund on séléction une couleur ce la affiches l'image qui correspondes à la variante#}
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorSelect = document.getElementById('color');
+        const mainImage = document.getElementById('main_product_img');
+        const thumbnailsContainer = document.getElementById('thumbnails');
+        
+        // Variantes injectées depuis Twig
+        const variants = {{ variants|json_encode()|raw }};
+        
+        function updateImages(selectedColor) {
+            // Trouver la variante correspondant à la couleur sélectionnée
+            const selectedVariant = variants.find(variant => variant.color === selectedColor);
 
+            if (selectedVariant && selectedVariant.images.length > 0) {
+                // Mettre à jour l'image principale
+                const firstImage = selectedVariant.images[0].imageName;
+                console.log(`Chemin de l'image: /images/products/${firstImage}`);  // Vérifiez ici l'URL générée
+                mainImage.src = `/images/products/${firstImage}`;
 
-{# document.addEventListener('DOMContentLoaded', function() {
-    const sizeSelect = document.getElementById('size');
-    const colorSelect = document.getElementById('color');
-    const mainImageDisplay = document.getElementById('main_product_img');
-    const thumbnailsContainer = document.getElementById('thumbnails'); // Conteneur pour les miniatures des images
+                // Vider les miniatures précédentes
+                thumbnailsContainer.innerHTML = '';
 
-    // Injecter les variantes préparées depuis PHP en utilisant json_encode
-    let variants = {{ variants|json_encode()|raw }};
-    
-    console.log('Variants:', variants); // Vérifie la structure dans la console
+                // Générer les miniatures
+                selectedVariant.images.forEach(image => {
+                    const thumbnail = document.createElement('div');
+                    thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'mx-2');
 
-    // Fonction pour obtenir une variante par taille et couleur
-    function getVariantBySizeAndColor(selectedSize, selectedColor) {
-        return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
-    }
+                    thumbnail.innerHTML = `
+                        <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
+                            <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
+                                <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </a>
+                        </div>
+                    `;
 
-    // Fonction pour mettre à jour les images selon la variante sélectionnée
-    function updateVariantImages() {
-        const selectedSize = sizeSelect.value;
-        const selectedColor = colorSelect.value;
-
-        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
-
-        if (selectedVariant && selectedVariant.images.length > 0) {
-            // Mettre à jour l'image principale avec la première image de la variante
-            const firstImage = selectedVariant.images[0].imageName;
-            mainImageDisplay.src = `/images/products/${firstImage}`;
-            mainImageDisplay.setAttribute('data-zoom-image', `/images/products/${firstImage}`);
-
-            // Afficher les miniatures
-            thumbnailsContainer.innerHTML = ''; // Vider les miniatures précédentes
-            selectedVariant.images.forEach((image, index) => {
-                const thumbnail = document.createElement('div');
-                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'ml-3');
-                thumbnail.innerHTML = `
-                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
-                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover;" data-large-src="/images/products/${image.imageName}" />
-                        </a>
-                    </div>
-                `;
-
-                // Ajouter un événement de clic pour changer l'image principale
-                thumbnail.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    changeMainImage(thumbnail.querySelector('img'));
+                    thumbnailsContainer.appendChild(thumbnail);
                 });
-
-                thumbnailsContainer.appendChild(thumbnail);
-            });
-
-            // Réinitialiser et appliquer Elevate Zoom sur l'image principale
-            initElevateZoom();
-        } else {
-            // Réinitialiser si aucune image disponible pour la variante
-            mainImageDisplay.src = `/images/products/default.jpg`;
-            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
-        }
-    }
-
-    // Fonction pour appliquer Elevate Zoom sur l'image principale
-    function initElevateZoom() {
-        $('#main_product_img').elevateZoom({
-            zoomType: "inner",
-            cursor: "crosshair"
-        });
-    }
-
-    // Fonction pour changer l'image principale
-    function changeMainImage(thumbnail) {
-        const mainImage = $('#main_product_img');
-        const largeSrc = thumbnail.getAttribute('data-large-src');
-        mainImage.attr('src', largeSrc);
-        mainImage.data('zoom-image', largeSrc);
-
-        mainImage.removeData('elevateZoom');
-        $('.zoomContainer').remove();
-        initElevateZoom();
-    }
-
-    // Mettre à jour les images lors des changements de taille et de couleur
-    sizeSelect.addEventListener('change', updateVariantImages);
-    colorSelect.addEventListener('change', updateVariantImages);
-
-    // Initialiser avec la première variante sélectionnée
-    updateVariantImages();
-}); #}
-
-
-
-{# document.addEventListener('DOMContentLoaded', function() {
-    const colorSelect = document.getElementById('color');
-    const mainImage = document.getElementById('main_product_img');
-    const thumbnailsContainer = document.getElementById('thumbnails');
-    
-    // Variantes injectées depuis Twig
-    const variants = {{ variants|json_encode()|raw }};
-    
-    function updateImages(selectedColor) {
-        // Trouver la variante correspondant à la couleur sélectionnée
-        const selectedVariant = variants.find(variant => variant.color === selectedColor);
-
-        if (selectedVariant && selectedVariant.images.length > 0) {
-            // Mettre à jour l'image principale
-            const firstImage = selectedVariant.images[0].imageName;
-            mainImage.src = `/images/products/${firstImage}`;
-
-            // Vider les miniatures précédentes
-            thumbnailsContainer.innerHTML = '';
-
-            // Générer les miniatures
-            selectedVariant.images.forEach(image => {
-                const thumbnail = document.createElement('div');
-                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3');
-
-                thumbnail.innerHTML = `
-                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
-                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
-                        </a>
-                    </div>
-                `;
-
-                thumbnailsContainer.appendChild(thumbnail);
-            });
-        } else {
-            // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
-            mainImage.src = `/images/products/default.jpg`;
-            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
-        }
-    }
-
-    // Mettre à jour les images quand la couleur change
-    colorSelect.addEventListener('change', function() {
-        const selectedColor = this.value;
-        updateImages(selectedColor);
-    });
-
-    // Initialiser avec la première couleur sélectionnée
-    if (colorSelect.value) {
-        updateImages(colorSelect.value);
-    }
-}); #}
-
-
-
-
-
-
-
-
-{# TODO: Qaund on séléction une couleur ce la affiches l'image qui correspondes à la variante#}
-document.addEventListener('DOMContentLoaded', function() {
-    const colorSelect = document.getElementById('color');
-    const mainImage = document.getElementById('main_product_img');
-    const thumbnailsContainer = document.getElementById('thumbnails');
-    
-    // Variantes injectées depuis Twig
-    const variants = {{ variants|json_encode()|raw }};
-    
-    function updateImages(selectedColor) {
-        // Trouver la variante correspondant à la couleur sélectionnée
-        const selectedVariant = variants.find(variant => variant.color === selectedColor);
-
-        if (selectedVariant && selectedVariant.images.length > 0) {
-            // Mettre à jour l'image principale
-            const firstImage = selectedVariant.images[0].imageName;
-            console.log(`Chemin de l'image: /images/products/${firstImage}`);  // Vérifiez ici l'URL générée
-            mainImage.src = `/images/products/${firstImage}`;
-
-            // Vider les miniatures précédentes
-            thumbnailsContainer.innerHTML = '';
-
-            // Générer les miniatures
-            selectedVariant.images.forEach(image => {
-                const thumbnail = document.createElement('div');
-                thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'mx-2');
-
-                thumbnail.innerHTML = `
-                    <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
-                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
-                        </a>
-                    </div>
-                `;
-
-                thumbnailsContainer.appendChild(thumbnail);
-            });
-        } else {
-            // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
-            mainImage.src = `/images/products/default.jpg`;
-            thumbnailsContainer.innerHTML = ''; // Vider les miniatures
-        }
-    }
-
-    // Mettre à jour les images quand la couleur change
-    colorSelect.addEventListener('change', function() {
-        const selectedColor = this.value;
-        updateImages(selectedColor);
-    });
-
-    // Initialiser avec la première couleur sélectionnée
-    if (colorSelect.value) {
-        updateImages(colorSelect.value);
-    }
-});
-
-
-
-
-
-
-
-
-
-
-{# TODO: Affiche le prix et bar le prix de off#}
-document.addEventListener('DOMContentLoaded', function() {
-    const sizeSelect = document.getElementById('size');
-    const colorSelect = document.getElementById('color');
-    const priceDisplay = document.getElementById('variant-price');
-    const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
-    const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
-
-    // Variantes injectées depuis PHP via Twig
-    let variants = {{ variants|json_encode()|raw }};
-    
-    console.log('Variants:', variants); // Vérifie la structure dans la console
-
-    // Fonction pour obtenir une variante par taille et couleur
-    function getVariantBySizeAndColor(selectedSize, selectedColor) {
-        return variants.find(variant => variant.color === selectedColor && variant.sizes.includes(selectedSize));
-    }
-
-    // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
-    function updatePrice() {
-        const selectedSize = sizeSelect.value;
-        const selectedColor = colorSelect.value;
-
-        const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
-
-        if (selectedVariant) {
-            const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
-
-            // Affiche le prix réduit
-            priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
-
-            // Affiche l'ancien prix barré si une réduction existe
-            if (selectedVariant.offVariant > 0) {
-                oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
-                oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
-
-                discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
-                discountDisplay.style.display = 'block'; // Affiche la réduction
             } else {
-                oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
-                discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+                // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
+                mainImage.src = `/images/products/default.jpg`;
+                thumbnailsContainer.innerHTML = ''; // Vider les miniatures
             }
-        } else {
-            priceDisplay.textContent = 'Prix indisponible';
-            oldPriceDisplay.style.display = 'none';
-            discountDisplay.style.display = 'none';
         }
-    }
 
-    // Mettre à jour les prix lors des changements de taille et de couleur
-    sizeSelect.addEventListener('change', updatePrice);
-    colorSelect.addEventListener('change', updatePrice);
+        // Mettre à jour les images quand la couleur change
+        colorSelect.addEventListener('change', function() {
+            const selectedColor = this.value;
+            updateImages(selectedColor);
+        });
 
-    // Initialiser avec la première variante sélectionnée
-    updatePrice();
-});
+        // Initialiser avec la première couleur sélectionnée
+        if (colorSelect.value) {
+            updateImages(colorSelect.value);
+        }
+    });
+
+
+
+
+
+    {# TODO: Affiche le prix et bar le prix de off#}
+    document.addEventListener('DOMContentLoaded', function() {
+        const sizeSelect = document.getElementById('size');
+        const colorSelect = document.getElementById('color');
+        const priceDisplay = document.getElementById('variant-price');
+        const oldPriceDisplay = document.getElementById('old-price'); // Pour l'ancien prix barré
+        const discountDisplay = document.getElementById('variant-off'); // Pour la réduction
+
+        // Variantes injectées depuis PHP via Twig
+        let variants = {{ variants|json_encode()|raw }};
+        
+        console.log('Variants:', variants); // Vérifie la structure dans la console
+
+        // Fonction pour obtenir une variante par taille et couleur
+        function getVariantBySizeAndColor(selectedSize, selectedColor) {
+            return variants.find(variant => variant.color === selectedColor && variant.sizes.includes(selectedSize));
+        }
+
+        // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
+        function updatePrice() {
+            const selectedSize = sizeSelect.value;
+            const selectedColor = colorSelect.value;
+
+            const selectedVariant = getVariantBySizeAndColor(selectedSize, selectedColor);
+
+            if (selectedVariant) {
+                const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+
+                // Affiche le prix réduit
+                priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+                // Affiche l'ancien prix barré si une réduction existe
+                if (selectedVariant.offVariant > 0) {
+                    oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`; // Prix original
+                    oldPriceDisplay.style.display = 'inline'; // Affiche l'ancien prix barré
+
+                    discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`; // Montre le pourcentage de réduction
+                    discountDisplay.style.display = 'block'; // Affiche la réduction
+                } else {
+                    oldPriceDisplay.style.display = 'none'; // Cache l'ancien prix si aucune réduction
+                    discountDisplay.style.display = 'none'; // Cache la réduction si elle n'existe pas
+                }
+            } else {
+                priceDisplay.textContent = 'Prix indisponible';
+                oldPriceDisplay.style.display = 'none';
+                discountDisplay.style.display = 'none';
+            }
+        }
+
+        // Mettre à jour les prix lors des changements de taille et de couleur
+        sizeSelect.addEventListener('change', updatePrice);
+        colorSelect.addEventListener('change', updatePrice);
+
+        // Initialiser avec la première variante sélectionnée
+        updatePrice();
+    });
+
+
 
 
 
@@ -1001,4 +816,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -45,7 +45,7 @@ class ProductCrudController extends AbstractCrudController
             TextEditorField::new('description')
                 ->setFormType(CKEditorType::class)
                 ->hideOnIndex(),
-            CollectionField::new('productVariants')
+            CollectionField::new('variants')
                 ->setEntryType(ProductVariantType::class) // Utilisez ProductVariantType
                 ->setFormTypeOptions([
                     'by_reference' => false,
@@ -82,7 +82,7 @@ class ProductCrudController extends AbstractCrudController
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         if ($entityInstance instanceof Product) {
-            foreach ($entityInstance->getProductVariants() as $productVariant) {
+            foreach ($entityInstance->getVariants() as $productVariant) {
                 $productVariant->setProduct($entityInstance);
                 foreach ($productVariant->getVariantImages() as $variantImage) {
                     // Lier l'image au produit via la variante
@@ -98,7 +98,7 @@ class ProductCrudController extends AbstractCrudController
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         if ($entityInstance instanceof Product) {
-            foreach ($entityInstance->getProductVariants() as $productVariant) {
+            foreach ($entityInstance->getVariants() as $productVariant) {
                 // Liez le produit à chaque variante
                 $productVariant->setProduct($entityInstance);
             }

@@ -83,11 +83,23 @@
                         {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' %}
                         <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
                             <ul class="cart_list">
-                                <div id="cart-data" 
+                                {# <div id="cart-data" 
                                     data-delete-path="{{ path('app_delete_to_cart', {'id': 'element.product.id'}) }}" 
-                                    data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
+                                    {# data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
+                                    data-add-path="{{ path('app_add_to_cart', {'variantId': element.variant.id}) }}"
                                     data-delete-all-path="{{ path('app_cart_delete_all', {'id': 'element.product.id'}) }}">
-                                </div>
+                                </div> #}
+                               {# {% for item in cart.products %}
+                                    {% if item.variant and item.variant.id %}
+                                        <div id="cart-data" 
+                                            data-delete-path="{{ path('app_cart_decrease', {'variantId': item.variant.id}) }}" 
+                                            data-add-path="{{ path('app_cart_increase', {'variantId': item.variant.id, 'quantity': item.quantity}) }}"
+                                            data-delete-all-path="{{ path('app_cart_clear', {'variantId': item.variant.id}) }}">
+                                        </div>
+                                    {% else %}
+                                        <p>Erreur : le variant n'est pas disponible pour ce produit.</p>
+                                    {% endif %}
+                                {% endfor %} #}
                             </ul>
                                 <div class="cart_footer">
                                     <p class="cart_total text-dark">
@@ -112,6 +124,7 @@
                                         <span class="cart_price_ttc"></span>
                                     </p>
                                     <p class="cart_buttons">
+                                    
                                         {# <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a> #}
                                         <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
                                     </p>
@@ -125,3 +138,4 @@
         </div>
     </div>
 </header>
+
