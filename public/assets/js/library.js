@@ -103,7 +103,7 @@ export const initCart = (cart = null) => {
         cart.products.forEach(item => {
             const { product, variant, quantity } = item;
             const imageUrl = product.images && product.images.length > 0
-                ? `/images/products/${product.images[0]}`
+                ? `/images/products/${variant.images[0]}`
                 : '/images/products/default.jpg';
 
             const deletePath = `/mon-panier/${product.id}/supprimer`;
@@ -233,75 +233,101 @@ function updateCartQuantityInDOM(uniqueKey, quantity) {
 //     attachQuantityChangeEvents(); // Recharge les événements pour les nouveaux éléments
 // }
 
+
+
+
+
+
+
+
+
+
 export const updateHeaderCart = (cart) => {
     console.log('Données reçues pour mettre à jour le header :', cart);
 
     const cartListElement = document.querySelector('.cart_list');
     const cartCountElement = document.querySelector('.cart_count');
-    const cart_price_value = document.querySelector('.cart_price_value');
-    const cart_price_taxe = document.querySelector('.cart_price_taxe');
-    const cart_price_ttc = document.querySelector('.cart_price_ttc');
+    const cartPriceValue = document.querySelector('.cart_price_value');
+    const cartPriceTaxe = document.querySelector('.cart_price_taxe');
+    const cartPriceTTC = document.querySelector('.cart_price_ttc');
 
+    // Vérification si le panier est vide
     if (!cart || !cart.products || cart.products.length === 0) {
         console.log('Le panier est vide, mise à jour en conséquence.');
+
         if (cartListElement) {
             cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
         }
 
-        if (cart_price_value) cart_price_value.innerHTML = '0.00 €';
-        if (cart_price_taxe) cart_price_taxe.innerHTML = '0.00 €';
-        if (cart_price_ttc) cart_price_ttc.innerHTML = '0.00 €';
+        if (cartPriceValue) cartPriceValue.innerHTML = '0.00 €';
+        if (cartPriceTaxe) cartPriceTaxe.innerHTML = '0.00 €';
+        if (cartPriceTTC) cartPriceTTC.innerHTML = '0.00 €';
         if (cartCountElement) cartCountElement.textContent = '0';
+
         return;
     }
 
     // Mise à jour des totaux globaux
-    console.log('Mise à jour des totaux globaux.');
-    if (cart_price_value) cart_price_value.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
-    if (cart_price_taxe) cart_price_taxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
-    if (cart_price_ttc) cart_price_ttc.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
-    if (cartCountElement) cartCountElement.textContent = cart.data.cart_count;
+    if (cartPriceValue) {
+        cartPriceValue.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
+    }
+    if (cartPriceTaxe) {
+        cartPriceTaxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
+    }
+    if (cartPriceTTC) {
+        cartPriceTTC.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
+    }
+    if (cartCountElement) {
+        cartCountElement.textContent = cart.data.cart_count;
+    }
 
-    // Mise à jour des produits dans le DOM
-    console.log('Mise à jour des produits dans le DOM.');
-    cartListElement.innerHTML = '';
-    cart.products.forEach(item => {
-        const { variant, quantity } = item;
+    // Réinitialisation et mise à jour des produits dans le DOM
+    if (cartListElement) {
+        cartListElement.innerHTML = ''; // Vide la liste avant de la remplir
 
-        // Génération d'une clé unique
-        const uniqueKey = `${variant.id}-${variant.size}-${variant.color}`;
+        cart.products.forEach((item) => {
+            const { variant, quantity, product } = item;
 
-        console.log('Ajout de l\'élément au DOM avec la clé unique :', uniqueKey);
+            // Construire une clé unique pour éviter les doublons
+            const uniqueKey = `${variant.id}-${variant.size}-${variant.color}`;
 
-        const product = item.product;
-        const imageUrl = product.images && product.images.length > 0
-            ? `/images/products/${product.images[0]}`
-            : '/images/products/default.jpg';
+            // Calcul du prix TTC avec remise
+            const discount = variant.offVariant ? (variant.offVariant / 100) : 0;
+            const discountedPriceTTC = variant.price * (1 - discount);
+            // Vérifier si l'image existe
+            const imageUrl =
+                product.images && product.images.length > 0
+                    ? `/images/products/${product.images[0]}`
+                    : '/images/products/default.jpg';
 
-        const content = `
-            <li data-variant-key="${uniqueKey}">
-                <a href="/produit/${product.slug}" class="product-thumbnail">
-                    <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
-                    ${product.name} (${variant.size}, ${variant.color})
-                </a>
-                <a href="/mon-panier/${variant.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
-                <div class="cart-product-quantity mb-4">
-                    <div class="quantity">
-                        <a href="/mon-panier/${variant.id}/diminuer" class="minus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">-</a>
-                        <input type="text" value="${quantity}" class="qty" readonly>
-                        <a href="/mon-panier/${variant.id}/ajouter" class="plus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">+</a>
+            // HTML pour chaque produit
+            const content = `
+                <li data-variant-key="${uniqueKey}">
+                    <a href="/produit/${product.slug}" class="product-thumbnail">
+                        <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
+                        ${product.name} (${variant.size || 'Default'}, ${variant.color || 'Default'})
+                    </a>
+                    <a href="/mon-panier/${variant.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
+                    <div class="cart-product-quantity mb-4">
+                        <div class="quantity">
+                            <a href="/mon-panier/${variant.id}/diminuer" class="minus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">-</a>
+                            <input type="text" value="${quantity}" class="qty" readonly>
+                            <a href="/mon-panier/${variant.id}/ajouter" class="plus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">+</a>
+                        </div>
                     </div>
-                </div>
-                <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${variant.price.toFixed(2)} €</span></span>
-            </li>
-        `;
-
-        cartListElement.insertAdjacentHTML('beforeend', content);
-    });
+                    <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${discountedPriceTTC.toFixed(2)} €</span></span>
+                </li>
+            `;
+            cartListElement.insertAdjacentHTML('beforeend', content);
+        });
+    }
 
     console.log('Réattachement des événements.');
-    attachQuantityChangeEvents();
+
+    // Réattachement des événements nécessaires
+    attachQuantityChangeEvents(); // Assurez-vous que cette fonction existe pour gérer les boutons "plus" et "moins"
 };
+
 
 
 

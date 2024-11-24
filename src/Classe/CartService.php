@@ -329,66 +329,109 @@ class CartService
     //      ];
     //  }   
      
-   
-     
-    public function getFullCart(): array
+    private function calculateSubTotalHT(array $cart): float
     {
-        $cart = $this->getSession()->get('cart', []);
-        $fullCart = ['products' => []];
-        $cartCount = 0;
+        $subTotalHT = 0;
+    
+        foreach ($cart['products'] as $item) {
+            if (isset($item['variant']['price'], $item['quantity'], $item['variant']['offVariant'])) {
+                $priceTTC = $item['variant']['price']; // Prix TTC
+                $discount = $item['variant']['offVariant'] / 100; // Réduction
+                $priceAfterDiscountTTC = $priceTTC * (1 - $discount); // Prix TTC après réduction
+                $priceHT = $priceAfterDiscountTTC / 1.2; // Conversion TTC -> HT
+                $subTotalHT += $priceHT * $item['quantity'];
+            } else {
+                error_log('Item mal formé dans le panier: ' . json_encode($item));
+            }
+        }
+    
+        return $this->truncateToTwoDecimals($subTotalHT);
+    }
+    
+    private function calculateSubTotalTTC(array $cart): float
+    {
         $subTotalTTC = 0;
     
-        foreach ($cart as $key => $item) {
-            if (!isset($item['variantId'], $item['quantity'], $item['selectedSize'], $item['selectedColor'])) {
-                continue;
+        foreach ($cart['products'] as $item) {
+            if (isset($item['variant']['price'], $item['quantity'], $item['variant']['offVariant'])) {
+                $priceTTC = $item['variant']['price'];
+                $discount = $item['variant']['offVariant'] / 100; // Réduction
+                $priceAfterDiscountTTC = $priceTTC * (1 - $discount); // Prix TTC après réduction
+                $subTotalTTC += $priceAfterDiscountTTC * $item['quantity'];
+            } else {
+                error_log('Item mal formé dans le panier: ' . json_encode($item));
             }
+        }
     
+        return $this->truncateToTwoDecimals($subTotalTTC);
+    }
+    
+    private function calculateTax(array $cart): float
+    {
+        $subTotalHT = $this->calculateSubTotalHT($cart);
+        $subTotalTTC = $this->calculateSubTotalTTC($cart);
+    
+        $tax = $subTotalTTC - $subTotalHT; // TVA = TTC - HT
+        return $this->truncateToTwoDecimals($tax);
+    }
+    
+    private function calculateTotalTTC(array $cart): float
+    {
+        return $this->calculateSubTotalTTC($cart);
+    }
+    
+    private function truncateToTwoDecimals(float $value): float
+    {
+        return round($value, 2); // Utilise round pour gérer les valeurs exactes
+    }
+    
+    public function getFullCart(): array
+    {
+        $cart = $this->getCart();
+        $fullCart = [
+            'products' => [],
+            'data' => [],
+        ];
+    
+        foreach ($cart as $item) {
             $variant = $this->repoProductVariant->find($item['variantId']);
-            if (!$variant) {
-                continue;
-            }
-    
             $product = $variant->getProduct();
-            if (!$product) {
-                continue;
-            }
     
-            $price = $variant->getPrice();
-            $itemTotalPrice = $price * $item['quantity'];
+            $variantImages = [];
+            foreach ($variant->getVariantImages() as $image) {
+                $variantImages[] = '/uploads/products/' . $image->getImageName();
+            }
     
             $fullCart['products'][] = [
                 'product' => [
                     'id' => $product->getId(),
                     'name' => $product->getName(),
                     'slug' => $product->getSlug(),
-                    'images' => array_map(fn($image) => $image->getImageName(), $product->getImages()->toArray()),
+                    'images' => $variantImages,
                 ],
                 'variant' => [
                     'id' => $variant->getId(),
-                    'price' => $price,
+                    'price' => $variant->getPrice(),
+                    'offVariant' => $variant->getOffVariant(), // Réduction
                     'size' => $item['selectedSize'],
                     'color' => $item['selectedColor'],
                 ],
                 'quantity' => $item['quantity'],
             ];
-    
-            $cartCount += $item['quantity'];
-            $subTotalTTC += $itemTotalPrice;
         }
     
-        $taxes = $subTotalTTC * $this->tva;
-        $subTotalHT = $subTotalTTC - $taxes;
-    
-        return [
-            'products' => $fullCart['products'],
-            'data' => [
-                'cart_count' => $cartCount,
-                'subTotalHT' => round($subTotalHT, 2),
-                'Taxe' => round($taxes, 2),
-                'subTotalTTC' => round($subTotalTTC, 2),
-            ],
+        $fullCart['data'] = [
+            'cart_count' => count($cart),
+            'subTotalHT' => $this->calculateSubTotalHT($fullCart),
+            'Taxe' => $this->calculateTax($fullCart),
+            'subTotalTTC' => $this->calculateTotalTTC($fullCart),
         ];
+    
+        return $fullCart;
     }
+
+ 
+    
     
     
      
