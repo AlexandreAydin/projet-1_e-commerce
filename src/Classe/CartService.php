@@ -13,8 +13,6 @@ class CartService
     private $repoProductVariant;
     private $tva = 0.2;
 
-    
-
     public function __construct(RequestStack $requestStack,
     ProductRepository $repoProduct,
     ProductVariantRepository $repoProductVariant)
@@ -25,26 +23,28 @@ class CartService
         
     }
 
-    /**
-     * Obtenir la session courante
-     */
     private function getSession()
     {
         return $this->requestStack->getSession();
     }
-
 
     public function saveCart(array $cart): void
     {
         $this->getSession()->set('cart', $cart);
     }
     
-
-
-
     public function addToCart(int $variantId, int $quantity, string $size, string $color): void
     {
         $cart = $this->getCart();
+        $variant = $this->repoProductVariant->find($variantId);
+    
+        if (!$variant) {
+            throw new \Exception('Variante non trouvée.');
+        }
+    
+        // Logs pour déboguer
+        error_log("Ajout au panier : Variant ID = {$variantId}, Taille = {$size}, Couleur = {$color}");
+        error_log("Prix de la variante : {$variant->getPrice()}, Remise : {$variant->getOffVariant()}%");
     
         foreach ($cart as &$item) {
             if (
@@ -52,160 +52,88 @@ class CartService
                 $item['selectedSize'] === $size &&
                 $item['selectedColor'] === $color
             ) {
-                // Ajout de la quantité choisie
                 $item['quantity'] += $quantity;
                 $this->saveCart($cart);
                 return;
             }
         }
     
-        // Si la variante n'existe pas encore dans le panier, on l'ajoute
         $cart[] = [
             'variantId' => $variantId,
-            'quantity' => $quantity, // Quantité correcte ici
+            'quantity' => $quantity,
             'selectedSize' => $size,
             'selectedColor' => $color,
+            'price' => $variant->getPrice(), // Prix TTC
+            'offVariant' => $variant->getOffVariant(),
         ];
     
         $this->saveCart($cart);
     }
     
     
+    
+    
 
-
-    
-    
-    
-    
-    
-    
     public function decreaseQuantity(int $variantId, string $size, string $color): void
-{
-    $cart = $this->getCart();
+    {
+        $cart = $this->getCart();
 
-    foreach ($cart as $key => &$item) {
-        if (
-            $item['variantId'] === $variantId &&
-            $item['selectedSize'] === $size &&
-            $item['selectedColor'] === $color
-        ) {
-            // Réduire la quantité
-            if ($item['quantity'] > 1) {
-                $item['quantity']--;
-            } else {
-                // Si la quantité est 1, supprimez le produit du panier
-                unset($cart[$key]);
+        foreach ($cart as $key => &$item) {
+            if (
+                $item['variantId'] === $variantId &&
+                $item['selectedSize'] === $size &&
+                $item['selectedColor'] === $color
+            ) {
+                // Réduire la quantité
+                if ($item['quantity'] > 1) {
+                    $item['quantity']--;
+                } else {
+                    // Si la quantité est 1, supprimez le produit du panier
+                    unset($cart[$key]);
+                }
+
+                // Sauvegarder le panier après modification
+                $this->saveCart($cart);
+                return;
             }
-
-            // Sauvegarder le panier après modification
-            $this->saveCart($cart);
-            return;
         }
     }
-}
-
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
 
     public function cleanCart()
-{
-    $cart = $this->getCart();
+    {
+        $cart = $this->getCart();
 
-    foreach ($cart as $variantId => $item) {
-        // Si l'élément est un scalaire, on le transforme en tableau avec une quantité par défaut
-        if (!is_array($item)) {
-            $cart[$variantId] = [
-                'quantity' => $item,
-                'selectedSize' => null
-            ];
+        foreach ($cart as $variantId => $item) {
+            // Si l'élément est un scalaire, on le transforme en tableau avec une quantité par défaut
+            if (!is_array($item)) {
+                $cart[$variantId] = [
+                    'quantity' => $item,
+                    'selectedSize' => null
+                ];
+            }
         }
+
+        $this->updateCart($cart);  // Mettre à jour le panier
     }
 
-    $this->updateCart($cart);  // Mettre à jour le panier
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Supprimer une quantité spécifique d'un produit du panier
-     */
-    // public function deleteFromCart(int $variantId, int $count = 1): void
-    // {
-    //     $cart = $this->getCart();
-    
-    //     // Assurez-vous que le panier est un tableau
-    //     if (!is_array($cart)) {
-    //         $cart = [];
-    //     }
-    
-    //     // Parcourt les produits dans le panier
-    //     foreach ($cart as $cartKey => $item) {
-    //         if (isset($item['variantId']) && $item['variantId'] == $variantId) {
-    //             // Réduit la quantité ou supprime le produit
-    //             if ($item['quantity'] <= $count) {
-    //                 unset($cart[$cartKey]); // Supprime complètement le produit
-    //             } else {
-    //                 $cart[$cartKey]['quantity'] -= $count; // Diminue la quantité
-    //             }
-    //             break;
-    //         }
-    //     }
-    
-    //     // Met à jour le panier dans la session
-    //     $this->updateCart($cart);
-    // }
-    
-    
-    
 
     /**
      * Supprimer complètement un produit du panier
      */
     public function deleteAllFromCart($variantId)
-{
-    $cart = $this->getCart();
+    {
+        $cart = $this->getCart();
 
-    // Rechercher et supprimer l'élément correspondant
-    foreach ($cart as $key => $item) {
-        if ($item['variantId'] == $variantId) {
-            unset($cart[$key]);
+        // Rechercher et supprimer l'élément correspondant
+        foreach ($cart as $key => $item) {
+            if ($item['variantId'] == $variantId) {
+                unset($cart[$key]);
+            }
         }
-    }
 
-    // Mettre à jour le panier dans la session
-    $this->updateCart($cart);
-}
+        // Mettre à jour le panier dans la session
+        $this->updateCart($cart);
+    }
 
 
     /**
@@ -226,7 +154,7 @@ class CartService
     /**
      * Récupérer le panier depuis la session
      */
-       public function getCart(): array
+    public function getCart(): array
     {
         $cart = $this->getSession()->get('cart', []);
         
@@ -240,106 +168,20 @@ class CartService
         return $cart; // Retourne un panier valide
     }
      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Calculer le panier complet avec les détails des produits, quantités et prix
-     */
-
-
-
-    //  public function getFullCart(): array
-    //  {
-    //      $cart = $this->getCart(); // Récupère le panier de la session
-    //      $fullCart = ['products' => []];
-    //      $cart_count = 0;
-    //      $subTotalTTC = 0;
-     
-    //      foreach ($cart as $item) {
-    //          $variantId = $item['variantId'];
-    //          $quantity = $item['quantity'];
-    //          $selectedSize = $item['selectedSize'];
-    //          $selectedColor = $item['selectedColor'];
-     
-    //          $variant = $this->repoProductVariant->find($variantId);
-    //          if (!$variant) {
-    //              continue;
-    //          }
-     
-    //          $product = $variant->getProduct();
-    //          if (!$product) {
-    //              continue;
-    //          }
-     
-    //          // Vérifiez si ce produit existe déjà dans le `fullCart`
-    //          $existingProductKey = array_search($variantId, array_column($fullCart['products'], 'variantId'));
-     
-    //          if ($existingProductKey !== false) {
-    //              // Si le produit existe déjà, combinez les quantités
-    //              $fullCart['products'][$existingProductKey]['quantity'] += $quantity;
-    //          } else {
-    //              // Sinon, ajoutez le produit comme une nouvelle entrée
-    //              $fullCart['products'][] = [
-    //                  'product' => [
-    //                      'id' => $product->getId(),
-    //                      'name' => $product->getName(),
-    //                      'slug' => $product->getSlug(),
-    //                      'images' => array_map(fn($image) => $image->getImageName(), $product->getImages()->toArray()),
-    //                  ],
-    //                  'variant' => [
-    //                      'id' => $variant->getId(),
-    //                      'price' => $variant->getPrice(),
-    //                      'size' => $selectedSize,
-    //                      'color' => $selectedColor,
-    //                  ],
-    //                  'quantity' => $quantity,
-    //              ];
-    //          }
-     
-    //          $cart_count += $quantity;
-    //          $subTotalTTC += $variant->getPrice() * $quantity;
-    //      }
-     
-    //      $taxes = $subTotalTTC * $this->tva;
-    //      $subTotalHT = $subTotalTTC - $taxes;
-     
-    //      return [
-    //          'products' => $fullCart['products'],
-    //          'data' => [
-    //              'cart_count' => $cart_count,
-    //              'subTotalHT' => $subTotalHT,
-    //              'Taxe' => $taxes,
-    //              'subTotalTTC' => $subTotalTTC,
-    //          ],
-    //      ];
-    //  }   
-     
     private function calculateSubTotalHT(array $cart): float
     {
         $subTotalHT = 0;
     
         foreach ($cart['products'] as $item) {
             if (isset($item['variant']['price'], $item['quantity'], $item['variant']['offVariant'])) {
-                $priceTTC = $item['variant']['price']; // Prix TTC
-                $discount = $item['variant']['offVariant'] / 100; // Réduction
-                $priceAfterDiscountTTC = $priceTTC * (1 - $discount); // Prix TTC après réduction
+                $priceTTC = $item['variant']['price'];
+                $discount = $item['variant']['offVariant'] / 100;
+                $priceAfterDiscountTTC = $priceTTC * (1 - $discount);
                 $priceHT = $priceAfterDiscountTTC / 1.2; // Conversion TTC -> HT
                 $subTotalHT += $priceHT * $item['quantity'];
+    
+                // Log pour déboguer
+                error_log("Variant ID: {$item['variant']['id']} - Price HT: $priceHT - Quantity: {$item['quantity']}");
             } else {
                 error_log('Item mal formé dans le panier: ' . json_encode($item));
             }
@@ -348,6 +190,7 @@ class CartService
         return $this->truncateToTwoDecimals($subTotalHT);
     }
     
+    
     private function calculateSubTotalTTC(array $cart): float
     {
         $subTotalTTC = 0;
@@ -355,9 +198,12 @@ class CartService
         foreach ($cart['products'] as $item) {
             if (isset($item['variant']['price'], $item['quantity'], $item['variant']['offVariant'])) {
                 $priceTTC = $item['variant']['price'];
-                $discount = $item['variant']['offVariant'] / 100; // Réduction
-                $priceAfterDiscountTTC = $priceTTC * (1 - $discount); // Prix TTC après réduction
+                $discount = $item['variant']['offVariant'] / 100;
+                $priceAfterDiscountTTC = $priceTTC * (1 - $discount);
                 $subTotalTTC += $priceAfterDiscountTTC * $item['quantity'];
+    
+                // Log pour déboguer
+                error_log("Variant ID: {$item['variant']['id']} - Price TTC (après remise): $priceAfterDiscountTTC - Quantity: {$item['quantity']}");
             } else {
                 error_log('Item mal formé dans le panier: ' . json_encode($item));
             }
@@ -365,6 +211,7 @@ class CartService
     
         return $this->truncateToTwoDecimals($subTotalTTC);
     }
+    
     
     private function calculateTax(array $cart): float
     {
@@ -395,56 +242,51 @@ class CartService
     
         foreach ($cart as $item) {
             $variant = $this->repoProductVariant->find($item['variantId']);
-            $product = $variant->getProduct();
-    
-            $variantImages = [];
-            foreach ($variant->getVariantImages() as $image) {
-                $variantImages[] = '/uploads/products/' . $image->getImageName();
+            if (!$variant) {
+                error_log("Variante introuvable pour ID: {$item['variantId']}");
+                continue;
             }
+    
+            $product = $variant->getProduct();
+            $priceTTC = $variant->getPrice();
+            $discount = $variant->getOffVariant() / 100;
+            $priceAfterDiscountTTC = $priceTTC * (1 - $discount);
+    
+            error_log("Produit: {$product->getName()} - ID variante: {$variant->getId()} - Prix TTC: $priceTTC - Prix après remise: $priceAfterDiscountTTC");
     
             $fullCart['products'][] = [
                 'product' => [
                     'id' => $product->getId(),
                     'name' => $product->getName(),
                     'slug' => $product->getSlug(),
-                    'images' => $variantImages,
+                    'images' => array_map(
+                        fn($img) => $img->getImageName(), 
+                        $variant->getVariantImages()->toArray()
+                    ),
                 ],
                 'variant' => [
                     'id' => $variant->getId(),
                     'price' => $variant->getPrice(),
-                    'offVariant' => $variant->getOffVariant(), // Réduction
+                    'offVariant' => $variant->getOffVariant(),
                     'size' => $item['selectedSize'],
                     'color' => $item['selectedColor'],
                 ],
                 'quantity' => $item['quantity'],
             ];
+            
         }
     
         $fullCart['data'] = [
             'cart_count' => count($cart),
             'subTotalHT' => $this->calculateSubTotalHT($fullCart),
             'Taxe' => $this->calculateTax($fullCart),
-            'subTotalTTC' => $this->calculateTotalTTC($fullCart),
+            'subTotalTTC' => $this->calculateSubTotalTTC($fullCart),
         ];
     
         return $fullCart;
     }
-
- 
     
     
-    
-     
-     
-     
-     
-     
-
-     
-     
-
-
-
 
 
     /**

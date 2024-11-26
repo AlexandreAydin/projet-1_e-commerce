@@ -143,6 +143,7 @@ export const initCart = (cart = null) => {
     addEventListenerToLink(); // Assurez-vous que cette fonction est bien définie
 };
 
+
 const addEventListenerToLink = () => {
     const links = document.querySelectorAll('.cart_list a.plus, .cart_list a.minus, .cart_list a.item_remove');
     links.forEach(link => {
@@ -157,90 +158,6 @@ function updateCartQuantityInDOM(uniqueKey, quantity) {
         console.log(`Quantité mise à jour pour la clé ${uniqueKey} : ${quantity}`);
     }
 }
-
-
-
-// export const updateHeaderCart = (cart) => {
-//     console.log('Données reçues pour mettre à jour le header :', cart);
-//     const cartListElement = document.querySelector('.cart_list');
-//     const cartCountElement = document.querySelector('.cart_count');
-//     const cart_price_value = document.querySelector('.cart_price_value');
-//     const cart_price_taxe = document.querySelector('.cart_price_taxe');
-//     const cart_price_ttc = document.querySelector('.cart_price_ttc');
-
-//     if (!cart || !cart.products || cart.products.length === 0) {
-//         console.log('Le panier est vide, mise à jour en conséquence.');
-//         if (cartListElement) {
-//             cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
-//         }
-
-//         if (cart_price_value) cart_price_value.innerHTML = 'Sous Total HT: 0.00 €';
-//         if (cart_price_taxe) cart_price_taxe.innerHTML = 'TVA: 0.00 €';
-//         if (cart_price_ttc) cart_price_ttc.innerHTML = 'Total TTC: 0.00 €';
-//         if (cartCountElement) cartCountElement.textContent = '0';
-//         return;
-//     }
-
-//     // Mise à jour des totaux globaux
-//     if (cart_price_value) {
-//         cart_price_value.innerHTML = `Sous Total HT: ${cart.data.subTotalHT.toFixed(2)} €`;
-//     }
-//     if (cart_price_taxe) {
-//         cart_price_taxe.innerHTML = `TVA: ${cart.data.Taxe.toFixed(2)} €`;
-//     }
-//     if (cart_price_ttc) {
-//         cart_price_ttc.innerHTML = `Total TTC: ${cart.data.subTotalTTC.toFixed(2)} €`;
-//     }
-//     if (cartCountElement) {
-//         cartCountElement.textContent = cart.data.cart_count;
-//     }
-
-//     // Réinitialisation et mise à jour des produits dans le DOM
-//     if (cartListElement) {
-//         cartListElement.innerHTML = ''; // Vide la liste avant de la remplir
-//         cart.products.forEach(item => {
-//             const { variant, quantity } = item;
-
-//             const uniqueKey = `${variant.id}-${variant.size || 'Default'}-${variant.color || 'Default'}`;
-
-//             const product = item.product;
-//             const imageUrl = product.images && product.images.length > 0
-//                 ? `/images/products/${product.images[0]}`
-//                 : '/images/products/default.jpg';
-
-//             const content = `
-//                 <li data-variant-key="${uniqueKey}">
-//                     <a href="/produit/${product.slug}" class="product-thumbnail">
-//                         <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
-//                         ${product.name} (${variant.size || 'Default'}, ${variant.color || 'Default'})
-//                     </a>
-//                     <a href="/mon-panier/${variant.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
-//                     <div class="cart-product-quantity mb-4">
-//                         <div class="quantity">
-//                             <a href="/mon-panier/${variant.id}/diminuer" class="minus" data-variant-id="${variant.id}">-</a>
-//                             <input type="text" value="${quantity}" class="qty" readonly>
-//                             <a href="/mon-panier/${variant.id}/ajouter" class="plus" data-variant-id="${variant.id}">+</a>
-//                         </div>
-//                     </div>
-//                     <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${variant.price.toFixed(2)} €</span></span>
-//                 </li>
-//             `;
-//             cartListElement.insertAdjacentHTML('beforeend', content);
-//         });
-//     }
-
-//     console.log('Réattachement des événements.');
-//     attachQuantityChangeEvents(); // Recharge les événements pour les nouveaux éléments
-// }
-
-
-
-
-
-
-
-
-
 
 export const updateHeaderCart = (cart) => {
     console.log('Données reçues pour mettre à jour le header :', cart);
@@ -328,9 +245,6 @@ export const updateHeaderCart = (cart) => {
     attachQuantityChangeEvents(); // Assurez-vous que cette fonction existe pour gérer les boutons "plus" et "moins"
 };
 
-
-
-
 document.querySelectorAll('.plus').forEach(button => {
     button.addEventListener('click', async function (event) {
         event.preventDefault();
@@ -359,8 +273,6 @@ document.querySelectorAll('.plus').forEach(button => {
         }
     });
 });
-
-
 
 document.querySelectorAll('.minus').forEach(button => {
     button.addEventListener('click', async function (event) {
@@ -391,9 +303,6 @@ document.querySelectorAll('.minus').forEach(button => {
     });
 });
 
-
-
-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Appeler la route pour obtenir les données du panier
@@ -407,179 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Erreur lors du chargement du panier :', error.message);
     }
 });
-
-
-
-// export const updateHeaderCart = (cart) => {
-//     const cartListElement = document.querySelector('.cart_list');
-//     const cartCountElement = document.querySelector('.cart_count');
-//     const cart_price_value = document.querySelector('.cart_price_value');
-//     const cart_price_taxe = document.querySelector('.cart_price_taxe');
-//     const cart_price_ttc = document.querySelector('.cart_price_ttc');
-
-//     if (!cart || !cart.products || cart.products.length === 0) {
-//         console.log('Le panier est vide, mise à jour en conséquence.');
-        
-//         if (cartListElement) {
-//             cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
-//         }
-//         if (cartCountElement) {
-//             cartCountElement.textContent = '0';
-//         }
-//         if (cart_price_value) {
-//             cart_price_value.innerHTML = '0.00 €';
-//         }
-//         if (cart_price_taxe) {
-//             cart_price_taxe.innerHTML = '0.00 €';
-//         }
-//         if (cart_price_ttc) {
-//             cart_price_ttc.innerHTML = '0.00 €';
-//         }
-
-//         return; // Fin de la fonction car le panier est vide
-//     }
-
-//     console.log('Mise à jour du header avec les données suivantes:', cart);
-
-//     // Mise à jour des totaux globaux
-//     if (cart_price_value) {
-//         cart_price_value.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
-//     }
-//     if (cart_price_taxe) {
-//         cart_price_taxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
-//     }
-//     if (cart_price_ttc) {
-//         cart_price_ttc.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
-//     }
-//     if (cartCountElement) {
-//         cartCountElement.textContent = cart.data.cart_count;
-//     }
-
-//     // Réinitialisation et mise à jour des produits dans le DOM
-//     if (cartListElement) {
-//         cartListElement.innerHTML = ''; // Vide la liste avant de la remplir
-//         cart.products.forEach(item => {
-//             const { variant, quantity } = item;
-
-//             const existingCartItem = cartListElement.querySelector(`li[data-variant-id="${variant.id}"]`);
-//             if (existingCartItem) {
-//                 // Mise à jour uniquement de la quantité
-//                 const qtyInput = existingCartItem.querySelector('.qty');
-//                 if (qtyInput) {
-//                     qtyInput.value = quantity;
-//                 }
-//             } else {
-//                 // Ajouter un nouveau produit si non présent
-//                 const product = item.product;
-//                 const imageUrl = product.images && product.images.length > 0
-//                     ? `/images/products/${product.images[0]}`
-//                     : '/images/products/default.jpg';
-
-//                 const content = `
-//                     <li data-variant-id="${variant.id}">
-//                         <a href="/produit/${product.slug}" class="product-thumbnail">
-//                             <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
-//                             ${product.name}
-//                         </a>
-//                         <a href="/mon-panier/${variant.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
-//                         <div class="cart-product-quantity mb-4">
-//                             <div class="quantity">
-//                                 <a href="/mon-panier/${variant.id}/diminuer" class="minus">-</a>
-//                                 <input type="text" value="${quantity}" class="qty" readonly>
-//                                 <a href="/mon-panier/${variant.id}/ajouter" class="plus">+</a>
-//                             </div>
-//                         </div>
-//                         <span class="cart_quantity text-dark qty" data-variant-id="${variant.id}">${quantity} x <span class="cart_amount">${variant.price.toFixed(2)} €</span></span>
-//                     </li>
-//                 `;
-//                 cartListElement.insertAdjacentHTML('beforeend', content);
-//             }
-//         });
-//     }
-
-//     console.log('Réattachement des événements.');
-//     addEventListenerToCartLinks(); // Recharge les événements pour les nouveaux éléments
-// };
-
-// export const updateHeaderCart = (cart) => {
-//     const cartListElement = document.querySelector('.cart_list');
-//     const cartCountElement = document.querySelector('.cart_count');
-//     const cart_price_value = document.querySelector('.cart_price_value');
-//     const cart_price_taxe = document.querySelector('.cart_price_taxe');
-//     const cart_price_ttc = document.querySelector('.cart_price_ttc');
-
-//     if (!cart || !cart.products || cart.products.length === 0) {
-//         console.log('Le panier est vide, mise à jour en conséquence.');
-
-//         if (cartListElement) {
-//             cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
-//         }
-
-//         if (cart_price_value) cart_price_value.innerHTML = 'Sous Total HT: 0.00 €';
-//         if (cart_price_taxe) cart_price_taxe.innerHTML = 'TVA: 0.00 €';
-//         if (cart_price_ttc) cart_price_ttc.innerHTML = 'Total TTC: 0.00 €';
-//         if (cartCountElement) cartCountElement.textContent = '0';
-
-//         return;
-//     }
-
-//     console.log('Mise à jour du header avec les données suivantes:', cart);
-
-//     // Mise à jour des totaux globaux
-//     if (cart_price_value) {
-//         cart_price_value.innerHTML = `Sous Total HT: ${cart.data.subTotalHT.toFixed(2)} €`;
-//     }
-//     if (cart_price_taxe) {
-//         cart_price_taxe.innerHTML = `TVA: ${cart.data.Taxe.toFixed(2)} €`;
-//     }
-//     if (cart_price_ttc) {
-//         cart_price_ttc.innerHTML = `Total TTC: ${cart.data.subTotalTTC.toFixed(2)} €`;
-//     }
-//     if (cartCountElement) {
-//         cartCountElement.textContent = cart.data.cart_count;
-//     }
-
-//     // Réinitialisation et mise à jour des produits dans le DOM
-//     if (cartListElement) {
-//         cartListElement.innerHTML = ''; // Vide la liste avant de la remplir
-//         cart.products.forEach(item => {
-//             const { variant, quantity } = item;
-
-//             // Construire un identifiant unique pour la variante
-//             const uniqueKey = `${variant.id}-${variant.size || 'default'}-${variant.color || 'default'}`;
-
-//             const product = item.product;
-//             const imageUrl = product.images && product.images.length > 0
-//                 ? `/images/products/${product.images[0]}`
-//                 : '/images/products/default.jpg';
-
-//             const content = `
-//                 <li data-variant-key="${uniqueKey}">
-//                     <a href="/produit/${product.slug}" class="product-thumbnail">
-//                         <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
-//                         ${product.name} (${variant.size || 'Default'}, ${variant.color || 'Default'})
-//                     </a>
-//                     <a href="/mon-panier/${variant.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
-//                     <div class="cart-product-quantity mb-4">
-//                         <div class="quantity">
-//                             <a href="/mon-panier/${variant.id}/diminuer" class="minus" data-variant-id="${variant.id}">-</a>
-//                             <input type="text" value="${quantity}" class="qty" readonly>
-//                             <a href="/mon-panier/${variant.id}/ajouter" class="plus" data-variant-id="${variant.id}">+</a>
-//                         </div>
-//                     </div>
-//                     <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${variant.price.toFixed(2)} €</span></span>
-//                 </li>
-//             `;
-//             cartListElement.insertAdjacentHTML('beforeend', content);
-//         });
-//     }
-
-//     console.log('Réattachement des événements.');
-//     addEventListenerToCartLinks(); // Recharge les événements pour les nouveaux éléments
-// };
-
-
-
 
 // Fonction principale pour gérer les liens dynamiques
 const manageCartLink = async (event) => {
@@ -701,27 +437,21 @@ document.querySelectorAll('.btn-addtocart').forEach(button => {
         event.preventDefault();
 
         const variantId = button.dataset.variantId;
-        const quantityInput = document.querySelector('input#quantity'); // Sélectionnez l'élément quantité
-        const quantity = parseInt(quantityInput?.value, 10) || 1; // Valeur saisie ou 1 par défaut
-        const size = document.querySelector('select[name="size"]').value || 'DefaultSize';
-        const color = document.querySelector('select[name="color"]').value || 'DefaultColor';
+        const size = document.querySelector('select[name="size"]').value;
+        const color = document.querySelector('select[name="color"]').value;
+        const quantity = parseInt(document.querySelector('input#quantity').value, 10) || 1;
 
-        console.log(`Quantité sélectionnée : ${quantity}`);
-        console.log(`Taille sélectionnée : ${size}`);
-        console.log(`Couleur sélectionnée : ${color}`);
+        console.log(`Variant ID: ${variantId}, Taille: ${size}, Couleur: ${color}, Quantité: ${quantity}`);
 
         const url = `/panier/${variantId}/ajouter/${quantity}?size=${size}&color=${color}`;
 
         try {
             const response = await fetch(url, { method: 'POST' });
-            if (!response.ok) {
-                throw new Error('Erreur lors de l\'ajout au panier');
-            }
-
             const data = await response.json();
+            console.log('Réponse du serveur :', data);
+
             if (data.products) {
-                updateHeaderCart(data); // Mettre à jour dynamiquement le panier
-                console.log('Panier mis à jour :', data);
+                updateHeaderCart(data);
             }
         } catch (error) {
             console.error('Erreur :', error.message);
@@ -729,6 +459,22 @@ document.querySelectorAll('.btn-addtocart').forEach(button => {
     });
 });
 
+
+
+
+
+function updateVariantId() {
+    const size = document.querySelector('select[name="size"]').value;
+    const color = document.querySelector('select[name="color"]').value;
+
+    // Trouver la variante correspondante
+    const variant = variants.find(v => v.size === size && v.color === color);
+    if (variant) {
+        const button = document.querySelector('.btn-addtocart');
+        button.dataset.variantId = variant.id; // Mettre à jour l'ID de la variante
+        console.log('ID de la variante mis à jour :', variant.id);
+    }
+}
 
 
 
@@ -752,4 +498,8 @@ const transformCartResponse = (serverResponse) => {
 
     return cartData;
 };
+
+
+
+
 

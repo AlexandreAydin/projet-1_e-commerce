@@ -803,9 +803,34 @@
     });
 
 
+  const variants = {{ variants|json_encode()|raw }};
+    console.log('Variants voir:', variants); 
 
 
+function getVariantBySizeAndColor(size, color) {
+    // Trouve une variante avec la couleur et contenant la taille
+    return variants.find(variant =>
+        variant.color === color && variant.sizes.includes(size)
+    );
+}
 
+
+// Lors du changement de taille ou de couleur
+document.querySelectorAll('select[name="size"], select[name="color"]').forEach(select => {
+    select.addEventListener('change', () => {
+        const size = document.querySelector('select[name="size"]').value;
+        const color = document.querySelector('select[name="color"]').value;
+
+        const selectedVariant = getVariantBySizeAndColor(size, color);
+
+        if (selectedVariant) {
+            console.log(`Variant sélectionné :`, selectedVariant);
+            document.querySelector('.btn-addtocart').dataset.variantId = selectedVariant.id;
+        } else {
+            console.warn('Aucune variante trouvée pour cette combinaison.');
+        }
+    });
+});
 
 
 
