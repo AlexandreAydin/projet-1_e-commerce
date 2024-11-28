@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-
+use App\Classe\WishListService;
 use App\Entity\OrderDetails;
 use App\Entity\Product;
 use App\Entity\ProductVariant;
@@ -32,7 +32,7 @@ class HomeController extends AbstractController
 {
     
     #[Route('/', name: 'app_home')]
-    public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo): Response
+    public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo, WishListService $wishListService): Response
     {
         // Utiliser la méthode avec tri pour récupérer les produits par ID décroissant
         $products = $repoProduct->findAllOrderedByIdDesc();
@@ -63,6 +63,8 @@ class HomeController extends AbstractController
         
         $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
 
+        $isInWishlist = $wishListService->isProductInWishlist($product->getId());
+
         return $this->render('pages/home/index.html.twig', [
             'controller_name' => 'HomeController',
             'products' => $products, 
@@ -72,318 +74,9 @@ class HomeController extends AbstractController
             'productSpecialOffer'=> $productSpecialOffer,
             'averageRating' => $averageRating,
             'productRatings' => $productRatings,
+            'isInWishlist' => $isInWishlist,
         ]);
     }
-    
-    // #[Route('/produit/{slug}', name: 'app_single_product')]
-    // public function single_product(
-    //     ?Product $product,
-    //     CartService $cartService,
-    //     RewiewsProductRepository $reviewsRepo,
-    //     EntityManagerInterface $em,
-    //     Request $request,
-    //     OrderRepository $orderRepo
-    // ): Response 
-    // {
-
-    //     if (!$product) { 
-    //         return $this->redirectToRoute('app_home');
-    //     }
-        
-    //     // Permet aux clients de noter uniquement le produit qu'ils ont acheté 
-    //     $orders = $orderRepo->findBy([
-    //         'isPaid' => true, 
-    //         'user' => $this->getUser(),
-    //     ]);
-            
-    //     $reviews = $reviewsRepo->findBy(['product' => $product]);
-    //     $starCounts = [
-    //         5 => 0,
-    //         4 => 0,
-    //         3 => 0,
-    //         2 => 0,
-    //         1 => 0
-    //     ];
-        
-    //     foreach ($reviews as $review) {
-    //         $note = $review->getNote();  
-    //         if (isset($starCounts[$note])) {
-    //             $starCounts[$note]++;
-    //         }
-    //     }
-    //     $newReview = new RewiewsProduct();
-    //     $form = $this->createForm(RewiewsProductType::class, $newReview);
-    //     $form->handleRequest($request);
-
-    //     if ($form->isSubmitted() && $form->isValid()) {
-    //         $newReview->setUser($this->getUser())
-    //                 ->setProduct($product)
-    //                 ->setCreatedAt(new \DateTimeImmutable());
-
-    //         $existingReview = $reviewsRepo->findOneBy([
-    //             'user' => $this->getUser(),
-    //             'product' => $product
-    //         ]);
-
-    //         // Gestion des fichiers image
-    //         $imageFiles = [
-    //             'rewiewImage' => $form->get('rewiewImage')->getData(),
-    //             'rewiewImages2' => $form->get('rewiewImages2')->getData(),
-    //             'rewiewImages3' => $form->get('rewiewImages3')->getData(),
-    //             'rewiewImages4' => $form->get('rewiewImages4')->getData(),
-    //             'rewiewImages5' => $form->get('rewiewImages5')->getData(),
-    //             'reviewVideo' => $form->get('reviewVideo')->getData(),
-    //         ];
-
-    //         foreach ($imageFiles as $property => $file) {
-    //             $setter = 'set' . ucfirst($property);
-    //             if ($file) {
-    //                 $newFilename = uniqid().'.'.$file->guessExtension();
-    //                 try {
-    //                     $file->move(
-    //                         $this->getParameter('images_directory'), // Chemin où stocker les fichiers
-    //                         $newFilename
-    //                     );
-    //                     if ($existingReview) {
-    //                         $existingReview->$setter($newFilename);
-    //                     } else {
-    //                         $newReview->$setter($newFilename);
-    //                     }
-    //                 } catch (FileException $e) {
-    //                     // Gérer l'erreur
-    //                 }
-    //             } else {
-    //                 // Si aucun fichier n'est soumis et qu'une image existe, la supprimer
-    //                 if ($existingReview) {
-    //                     $getter = 'get' . ucfirst($property);
-    //                     $currentImage = $existingReview->$getter();
-    //                     if ($currentImage) {
-    //                         $existingReview->$setter(null); // Supprimer l'image actuelle
-    //                         // Supprimez le fichier du serveur
-    //                         $filesystem = new Filesystem();
-    //                         $filesystem->remove($this->getParameter('images_directory').'/'.$currentImage);
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         if (!$existingReview) {
-    //             $em->persist($newReview);
-    //         } else {
-    //             $existingReview->setComment($newReview->getComment());
-    //             $existingReview->setNote($newReview->getNote());
-    //             $existingReview->setUpdatedAt(new \DateTimeImmutable());
-    //         }
-
-    //         $em->flush();
-    //         return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
-    //     }
-
-    //     $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
-    //     $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
-    //     $reviewsWithComments = array_filter($reviews, fn($review) => !empty($review->getComment()));
-    //     $reviewCount = count($reviewsWithComments);
-    //     $totalReviews = count($reviews);
-
-    //     $relatedRatings = [];
-    //     foreach ($product->getCategorie()->getProducts() as $relatedProduct) {
-    //         if ($relatedProduct->getId() != $product->getId()) {
-    //             $relatedRatings[$relatedProduct->getId()] = $reviewsRepo->getAverageRatingForProduct($relatedProduct);
-    //         }
-    //     }
-
-    //     return $this->render('pages/home/single_product.html.twig', [
-    //         'product' => $product,   
-    //         'cart' => $cartService->getFullCart(),
-    //         'reviews' => $reviews,
-    //         'averageRating' => $averageRating, // Afficher la moyenne des étoiles et la note d'un seul utilisateur
-    //         'form' => $form->createView(),
-    //         'reviewCount' => $reviewCount,
-    //         'orders' => $orders,
-    //         'starCounts' => $starCounts, // Afficher le % des personnes qui ont mis combien d'étoiles
-    //         'totalReviews' => $totalReviews,
-    //         'relatedRatings' => $relatedRatings // Afficher les étoiles des autres produits dans details_product
-    //     ]);
-    // }
-
-
-
-
-
-
-
-    // #[Route('/produit/{slug}', name: 'app_single_product')]
-    // public function singleProduct(
-    //     ?Product $product,
-    //     CartService $cartService,
-    //     RewiewsProductRepository $reviewsRepo,
-    //     EntityManagerInterface $em,
-    //     Request $request,
-    //     ProductRepository $productRepository,
-    //     OrderRepository $orderRepo
-    // ): Response {
-    //     // Si le produit n'existe pas, redirige vers la page d'accueil
-    //     if (!$product) {
-    //         return $this->redirectToRoute('app_home');
-    //     }
-
-    //     // Récupération des variantes du produit et formatage pour la vue
-    //     $variants = $product->getProductVariants()->toArray();
-    //     $formattedVariants = array_map(function ($variant) {
-    //         return [
-    //             'id' => $variant->getId(),
-    //             'color' => $variant->getColor(),
-    //             'sizes' => $variant->getSizes(), // Tableau des tailles
-    //             'price' => $variant->getPrice(),
-    //             'offVariant' => $variant->getOffVariant(),
-    //             'images' => array_map(function ($image) {
-    //                 return [
-    //                     'id' => $image->getId(),
-    //                     'imageName' => $image->getImageName(),
-    //                 ];
-    //             }, $variant->getVariantImages()->toArray())
-    //         ];
-    //     }, $variants);
-
-    //     // Permet aux clients de noter uniquement le produit qu'ils ont acheté
-    //     $orders = $orderRepo->findBy([
-    //         'isPaid' => true,
-    //         'user' => $this->getUser(),
-    //     ]);
-
-    //     // Récupération des avis clients
-    //     $reviews = $reviewsRepo->findBy(['product' => $product]);
-    //     $starCounts = [
-    //         5 => 0,
-    //         4 => 0,
-    //         3 => 0,
-    //         2 => 0,
-    //         1 => 0
-    //     ];
-    //     foreach ($reviews as $review) {
-    //         $note = $review->getNote();
-    //         if (isset($starCounts[$note])) {
-    //             $starCounts[$note]++;
-    //         }
-    //     }
-
-    //     // Gestion du formulaire de commentaire
-    //     $newReview = new RewiewsProduct();
-    //     $form = $this->createForm(RewiewsProductType::class, $newReview);
-    //     $form->handleRequest($request);
-
-    //     if ($form->isSubmitted() && $form->isValid()) {
-    //                 $newReview->setUser($this->getUser())
-    //                         ->setProduct($product)
-    //                         ->setCreatedAt(new \DateTimeImmutable());
-        
-    //                 $existingReview = $reviewsRepo->findOneBy([
-    //                     'user' => $this->getUser(),
-    //                     'product' => $product
-    //                 ]);
-        
-    //                 // Gestion des fichiers image
-    //                 $imageFiles = [
-    //                     'rewiewImage' => $form->get('rewiewImage')->getData(),
-    //                     'rewiewImages2' => $form->get('rewiewImages2')->getData(),
-    //                     'rewiewImages3' => $form->get('rewiewImages3')->getData(),
-    //                     'rewiewImages4' => $form->get('rewiewImages4')->getData(),
-    //                     'rewiewImages5' => $form->get('rewiewImages5')->getData(),
-    //                     'reviewVideo' => $form->get('reviewVideo')->getData(),
-    //                 ];
-        
-    //                 foreach ($imageFiles as $property => $file) {
-    //                     $setter = 'set' . ucfirst($property);
-    //                     if ($file) {
-    //                         $newFilename = uniqid().'.'.$file->guessExtension();
-    //                         try {
-    //                             $file->move(
-    //                                 $this->getParameter('images_directory'), // Chemin où stocker les fichiers
-    //                                 $newFilename
-    //                             );
-    //                             if ($existingReview) {
-    //                                 $existingReview->$setter($newFilename);
-    //                             } else {
-    //                                 $newReview->$setter($newFilename);
-    //                             }
-    //                         } catch (FileException $e) {
-    //                             // Gérer l'erreur
-    //                         }
-    //                     } else {
-    //                         // Si aucun fichier n'est soumis et qu'une image existe, la supprimer
-    //                         if ($existingReview) {
-    //                             $getter = 'get' . ucfirst($property);
-    //                             $currentImage = $existingReview->$getter();
-    //                             if ($currentImage) {
-    //                                 $existingReview->$setter(null); // Supprimer l'image actuelle
-    //                                 // Supprimez le fichier du serveur
-    //                                 $filesystem = new Filesystem();
-    //                                 $filesystem->remove($this->getParameter('images_directory').'/'.$currentImage);
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-        
-    //                 if (!$existingReview) {
-    //                     $em->persist($newReview);
-    //                 } else {
-    //                     $existingReview->setComment($newReview->getComment());
-    //                     $existingReview->setNote($newReview->getNote());
-    //                     $existingReview->setUpdatedAt(new \DateTimeImmutable());
-    //                 }
-        
-    //                 $em->flush();
-    //                 return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
-    //             }
-
-    //     // Calcul des moyennes de notes et comptage des avis
-    //     $totalRating = array_sum(array_map(fn($review) => $review->getNote(), $reviews));
-    //     $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
-    //     $reviewsWithComments = array_filter($reviews, fn($review) => !empty($review->getComment()));
-    //     $reviewCount = count($reviewsWithComments);
-    //     $totalReviews = count($reviews);
-
-    //     // Calcul des produits similaires avec leur notation moyenne
-    //     $relatedRatings = [];
-    //     foreach ($product->getCategorie()->getProducts() as $relatedProduct) {
-    //         if ($relatedProduct->getId() != $product->getId()) {
-    //             $relatedRatings[$relatedProduct->getId()] = $reviewsRepo->getAverageRatingForProduct($relatedProduct);
-    //         }
-    //     }
-
-    //     // Extraction des tailles et couleurs disponibles
-    //     $sizes = [];
-    //     $colors = [];
-    //     foreach ($variants as $variant) {
-    //         foreach ($variant->getSizes() as $size) {
-    //             if (!in_array($size, $sizes)) {
-    //                 $sizes[] = $size;
-    //             }
-    //         }
-    //         if (!in_array($variant->getColor(), $colors)) {
-    //             $colors[] = $variant->getColor();
-    //         }
-    //     }
-
-    //     $variants = $product->getProductVariants()->toArray();
-    //     // Rendu de la vue avec les informations récupérées
-    //     return $this->render('pages/home/single_product.html.twig', [
-    //         'product' => $product,
-    //         'cart' => $cartService->getFullCart(),
-    //         'reviews' => $reviews,
-    //         'variants' => $formattedVariants,
-    //         'averageRating' => $averageRating,
-    //         'form' => $form->createView(),
-    //         'reviewCount' => $reviewCount,
-    //         'orders' => $orders,
-    //         'starCounts' => $starCounts,
-    //         'totalReviews' => $totalReviews,
-    //         'sizes' => $variant->getSizes(), 
-    //         'colors' => $colors,
-    //         'relatedRatings' => $relatedRatings,
-    //     ]);
-    // }
-
 
 
 
@@ -393,6 +86,7 @@ class HomeController extends AbstractController
     #[Route('/produit/{slug}', name: 'app_single_product')]
     public function singleProduct(
         ?Product $product,
+        WishListService $wishListService,
         CartService $cartService,
         RewiewsProductRepository $reviewsRepo,
         EntityManagerInterface $em,
@@ -480,6 +174,8 @@ class HomeController extends AbstractController
 
        
         $cart = $cartService->getFullCart(); // Obtenez le panier complet
+
+        $isInWishlist = $wishListService->isProductInWishlist($product->getId());
     
         // Rendu du template
         return $this->render('pages/home/single_product.html.twig', [
@@ -497,6 +193,7 @@ class HomeController extends AbstractController
             'sizes' => $sizes,
             'colors' => $colors,
             'relatedRatings' => $relatedRatings,
+            'isInWishlist' => $isInWishlist,
         ]);
     }
 
@@ -583,7 +280,7 @@ class HomeController extends AbstractController
 
 
     #[Route('/boutique', name: 'app_shop')]
-    public function shop(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo,Request $request): Response
+    public function shop(ProductRepository $repoProduct,WishListService $wishListService, RewiewsProductRepository $reviewsRepo,Request $request): Response
     {
         $products = $repoProduct->findAllOrderedByIdDesc();
 
@@ -600,12 +297,15 @@ class HomeController extends AbstractController
         foreach ($products as $product) {
             $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
         }
-    
+
+        
+        $isInWishlist = $wishListService->isProductInWishlist($product->getId());
         
         return $this->render('pages/home/shop.html.twig', [
             'products' => $products, 
             'search' => $form->createView(),
-            'productRatings' => $productRatings
+            'productRatings' => $productRatings,
+            'isInWishlist' => $isInWishlist,
         ]);
     }
 }

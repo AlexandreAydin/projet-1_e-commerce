@@ -102,10 +102,13 @@ class CartController extends AbstractController
     
 
     #[Route('/mon-panier/{variantId}/supprimer', name: 'app_cart_delete')]
-    public function removeFromCart($variantId): JsonResponse
+    public function removeFromCart($variantId,Request $request): JsonResponse
     {
+        $size = $request->query->get('size', 'DefaultSize');
+        $color = $request->query->get('color', 'DefaultColor');
+
         try {
-            $this->cartService->deleteAllFromCart($variantId);
+            $this->cartService->deleteAllFromCart($variantId, $size, $color);
             return $this->json([
                 'message' => 'Produit supprimé du panier',
                 'cart' => $this->cartService->getFullCart(),
@@ -116,10 +119,14 @@ class CartController extends AbstractController
     }
 
     #[Route('/mon-panier/{variantId}/tout-supprimer', name: 'app_cart_clear')]
-    public function clearCart($variantId, CartService $cartService): JsonResponse
+    public function clearCart($variantId, CartService $cartService,Request $request): JsonResponse
     {
+
+        $size = $request->query->get('size', 'DefaultSize');
+        $color = $request->query->get('color', 'DefaultColor');
+
         try {
-            $cartService->deleteAllFromCart($variantId);
+            $cartService->deleteAllFromCart($variantId ,$size, $color);
     
             // Retourner le panier mis à jour
             return $this->json($cartService->getFullCart());

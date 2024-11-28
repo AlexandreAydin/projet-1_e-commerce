@@ -8,15 +8,24 @@ export const formatPrice = (price) => {
 async function fetchData(requestUrl) {
     try {
         const response = await fetch(requestUrl);
-        if (!response.ok) {
-            throw new Error('Erreur réseau');
+
+        // Vérifiez si la réponse est bien JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Réponse non JSON reçue');
         }
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+
         return await response.json();
     } catch (error) {
         console.error('Erreur lors de la récupération des données:', error.message);
         return null;
     }
 }
+
 
 export const addWishListEventListenerToLink = () => {
     let links = document.querySelectorAll(".add-to-wishlist, .wishlist_table .remove-to-wishlist");
@@ -28,40 +37,99 @@ export const addWishListEventListenerToLink = () => {
 // Fonction pour gérer la wishlist
 export const manageWishListLink = async (event) => {
     event.preventDefault();
+
     const link = event.target.closest('a');
     if (!link) return;
 
     const requestUrl = link.href;
-    if (link.classList.contains('view-details')) {
-        window.location.href = requestUrl;
-        return;
-    }
 
-    if (requestUrl.includes('/mes-favoris/supprimer/')) {
-        try {
-            const data = await fetchDataWithMethod(requestUrl, 'DELETE');
-            if (data && data.success) {
-                const tableRow = link.closest('tr');
-                tableRow.parentNode.removeChild(tableRow);
-                addFlashMessage(`Produit supprimé de la liste de souhaits !`, "danger");
-            }
-        } catch (err) {
-            console.error('Erreur lors de la suppression des favoris:', err);
-        }
-        return;
-    }
+    console.log('Request URL:', requestUrl);
 
     try {
-        const wishlist = await fetchData(requestUrl);
-        initCart();
-        updateHeaderCart();
-        displayWishlist(wishlist);
+        const response = await fetch(requestUrl, { method: 'POST' });
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Réponse non JSON reçue');
+        }
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Wishlist mise à jour:', result);
+
+        if (result.success) {
+            link.classList.toggle('wishlist-active'); // Changement d'état visuel
+            console.log(result.message);
+        } else {
+            console.error('Erreur:', result.message);
+        }
     } catch (err) {
-        console.error('Erreur lors de la gestion de la liste de souhaits:', err);
+        console.error('Erreur lors de la gestion de la liste de souhaits:', err.message);
     }
-}
+};
+
+
+
+
 
 // Fonction pour afficher la wishlist
+// export const displayWishlist = (wishlist = null) => {
+//     addWishListEventListenerToLink();
+
+//     if (!wishlist) return;
+
+//     let tbody = document.querySelector('.wishlist_table tbody');
+//     if (tbody) {
+//         tbody.innerHTML = "";
+//         wishlist.forEach((product) => {
+//             const imageUrl = product.images ? `/images/products/${product.images}` : '/images/placeholder-image.jpg';
+//             let content = `
+//                 <tr>
+//                     <td class="product-thumbnail"><a href="#"><img src="${imageUrl}" alt="${product.name}"></a></td>
+//                     <td class="product-name"><a href="#">${product.name}</a></td>
+//                     <td class="product-price">${(product.price / 100).toFixed(2)}</td>
+//                     <td class="add-to-cart"><a href="/panier/${product.id}/ajouter" class="btn-addtocart">Ajouter Au Panier</a></td>
+//                     <td class="remove-to-wishlist"><a href="/mes-favoris/${product.id}/supprimer"><i class="ti-close"></i></a></td>
+//                 </tr>
+//             `;
+//             tbody.innerHTML += content;
+//         });
+//     }
+// }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Ajoute un gestionnaire d'événements à tous les boutons de suppression
+    document.querySelectorAll('.remove-wishlist-item').forEach(button => {
+        button.addEventListener('click', async function (event) {
+            event.preventDefault(); // Empêche le comportement par défaut du lien
+
+            const productId = button.getAttribute('data-product-id'); // ID du produit
+            const url = `/mes-favoris/${productId}/supprimer`; // URL pour la suppression
+            const row = button.closest('tr'); // La ligne du tableau à supprimer
+
+            try {
+                // Effectue une requête DELETE
+                const response = await fetch(url, { method: 'DELETE' });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Supprime dynamiquement la ligne du tableau
+                    row.remove();
+                    console.log(`Produit ${productId} supprimé de la wishlist.`);
+                } else {
+                    alert(result.message || 'Une erreur est survenue.');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la suppression de la wishlist:', error.message);
+            }
+        });
+    });
+});
+
+
 export const displayWishlist = (wishlist = null) => {
     addWishListEventListenerToLink();
 
@@ -74,11 +142,13 @@ export const displayWishlist = (wishlist = null) => {
             const imageUrl = product.images ? `/images/products/${product.images}` : '/images/placeholder-image.jpg';
             let content = `
                 <tr>
-                    <td class="product-thumbnail"><a href="#"><img src="${imageUrl}" alt="${product.name}"></a></td>
-                    <td class="product-name"><a href="#">${product.name}</a></td>
-                    <td class="product-price">${(product.price / 100).toFixed(2)}</td>
-                    <td class="add-to-cart"><a href="/panier/${product.id}/ajouter" class="btn-addtocart">Ajouter Au Panier</a></td>
-                    <td class="remove-to-wishlist"><a href="/mes-favoris/${product.id}/supprimer"><i class="ti-close"></i></a></td>
+                    <td class="product-thumbnail"></td>
+                    <td class="product-name"><a href="/produit/${product.slug}">${product.name}</a></td>
+                    <td class="product-price"></td>
+                    <td class="add-to-cart"></td>
+                    <td class="product-thumbnail"></td>
+                    <td class="remove-to-wishlist">
+                    </td>
                 </tr>
             `;
             tbody.innerHTML += content;
@@ -224,7 +294,14 @@ export const updateHeaderCart = (cart) => {
                         <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
                         ${product.name} (${variant.size || 'Default'}, ${variant.color || 'Default'})
                     </a>
-                    <a href="/mon-panier/${variant.id}/tout-supprimer" class="item_remove"><i class="ion-close"></i></a>
+                    <a href="/mon-panier/${variant.id}/tout-supprimer" 
+                        class="item_remove" 
+                        data-variant-id="${variant.id}" 
+                        data-size="${variant.size}" 
+                        data-color="${variant.color}">
+                            <i class="ion-close"></i>
+                        </a>
+
                     <div class="cart-product-quantity mb-4">
                         <div class="quantity">
                             <a href="/mon-panier/${variant.id}/diminuer" class="minus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">-</a>
@@ -303,6 +380,35 @@ document.querySelectorAll('.minus').forEach(button => {
     });
 });
 
+document.querySelectorAll('.item_remove').forEach(button => {
+    button.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        const variantId = button.closest('li').dataset.variantId; // Identifiant de la variante
+        const size = button.closest('li').dataset.size; // Taille associée
+        const color = button.closest('li').dataset.color; // Couleur associée
+
+        console.log(`Réduction pour le variant ID: ${variantId}, Taille: ${size}, Couleur: ${color}`);
+
+        const url = `/panier/${variantId}/tout-supprimer?size=${size}&color=${color}`;
+
+        try {
+            const response = await fetch(url, { method: 'POST' });
+            if (!response.ok) {
+                throw new Error('Erreur lors de la réduction de quantité');
+            }
+
+            const updatedCart = await response.json();
+            console.log('Panier mis à jour (réponse serveur):', updatedCart);
+
+            // Mettre à jour dynamiquement l'interface utilisateur
+            updateHeaderCart(updatedCart);
+        } catch (error) {
+            console.error('Erreur :', error.message);
+        }
+    });
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Appeler la route pour obtenir les données du panier
@@ -341,7 +447,7 @@ const manageCartLink = async (event) => {
         console.error('Erreur lors de la mise à jour du panier :', err.message);
     }
 };
-console.log('yilmaz')
+
 
 // Ajoute des événements aux liens pertinents
 const addEventListenerToCartLinks = () => {
@@ -366,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const attachQuantityChangeEvents = () => {
     const plusButtons = document.querySelectorAll('.plus');
     const minusButtons = document.querySelectorAll('.minus');
+    const removeButtons = document.querySelectorAll('.item_remove');
 
     plusButtons.forEach(button => {
         button.addEventListener('click', event => handleQuantityChange(event, 'increase'));
@@ -373,6 +480,10 @@ const attachQuantityChangeEvents = () => {
 
     minusButtons.forEach(button => {
         button.addEventListener('click', event => handleQuantityChange(event, 'decrease'));
+    });
+
+    removeButtons.forEach(button => {
+        button.addEventListener('click', event => handleQuantityChange(event, 'remove'));
     });
 };
 
@@ -394,6 +505,8 @@ async function handleQuantityChange(event, action) {
         requestUrl += `/ajouter?size=${encodeURIComponent(size)}&color=${encodeURIComponent(color)}`;
     } else if (action === 'decrease') {
         requestUrl += `/diminuer?size=${encodeURIComponent(size)}&color=${encodeURIComponent(color)}`;
+    }else if (action === 'remove') {
+        requestUrl += `/tout-supprimer?size=${encodeURIComponent(size)}&color=${encodeURIComponent(color)}`;
     }
 
     try {
@@ -458,8 +571,6 @@ document.querySelectorAll('.btn-addtocart').forEach(button => {
         }
     });
 });
-
-
 
 
 

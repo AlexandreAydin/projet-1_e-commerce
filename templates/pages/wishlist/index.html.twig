@@ -3,6 +3,37 @@
 {% block title %}Jstore | Product Wish list{% endblock %}
 
 {% block body %}
+<style>
+
+
+
+.add-to-wishlist .fa-heart {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    color: white; /* Couleur de l'icône */
+    font-size: 30px; /* Taille de l'icône */
+    -webkit-text-stroke: 0.5px black; /* Contour noir de 2px */
+    text-stroke: 0.5px black; /* Contour pour autres navigateurs */
+    text-decoration: none; /* Supprime les soulignements */
+}
+
+.add-to-wishlist .fa-heart:hover {
+    color: red; /* Change la couleur de l'icône au survol */
+    -webkit-text-stroke: 0.5px black; /* Conserve le contour noir */
+}
+
+.add-to-wishlist.wishlist-active .fa-heart {
+    color: red; /* Change la couleur pour les produits dans la wishlist */
+    -webkit-text-stroke: 0.5px black; /* Conserve le contour noir */
+}
+
+
+
+
+
+</style>
 <div  class="main_content wishlist_content" data-wishlist="{{wishlist_json}}">
     <div  class="section">
         <div  class="container">
@@ -13,11 +44,11 @@
                             <thead >
                                 <tr >
                                     <th  class="product-thumbnail">&nbsp;</th>
-                                    <th  class="product-name">Product</th>
-                                    <th  class="product-price">Price</th>
-                                    <th  class="product-stock-status">Stock Status</th>
+                                    <th  class="product-name">Produit</th>
+                                    <th  class="product-price"></th>
+                                    <th  class="product-stock-status"></th>
                                     <th  class="product-add-to-cart"></th>
-                                    <th  class="product-remove">Remove</th>
+                                    <th  class="product-remove"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -51,6 +82,7 @@
                                             <a href="{{ path('app_remove_to_wishList', {'id':  product.product.id}) }}"><i class="ti-close"></i></a>
                                         </td>
                                     </tr>
+                                    
                                 {% endfor %} #}
                             </tbody>
                         </table>

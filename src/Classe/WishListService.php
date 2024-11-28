@@ -109,73 +109,93 @@ class WishListService
         $this->updateWishList([]);
     }
 
-    // public function getWishListDetails()
-    // {
-    //     $wishList = $this->getWishList();
-    //     $result = [];
-
-    //     foreach ($wishList as $id => $quantity) {
-    //         $product = $this->productRepo->find($id);
-    //         if($product){
-    //             $result[] = $product;
-    //         }else{
-    //             unset($wishList[$id]);
-    //             $this->updateWishList($wishList);
-    //         }
-    //     }
-    //     return $result;
-    // }   
-
-    // public function getWishListDetails()
-    // {
-    //     $wishList = $this->getWishList();
-    //     $result = [];
-
-    //     foreach ($wishList as $id => $quantity) {
-    //         $product = $this->productRepo->find($id);
-    //         if($product){
-    //             $result[] = [
-    //                 'id' => $product->getId(),
-    //                 'name' => $product->getName(),
-    //                 'slug' => $product->getSlug(),
-    //                 'images' => $product->getImages()->first()->getImageName(),
-    //                 'price' => $product->getPrice(),
-    //                 'quantity' => $product->getQuantity(),
-    //             ];
-    //         }else{
-    //             unset($wishList[$id]);
-    //             $this->updateWishList($wishList);
-    //         }
-    //     }
-    //     return $result;
-    // }
 
     public function getWishListDetails()
-{
-    $user = $this->security->getUser();
-    if (!$user) {
-        throw new \Exception("User must be logged in to view wishlist details");
-    }
-
-    $wishList = $this->entityManager->getRepository(Wishlist::class)->findOneBy(['user' => $user]);
-
-    $result = [];
-    if ($wishList) {
-        foreach ($wishList->getProducts() as $product) {
-            $result[] = [
-                'id' => $product->getId(),
-                'name' => $product->getName(),
-                'slug' => $product->getSlug(),
-                'images' => $product->getImages()->first()->getImageName(),
-                'price' => $product->getPrice(),
-                'quantity' => $product->getQuantity(),
-            ];
+    {
+        $user = $this->security->getUser();
+        if (!$user) {
+            throw new \Exception("User must be logged in to view wishlist details");
         }
+
+        $wishList = $this->entityManager->getRepository(Wishlist::class)->findOneBy(['user' => $user]);
+
+        $result = [];
+        if ($wishList) {
+            foreach ($wishList->getProducts() as $product) {
+                $result[] = [
+                    'id' => $product->getId(),
+                    'name' => $product->getName(),
+                    'slug' => $product->getSlug(),
+                    'images' => $product->getImages()->first()->getImageName(),
+                    'price' => $product->getPrice(),
+                    'quantity' => $product->getQuantity(),
+                ];
+            }
+        }
+        
+        return $result;
     }
+
+
+    public function isProductInWishlist($productId): bool
+    {
+        $user = $this->security->getUser();
+        if (!$user) {
+            return false; // Si l'utilisateur n'est pas connecté, il ne peut pas avoir de wishlist
+        }
+
+        $wishList = $this->entityManager->getRepository(Wishlist::class)->findOneBy(['user' => $user]);
+
+        if (!$wishList) {
+            return false; // Pas de wishlist associée à l'utilisateur
+        }
+
+        foreach ($wishList->getProducts() as $product) {
+            if ($product->getId() === $productId) {
+                return true; // Produit trouvé dans la wishlist
+            }
+        }
+
+        return false; // Produit non trouvé
+    }
+
+    public function toggleWishList($productId): bool
+    {
+        $user = $this->security->getUser();
+        if (!$user) {
+            throw new \Exception("Vous devez être connecté pour gérer votre wishlist.");
+        }
     
-    return $result;
-}
+        $wishList = $this->entityManager->getRepository(Wishlist::class)
+            ->findOneBy(['user' => $user]);
+    
+        if (!$wishList) {
+            $wishList = new Wishlist();
+            $wishList->setUser($user);
+        }
+    
+        $product = $this->productRepo->find($productId);
+        if (!$product) {
+            throw new \Exception("Produit introuvable.");
+        }
+    
+        // Supprime ou ajoute directement sans boucle
+        if ($wishList->getProducts()->contains($product)) {
+            $wishList->getProducts()->removeElement($product);
+            $action = false; // Produit retiré
+        } else {
+            $wishList->getProducts()->add($product);
+            $action = true; // Produit ajouté
+        }
+    
+        $this->entityManager->persist($wishList);
+        $this->entityManager->flush();
+    
+        return $action;
+    }
 
 
+    
+    
 
 }

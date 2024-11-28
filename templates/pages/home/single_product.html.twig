@@ -14,11 +14,19 @@
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
                     <div class="product-image">
-                    <div class="main_image_container">
-                        <div class="mb-3" style="width: 100%; height: 600px">
-                            <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
-                        </div>
-                    </div>
+                  <div class="main_image_container position-relative">
+    <div class="mb-3" style="width: 100%; height: 600px">
+        <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
+    </div>
+    <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
+    href="{{ path('wishlist_toggle', {id: product.id}) }}" 
+    data-product-id="{{ product.id }}">
+        <i class="fa fa-heart"></i>
+    </a>
+
+
+</div>
+
                     <div id="thumbnails" class="row">
                         <!-- Les miniatures seront générées dynamiquement avec JS -->
                     </div>
@@ -131,7 +139,6 @@
                                                 <i class="icon-basket-loaded" data-variant-id="1"></i> Ajouter au panier
                                             </a>
                                     <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
-                                    <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
                                 </div>
                         </div>      
                     
@@ -833,6 +840,40 @@ document.querySelectorAll('select[name="size"], select[name="color"]').forEach(s
 });
 
 
+
+{# document.querySelectorAll('.add-to-wishlist').forEach(button => {
+    button.addEventListener('click', async (event) => {
+        event.preventDefault();
+
+        const productId = button.getAttribute('data-product-id');
+        const url = `/wishlist/toggle/${productId}`;
+
+        try {
+    const response = await fetch(url, { method: 'POST' });
+
+    if (!response.ok) {
+        throw new Error(`Erreur HTTP : ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Réponse non JSON reçue du serveur');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+        // Ajout ou suppression dynamique de la classe
+        button.classList.toggle('wishlist-active');
+        console.log(result.message);
+    } else {
+        alert(result.message);
+    }
+} catch (error) {
+    console.error('Erreur lors de la gestion de la wishlist:', error.message);
+}
+    });
+}); #}
 
 
 

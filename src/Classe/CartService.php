@@ -120,13 +120,17 @@ class CartService
     /**
      * Supprimer complètement un produit du panier
      */
-    public function deleteAllFromCart($variantId)
+    public function deleteAllFromCart($variantId, string $size, string $color)
     {
         $cart = $this->getCart();
 
         // Rechercher et supprimer l'élément correspondant
         foreach ($cart as $key => $item) {
-            if ($item['variantId'] == $variantId) {
+            if (
+                $item['variantId'] == $variantId &&
+                $item['selectedSize'] === $size &&
+                $item['selectedColor'] === $color
+                ) {
                 unset($cart[$key]);
             }
         }

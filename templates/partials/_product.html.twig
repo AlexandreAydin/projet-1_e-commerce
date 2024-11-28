@@ -1,15 +1,33 @@
+
+{% block stylesheets %}
+    {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
+    <link rel="stylesheet" href="{{ asset('assets/css/_product.css') }}">
+{% endblock %}
+
+
+
+
 <div class="col-lg-3 col-md-4 col-6">
     <div class="product"> 
-        <div class="product" onclick="location.href='{{ path('app_single_product', { 'slug': product.slug }) }}';" style="cursor: pointer;">
-                <div class="product_img">
-                    <a href="{{ path('app_single_product', { 'slug': product.slug }) }}">
-                        {% if product.images|length > 0 %}
-                            {% set firstImage = product.images|first %}
-                            <img src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" width="100%" object-fit="cover"  height="300"  />
-                        {% endif %}
-                    </a>
-                </div>
-        </div>
+<div class="product" onclick="location.href='{{ path('app_single_product', { 'slug': product.slug }) }}';" style="cursor: pointer;">
+    <div class="product_img">
+        <a href="{{ path('app_single_product', { 'slug': product.slug }) }}">
+            {% if product.images|length > 0 %}
+                {% set firstImage = product.images|first %}
+                <img src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" width="100%" object-fit="cover" height="300" />
+            {% endif %}
+        </a>
+        <!-- Nouveau cœur en haut à droite -->
+        <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
+           href="{{ path('wishlist_toggle', {id: product.id}) }}" 
+           data-product-id="{{ product.id }}"
+           onclick="event.stopPropagation();">
+            <i class="fa fa-heart"></i>
+        </a>
+    </div>
+</div>
+
+
         <div class="product_info">
            <h6 class="product_title"><a href="{{ path('app_single_product', { 'slug': product.slug })}}">{{product.name}}</a></h6>
             <div class="product_price">
@@ -31,24 +49,6 @@
             <div class="pr_desc">
                 <p>{{product.description}}</p>
             </div>
-            <ul class='d-flex justify-content-between mt-4'>
-            <!-- Icône à gauche pour ajouter au panier -->
-                {# <li class="add-to-cart style-none list-unstyled">
-                    {% if product.quantity > 0 %}
-                        <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
-                            <i class="icon-basket-loaded"></i>
-                        </a>
-                    {% else %}
-                        Produit non disponible
-                    {% endif %}
-                </li> #}
-                <!-- Icône à droite pour ajouter à la liste de souhaits -->
-                <li class="add-to-wishlist list-unstyled">
-                    <a href="{{ path('app_add_to_wishList', {'id': product.id}) }}">
-                        <i class="icon-heart"></i>
-                    </a>
-                </li>
-            </ul>
         </div>
     </div>
 </div>
