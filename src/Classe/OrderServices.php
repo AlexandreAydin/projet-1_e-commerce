@@ -6,17 +6,21 @@ use App\Entity\Cart;
 use App\Entity\CartDetails;
 use App\Entity\Order;
 use App\Entity\OrderDetails;
+use App\Entity\ProductVariant;
 use App\Repository\ProductRepository;
+use App\Repository\ProductVariantRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class OrderServices{
 
     private $manager;
     private $repoProduct;
+    private $repoProductVariant;
 
-    public function __construct(EntityManagerInterface $manager, ProductRepository $repoProduct)
+    public function __construct(EntityManagerInterface $manager, ProductRepository $repoProduct, ProductVariantRepository $repoProductVariant)
     {   
         $this->manager = $manager;
+        $this->repoProductVariant = $repoProductVariant;
         $this->repoProduct = $repoProduct;
     }
 
@@ -33,6 +37,7 @@ class OrderServices{
                 ->setBillingAddress($cart->getBillingAddress())
                 ->setMoreInformations($cart->getMoreInformations())
                 ->setQuantity($cart->getQuantity())
+                ->setVariant($cart->getVariant())
                 ->setSubTotalHT($cart->getSubTotalHT()/100)
                 ->setTaxe($cart->getTaxe()/100)
                 ->setSubTotalTTC($cart->getSubTotalHT() + $cart->getTaxe() + $cart->getCarrierPrice())
@@ -45,15 +50,44 @@ class OrderServices{
         foreach ($products as $cart_product)
         {
             $orderDetails = new OrderDetails();
+
+            $variant = $cart_product->getVariant();
+            if ($variant) {
+                $this->manager->initializeObject($variant); // Force l'initialisation si c'est une entité proxy
+            }
+           
+            $sizes = $variant->getSizes(); // Retourne le tableau des tailles
+
+            // Assurez-vous de manipuler $sizes comme un tableau
+            if (is_array($sizes)) {
+                $selectedSize = $sizes; // Accède à la première taille
+            } else {
+                throw new \Exception('Les tailles ne sont pas définies correctement pour cette variante.');
+            }
+
+            
+
+            // dump($selectedSize);exit();
             $orderDetails->setOrders($order)    
                         ->setProductName($cart_product->getProductName())
                         ->setProductPrice($cart_product->getProductPrice()/100)
+                        ->setVariant($variant)
                         ->setQuantity($cart_product->getQuantity())
                         ->setSubTotalHT($cart_product->getSubTotalHT()*100)
                         ->setTaxe($cart_product->getTaxe()*100)
-                        ->setSubTotalTTC($cart_product->getSubTotalTTC());
+                        ->setSubTotalTTC($cart_product->getSubTotalTTC())
+                        ->setSelectedSize($cart_product->getSelectedSize());
+                        // dump($orderDetails);exit();
             $this->manager->persist($orderDetails);
         }
+
+        // dump($cart_product->getVariant());exit();
+
+        // if ($cart_product->getVariant()) {
+        //     $orderDetails->setVariant($cart_product->getVariant());
+        // }
+
+        // dump($cart_product->getVariant());exit();
 
         $this->manager->flush();
 
@@ -61,160 +95,165 @@ class OrderServices{
 
     }
 
-    public function getLineItems($cart){
+    public function getLineItems($cart)
+    {
         $cartDetails = $cart->getCartDetails();
         $YOUR_DOMAIN = 'http://127.0.0.1:8000';
         
         $line_items = [];
-        foreach ($cartDetails as $details){
+        foreach ($cartDetails as $details) {
             $product = $this->repoProduct->findOneByName($details->getProductName());
-            $line_items[] = [
-                    'price_data' => [
-                        'currency' => 'eur',
-                        'unit_amount' => $product->getPrice(),
-                        'product_data' => [
-                            'name' => $product->getName(),
-                            'images' => [$YOUR_DOMAIN. "/uploads/products/".$product->getImages()[0]->getImageName()],
-                        ],
-                    ],
-                    'quantity' => $details->getQuantity(),
-                ];
-        }
-
-
-
-            //carrier
+            $variant = $details->getVariant(); // Récupération de la variante associée
+            
+            // Ajouter les informations de la variante, si elle existe
+            $variantDetails = $variant ? [
+                'id' => $variant->getId(),
+                'price' => $variant->getPrice(),
+                'offVariant' => $variant->getOffVariant(),
+                'size' => $variant->getSizes(), // Attention, vérifiez que 'sizes' est bien défini
+                'color' => $variant->getColor(),
+            ] : null;
+    
             $line_items[] = [
                 'price_data' => [
                     'currency' => 'eur',
-                    'unit_amount' => $cart->getCarrierPrice(),
+                    'unit_amount' => $variant ? $variant->getPrice() * 100 : $product->getPrice(), // Priorité au prix de la variante
                     'product_data' => [
-                        'name' => 'Carrier ( '.$cart->getCarrierName().' )',
-                        'images' => [$YOUR_DOMAIN. "/uploads/products/"],
+                        'name' => $product->getName(),
+                        'images' => [$YOUR_DOMAIN . "/uploads/products/" . $product->getImages()[0]->getImageName()],
                     ],
                 ],
-                'quantity' => 1,
+                'quantity' => $details->getQuantity(),
+                'variant' => $variantDetails, // Ajout des détails de la variante
             ];
-
-        //Taxe
-            $line_items[] = [
-                'price_data' => [
-                    'currency' => 'eur',
-                    'unit_amount' => $cart->getTaxe(),
-                    'product_data' => [
-                        'name' => 'TVA(20%)',
-                        'images' => [$YOUR_DOMAIN. "/uploads/products/"],
-                    ],
-                ],
-                'quantity' => 1,
-            ];
-
-            return $line_items;
-    }  
-
-    // public function saveCart($data, $user)
-    // {
-    //     $cart = new Cart();
-    //     $reference = $this->generateUuid();
-    //     $address=$data['checkout']['address'];
-    //     $carrier=$data['checkout']['carrier'];
-    //     $informations=$data['checkout']['information'];
-    //     foreach ($data['products'] as $products){
-    //     $cart->setReference($reference)
-    //         ->setCarrierName($carrier->getName())
-    //         ->setCarrierPrice($carrier->getPrice()/100)
-    //         ->setFullName($address->getFullName()) 
-    //         ->setDeliveryAddress($address)
-    //         ->setMoreInformations($informations)
-    //         ->setQuantity($data['data']['cart_count'])
-    //         ->setSubTotalHT($data['data']['subTotalHT'])
-    //         ->setTaxe($data['data']['Taxe'])
-    //         ->setSubTotalTTC(($data['data']['subTotalHT']+($data['data']['Taxe'])))
-    //         ->setUser($user)
-    //         ->setProduct($products['product'])
-    //         ->setProductName($products['product'])
-    //         ->setCreatedAt(new \DateTimeImmutable());
-    //     }
-    //         $this->manager->persist($cart);
-
-    //         $cart_details_aray=[];
-
-    //         foreach ($data['products'] as $products)
-    //         {
-    //             $cartDetails= new CartDetails();
-
-    //             $subTotal = $products['quantity']* $products['product']->getPrice()/100;
-
-    //             $cartDetails->setCarts($cart)
-    //                     ->setProductName($products['product']->getName())
-    //                     ->setProductPrice($products['product']->getPrice())
-    //                     ->setProduct($products['product'])
-    //                     ->setQuantity($products['quantity'])
-    //                     ->setSubTotalHT($subTotal)
-    //                     ->setTaxe($subTotal*0.2)
-    //                     ->setSubTotalTTC($subTotal*1.2);
-    //             $this->manager->persist($cartDetails);
-    //             $cart_details_aray[]=$cartDetails;
-    //         }
-
-    //         $this->manager->flush();
-    //         return $reference;
-
-    // }
-
-    public function saveCart($data, $user)
-{
-    $reference = $this->generateUuid();
-    $address = $data['checkout']['address'];
-    $billingAddress = $data['checkout']['billingAddress'];
-    $carrier = $data['checkout']['carrier'];
-    $informations = $data['checkout']['information'];
-    
-    $cart = new Cart();
-    $cart->setReference($reference)
-        ->setCarrierName($carrier->getName())
-        ->setCarrierPrice($carrier->getPrice() / 100)
-        ->setFullName($address->getFullName()) 
-        ->setDeliveryAddress($address)
-        ->setBillingAddress($billingAddress)
-        ->setMoreInformations($informations)
-        ->setQuantity($data['data']['cart_count'])
-        ->setSubTotalHT($data['data']['subTotalHT'])
-        ->setTaxe($data['data']['Taxe'])
-        ->setSubTotalTTC($data['data']['subTotalHT'] + $data['data']['Taxe'])
-        ->setUser($user)
-        ->setCreatedAt(new \DateTimeImmutable());
-    
-    // Adding each product to cart details
-    foreach ($data['products'] as $productData) {
-        $productEntity = $this->repoProduct->find($productData['product']['id']); // Assuming $productData['product'] is an array and has 'id'
-        if (!$productEntity) {
-            throw new \Exception('Product not found.');
         }
-        
-        $cart->setProduct($productEntity);
-        $cart->setProductName($productEntity->getName());
-
-        $cartDetails = new CartDetails();
-        $subTotal = $productData['quantity'] * $productEntity->getPrice() / 100;
-
-        $cartDetails->setCarts($cart)
-            ->setProductName($productEntity->getName())
-            ->setProductPrice($productEntity->getPrice())
-            ->setProduct($productEntity)
-            ->setQuantity($productData['quantity'])
-            ->setSubTotalHT($subTotal)
-            ->setTaxe($subTotal/1.2 * 0.2)
-            ->setSubTotalTTC($subTotal * 1.2);
-        
-        $this->manager->persist($cartDetails);
+    
+        // Ajouter les frais de livraison
+        $line_items[] = [
+            'price_data' => [
+                'currency' => 'eur',
+                'unit_amount' => $cart->getCarrierPrice(),
+                'product_data' => [
+                    'name' => 'Carrier ( ' . $cart->getCarrierName() . ' )',
+                    'images' => [$YOUR_DOMAIN . "/uploads/products/"],
+                ],
+            ],
+            'quantity' => 1,
+        ];
+    
+        // Ajouter la TVA
+        $line_items[] = [
+            'price_data' => [
+                'currency' => 'eur',
+                'unit_amount' => $cart->getTaxe(),
+                'product_data' => [
+                    'name' => 'TVA(20%)',
+                    'images' => [$YOUR_DOMAIN . "/uploads/products/"],
+                ],
+            ],
+            'quantity' => 1,
+        ];
+    
+        return $line_items;
     }
     
-    $this->manager->persist($cart);
-    $this->manager->flush();
 
-    return $reference;
-}
+    public function saveCart($data, $user)
+    {
+        $reference = $this->generateUuid();
+        $address = $data['checkout']['address'];
+        $billingAddress = $data['checkout']['billingAddress'];
+        $carrier = $data['checkout']['carrier'];
+        $informations = $data['checkout']['information'];
+        
+        $cart = new Cart();
+        $cart->setReference($reference)
+            ->setCarrierName($carrier->getName())
+            ->setCarrierPrice($carrier->getPrice() / 100)
+            ->setFullName($address->getFullName()) 
+            ->setDeliveryAddress($address)
+            ->setBillingAddress($billingAddress)
+            ->setMoreInformations($informations)
+            ->setQuantity($data['data']['cart_count'])
+            ->setSubTotalHT($data['data']['subTotalHT'])
+            ->setTaxe($data['data']['Taxe'])
+            ->setSubTotalTTC($data['data']['subTotalHT'] + $data['data']['Taxe'])
+            ->setUser($user)
+            ->setCreatedAt(new \DateTimeImmutable());
+        
+        // Adding each product to cart details
+        foreach ($data['products'] as $productData) {
+    
+            $variant = $this->repoProductVariant->find($productData['variant']['id']);
+            if (!$variant) {
+                throw new \Exception("Variant with ID {$productData['variant']['id']} not found.");
+            }
+
+            $productEntity = $this->repoProduct->find($productData['product']['id']);
+            if (!$productEntity) {
+                throw new \Exception('Product not found.');
+            }
+
+            $selectedSize = $productData['variant']['size'] ?? null;
+
+            if (!$selectedSize) {
+                throw new \Exception("No size selected for variant ID {$productData['variant']['id']}.");
+            }
+
+            $subTotal = $productData['quantity'] * $productEntity->getPrice() / 100;
+
+            // $cartDetails->setVariant($variant);
+    
+            $productEntity = $this->repoProduct->find($productData['product']['id']); // Assuming $productData['product'] is an array and has 'id'
+            if (!$productEntity) {
+                throw new \Exception('Product not found.');
+            }
+
+            // dump($productData['product']['id'], $productData['variant']['id']);exit();
+            
+            $cart->setProduct($productEntity);
+            $cart->setProductName($productEntity->getName());
+
+            $cartDetails = new CartDetails();
+            $subTotal = $productData['quantity'] * $productEntity->getPrice() / 100;
+
+            // $variant = $this->manager->getRepository(ProductVariant::class)->find($productData['variant']['id']);
+
+            // if (!$variant) {
+            //     throw new \Exception("Variant with ID {$productData['variant']['id']} not found.");
+            // }
+
+            // $cartDetails->setVariant($variant);
+
+            $variant = $this->repoProductVariant->find($productData['variant']['id']); // Récupère la variante
+            if (!$variant) {
+                throw new \Exception("Variant with ID {$productData['variant']['id']} not found.");
+            }
+
+
+            $cartDetails->setCarts($cart)
+                ->setProductName($productEntity->getName())
+                ->setProductPrice($productEntity->getPrice())
+                ->setProduct($productEntity)
+                ->setQuantity($productData['quantity'])
+                ->setSubTotalHT($subTotal)
+                ->setTaxe($subTotal/1.2 * 0.2)
+                ->setVariant($variant)
+                ->setSubTotalTTC($subTotal * 1.2)
+                ->setVariant($variant) // Associer la variante
+                ->setSelectedSize($selectedSize);
+
+                
+            
+            $this->manager->persist($cartDetails);
+            
+        }
+        
+        $this->manager->persist($cart);
+        $this->manager->flush();
+
+        return $reference;
+    }
 
 
     public function generateUuid()

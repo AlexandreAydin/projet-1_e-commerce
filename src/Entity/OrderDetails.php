@@ -35,6 +35,14 @@ class OrderDetails
     #[ORM\JoinColumn(nullable: false)]
     private ?Order $orders = null;
 
+    #[ORM\ManyToOne(targetEntity: ProductVariant::class)]
+    #[ORM\JoinColumn(nullable: true)] // Permet NULL si aucune variante n'est associée
+    private ?ProductVariant $variant = null;
+
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+private ?string $selectedSize = null;
+
+
 
     public function getId(): ?int
     {
@@ -124,5 +132,28 @@ class OrderDetails
 
         return $this;
     }
+
+     // Getters et Setters pour la propriété 'variant'
+     public function getVariant(): ?ProductVariant
+     {
+         return $this->variant;
+     }
+ 
+     public function setVariant(?ProductVariant $variant): self
+     {
+         $this->variant = $variant;
+         return $this;
+     }
+
+     public function getSelectedSize(): ?string
+{
+    return $this->selectedSize;
+}
+
+public function setSelectedSize(?string $selectedSize): self
+{
+    $this->selectedSize = $selectedSize;
+    return $this;
+}
 
 }

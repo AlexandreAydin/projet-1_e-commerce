@@ -81,6 +81,11 @@ class Order
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $paymentMethod = null;
 
+    #[ORM\ManyToOne(targetEntity: ProductVariant::class)]
+    #[ORM\JoinColumn(nullable: true)] // Permet NULL si aucune variante n'est associée
+    private ?ProductVariant $variant = null;
+    
+
 
     public function __construct()
     {
@@ -359,6 +364,17 @@ class Order
     {
         $this->paymentMethod = $paymentMethod;
 
+        return $this;
+    }
+
+    public function getVariant(): ?ProductVariant
+    {
+        return $this->variant;
+    }
+
+    public function setVariant(?ProductVariant $variant): self
+    {
+        $this->variant = $variant;
         return $this;
     }
 

@@ -54,6 +54,7 @@
                             </thead>
                             <tbody>
                                 {% for element in cart.products %}
+                                 {{ dump(element) }}
                                     <tr>
                                         <td>{{ element.product.name }} <span class="product-qty"> x {{ element.quantity }}</span></td>
                                         <td>

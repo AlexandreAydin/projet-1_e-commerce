@@ -38,6 +38,13 @@ class ProductVariant
     #[ORM\OneToMany(mappedBy: 'variantProduct', targetEntity: ProductImage::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $variantImages;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Order::class)]
+    private Collection $cart;
+
+    #[ORM\OneToMany(mappedBy: 'variant', targetEntity: CartDetails::class)]
+    private Collection $cartDetails;
+    
+
     public function __construct()
     {
         $this->sizes = []; 
@@ -72,6 +79,7 @@ class ProductVariant
 
         return $this;
     }
+
 
     // Getter et setter pour sizes
     public function getSizes(): array
@@ -143,6 +151,67 @@ class ProductVariant
         if ($this->variantImages->removeElement($variantImage)) {
             if ($variantImage->getVariantProduct() === $this) {
                 $variantImage->setVariantProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cart>
+     */
+    public function getCart(): Collection
+    {
+        return $this->cart;
+    }
+
+    public function addCart(Cart $cart): self
+    {
+        if (!$this->cart->contains($cart)) {
+            $this->cart->add($cart);
+            $cart->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCart(Cart $cart): self
+    {
+        if ($this->cart->removeElement($cart)) {
+            // set the owning side to null (unless already changed)
+            if ($cart->getProduct() === $this) {
+                $cart->setProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * @return Collection<int, CartDetails>
+     */
+    public function getCartDetails(): Collection
+    {
+        return $this->cartDetails;
+    }
+
+    public function addCartDetail(CartDetails $cartDetail): self
+    {
+        if (!$this->cartDetails->contains($cartDetail)) {
+            $this->cartDetails->add($cartDetail);
+            $cartDetail->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCartDetail(CartDetails $cartDetail): self
+    {
+        if ($this->cartDetails->removeElement($cartDetail)) {
+            // set the owning side to null (unless already changed)
+            if ($cartDetail->getProduct() === $this) {
+                $cartDetail->setProduct(null);
             }
         }
 

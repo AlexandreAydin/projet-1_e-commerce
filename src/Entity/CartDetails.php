@@ -38,8 +38,14 @@ class CartDetails
     #[ORM\ManyToOne(inversedBy: 'cartDetails')]
     private ?Product $product = null;
 
+    #[ORM\ManyToOne(targetEntity: ProductVariant::class, inversedBy: 'cartDetails')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?ProductVariant $variant = null;
+
     // #[ORM\Column(length: 255)]
     // private ?string $productId = null;
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    private ?string $selectedSize = null;
 
     public function getId(): ?int
     {
@@ -151,6 +157,28 @@ class CartDetails
     // {
     //     $this->productId = $productId;
 
-    //     return $this;
+    //     retur $this;
     // }
+
+    public function getVariant(): ?ProductVariant
+    {
+        return $this->variant;
+    }
+
+    public function setVariant(?ProductVariant $variant): self
+    {
+        $this->variant = $variant;
+        return $this;
+    }
+
+    public function getSelectedSize(): ?string
+    {
+        return $this->selectedSize;
+    }
+
+    public function setSelectedSize(?string $selectedSize): self
+    {
+        $this->selectedSize = $selectedSize;
+        return $this;
+    }
 }

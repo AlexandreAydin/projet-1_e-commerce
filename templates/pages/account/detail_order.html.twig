@@ -32,16 +32,28 @@
                         <tbody>
                         {% set subTotal = 0 %}                        
                         {% for element in order.orderDetails %}
-                        	<tr>
-                            <td class="product-thumbnail">{{element.id}}</td>
-                                <td class="product-name" data-title="Product"><a href="#">{{element.productName}}</a></td>
-                                <td class="product-price" data-title="Price">{{element.productPrice | number_format(2, '.', ',')}}</td>
-                                <td class="product-quantity" data-title="Quantity">{{element.quantity }}</td>
-                                <td class="product-subtotal" data-title="Total">{{(element.subtotalHT/1.2/100) | number_format(2, '.', ',')}}</td>
-                                <td class="product-subtotal" data-title="Total">{{(element.taxe/100) | number_format(2, '.', ',')}}</td>
-                                <td class="product-subtotal" data-title="Total">{{(element.subTotalTTC/1.2/100) | number_format(2, '.', ',')}}</td>
+                            <tr>
+                                <td class="product-thumbnail">{{ element.id }}</td>
+                                <td class="product-name" data-title="Product">
+                                    <a href="#">{{ element.productName }}</a>
+                                </td>
+                                <td class="product-price" data-title="Price">
+                                    {# {% if element.variant and element.variant.offVariant %} #}
+                                        {{ element.variant.price * (1 - element.variant.offVariant / 100) | number_format(2, '.', ',') }}
+                                    {# {% endif %} #}
+                                </td>
+                                <td>{{ element.selectedSize }}</td>
+                                <td class="product-quantity" data-title="Quantity">{{ element.quantity }}</td>
+                                {# <td class="product-subtotal" data-title="Total">{{ (element.variant.pric / 1.2 / 100) | number_format(2, '.', ',') }}</td> #}
+                     
+
+                                <td class="product-subtotal" data-title="Total">  {{ (element.variant.price / 1.2 * (1 - element.variant.offVariant / 100)) | round(2, 'common') | number_format(2, '.', ',') }}</td>
+                                <td class="product-subtotal" data-title="Total">  {% set discountedPriceHT = (element.variant.price / 1.2) * (1 - (element.variant.offVariant / 100)) %}
+                                    {{ (discountedPriceHT * 0.2) | number_format(2, '.', ',') }}</td>
+                                <td class="product-subtotal" data-title="Total">{{ element.variant.price * (1 - element.variant.offVariant / 100) | number_format(2, '.', ',') }}</td>
                             </tr>
                         {% endfor %}
+
                         </tbody>
                         <tfoot>
                           {# <tr>

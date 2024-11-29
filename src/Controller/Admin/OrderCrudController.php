@@ -174,8 +174,7 @@ class OrderCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id')
-                ->hideOnForm(),
+            IdField::new('id')->hideOnForm(),
             TextField::new('reference', 'Référance de la Commande')->hideOnIndex(),
             TextField::new('user.FullName', 'Client Nom')->hideOnIndex(),
             TextField::new('user.lastName', 'Client prénom')->hideOnIndex(),
@@ -187,9 +186,8 @@ class OrderCrudController extends AbstractCrudController
             TextField::new('deliveryAddress', "Addresse de la livraison")->hideOnIndex(),
             TextField::new('billingAddress', "Addresse de facturation")->hideOnIndex(),
             CollectionField::new('orderDetails', 'Détails de la commande')
-                ->setTemplatePath('admin/partials/order_details_field.html.twig')
+                ->setTemplatePath('admin/partials/order_details_with_variant.html.twig')
                 ->hideOnIndex(),
-            // AssociationField::new('product', 'Produit id'),
             IntegerField::new('quantity', 'quantité'),
             MoneyField::new('CarrierPrice','Expédition')->setCurrency('EUR'),
             MoneyField::new('subTotalHT','Sous TotalHT')->setCurrency('EUR'),
@@ -204,8 +202,8 @@ class OrderCrudController extends AbstractCrudController
                 'Livré' => 4
             ]),
             DateTimeField::new('createdAt','Date de la commande'),
-           
         ];
+        
     }
     
 }

@@ -23,7 +23,7 @@
     <table border="1" style="width:100%; margin-top: 20px;">
         <thead>
             <tr>
-                <th>Numéro de produit</th>
+                <th>Référence</th>
                 <th>Nom du Produit</th>
                 <th>Quantité</th>
                 <th>Sous Total HT</th>
@@ -32,10 +32,10 @@
         <tbody>
             {% for detail in order.orderDetails %}
             <tr>
-                <td> EAN: </td>
+                <td> {{ detail.id }} </td>
                 <td>{{ detail.productName }}</td>
                 <td>{{ detail.quantity }}</td>
-                <td>{{ (detail.subTotalHt/1.2/100) | number_format(2, '.', ',') }} €</td>
+                <td>{{ (detail.variant.price / 1.2 * (1 - detail.variant.offVariant / 100)) | round(2, 'common') | number_format(2, '.', ',') }} €</td>
             </tr>
             {% endfor %}
         </tbody>

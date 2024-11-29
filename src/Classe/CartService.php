@@ -70,9 +70,6 @@ class CartService
         $this->saveCart($cart);
     }
     
-    
-    
-    
 
     public function decreaseQuantity(int $variantId, string $size, string $color): void
     {
@@ -215,7 +212,6 @@ class CartService
     
         return $this->truncateToTwoDecimals($subTotalTTC);
     }
-    
     
     private function calculateTax(array $cart): float
     {
