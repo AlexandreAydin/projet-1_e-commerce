@@ -4,6 +4,7 @@ namespace App\Controller\Paypal;
 
 use App\Classe\Mail;
 use App\Classe\OrderServices;
+use App\Classe\StockManagerServices;
 use App\Entity\Cart;
 use App\Repository\OrderRepository;
 use App\Services\PaypalService;
@@ -68,6 +69,7 @@ class PaypalCheckoutSessionController extends AbstractController
         $reference,
         Request $req,
         OrderRepository $orderRepo,
+        StockManagerServices $stockManager,
         EntityManagerInterface $em,
         \App\Classe\Mail $mailService  // Assurez-vous d'injecter votre service de Mail ici
     ): JsonResponse
@@ -89,6 +91,7 @@ class PaypalCheckoutSessionController extends AbstractController
                 if ($status === "COMPLETED") {
                     $order->setIsPaid(true);
                     $order->setPaymentMethod("PAYPAL");
+                    $stockManager->deStock($order);
     
                     $em->persist($order);
                     $em->flush();
