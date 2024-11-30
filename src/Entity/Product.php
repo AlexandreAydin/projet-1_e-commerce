@@ -100,6 +100,7 @@ class Product
     private Collection $wishlists;
 
     #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductVariant::class, cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: true)]
     private Collection $variants;
 
 

@@ -42,9 +42,12 @@ class CartService
             throw new \Exception('Variante non trouvée.');
         }
     
+        // Calcul du prix final avec remise
+        $finalPrice = $variant->getPrice() * (1 - $variant->getOffVariant() / 100);
+    
         // Logs pour déboguer
         error_log("Ajout au panier : Variant ID = {$variantId}, Taille = {$size}, Couleur = {$color}");
-        error_log("Prix de la variante : {$variant->getPrice()}, Remise : {$variant->getOffVariant()}%");
+        error_log("Prix de base : {$variant->getPrice()}, Remise : {$variant->getOffVariant()}%, Prix final : {$finalPrice}");
     
         foreach ($cart as &$item) {
             if (
@@ -54,6 +57,7 @@ class CartService
             ) {
                 $item['quantity'] += $quantity;
                 $this->saveCart($cart);
+                error_log("Panier mis à jour : " . json_encode($cart));
                 return;
             }
         }
@@ -63,12 +67,18 @@ class CartService
             'quantity' => $quantity,
             'selectedSize' => $size,
             'selectedColor' => $color,
-            'price' => $variant->getPrice(), // Prix TTC
+            'price' => $finalPrice, // Prix après remise
+            'basePrice' => $variant->getPrice(),
             'offVariant' => $variant->getOffVariant(),
         ];
     
         $this->saveCart($cart);
+        error_log("Panier après ajout : " . json_encode($cart));
     }
+    
+    
+    
+    
     
 
     public function decreaseQuantity(int $variantId, string $size, string $color): void

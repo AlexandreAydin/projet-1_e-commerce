@@ -30,33 +30,39 @@ public function __construct(EntityManagerInterface $manager, ProductRepository $
 //    }
 
 
-public function deStock(Order $order){
-
+public function deStock(Order $order)
+{
+    // Récupérer les détails de la commande
     $orderDetails = $order->getOrderDetails()->getValues();
 
-    foreach ($orderDetails as $key =>$details){
-        $products = $this->repoProduct->findByName($details->getProductName());
+    foreach ($orderDetails as $details) {
+        $variant = $details->getVariant(); // Récupérer la variante associée
+        $selectedSize = $details->getSelectedSize(); // Récupérer la taille sélectionnée
 
-        // Vérifiez si le produit a été trouvé
-        
-        if (!empty($products)) {
-            $product = $products[0];
-            $newQuantity = $product->getQuantity() - $details->getQuantity();
-
-            
-            // Vérifiez si la nouvelle quantité est supérieure ou égale à zéro
-            if ($newQuantity >= 0) {
-                $product->setQuantity($newQuantity);
-            } else {
-                // Gérer l'erreur
-                throw new \Exception("Stock insuffisant pour le produit " . $product->getName());
-            }
-        } else {
-            // Gérer l'erreur
-            throw new \Exception("Produit " . $details->getProductName() . " non trouvé");
+        if (!$variant) {
+            throw new \Exception("Variante non trouvée pour le produit " . $details->getProductName());
         }
+
+        // Trouver le stock associé à la taille sélectionnée
+        $sizeStock = $variant->getSizes()->filter(function ($sizeStock) use ($selectedSize) {
+            return $sizeStock->getSize() === $selectedSize;
+        })->first();
+
+        if (!$sizeStock) {
+            throw new \Exception("Stock non trouvé pour la taille '{$selectedSize}' de la variante ID {$variant->getId()}.");
+        }
+
+        // Réduire le stock pour cette taille
+        $newStock = $sizeStock->getStock() - $details->getQuantity();
+
+        if ($newStock < 0) {
+            throw new \Exception("Stock insuffisant pour la taille '{$selectedSize}' de la variante ID {$variant->getId()}.");
+        }
+
+        $sizeStock->setStock($newStock); // Mettre à jour le stock
     }
 
+    // Sauvegarder les modifications
     $this->manager->flush();
 }
 

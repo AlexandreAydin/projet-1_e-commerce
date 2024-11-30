@@ -467,7 +467,6 @@
 
 
 
-
 <script>
     (function() {  // IIFE pour encapsuler le code
         // Fonctionnalité : Elevate Zoom
@@ -583,9 +582,26 @@
         console.log('Variants:', variants); // Vérifie la structure dans la console
 
         // Fonction pour obtenir une variante par taille et couleur
-        function getVariantBySizeAndColor(selectedSize, selectedColor) {
-            return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
-        }
+        function getVariantBySizeAndColor(size, color) {
+    // Vérifiez si `variants` est un tableau valide
+    if (!Array.isArray(variants) || variants.length === 0) {
+        console.error("Aucune variante disponible.");
+        return null;
+    }
+
+    // Rechercher une variante correspondant à la taille et à la couleur
+    const matchingVariant = variants.find(variant => {
+        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+        return variant.color === color && sizeArray.includes(size);
+    });
+
+    if (!matchingVariant) {
+        console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
+    }
+
+    return matchingVariant;
+}
+
 
         // Fonction pour mettre à jour le prix selon la sélection de taille et de couleur
         function updatePrice() {
@@ -649,9 +665,26 @@
         console.log('Variants:', variants); // Vérifie la structure dans la console
 
         // Fonction pour obtenir une variante par taille et couleur
-        function getVariantBySizeAndColor(selectedSize, selectedColor) {
-            return variants.find(variant => variant.size === selectedSize && variant.color === selectedColor);
-        }
+       function getVariantBySizeAndColor(size, color) {
+    // Vérifiez si `variants` est un tableau valide
+    if (!Array.isArray(variants) || variants.length === 0) {
+        console.error("Aucune variante disponible.");
+        return null;
+    }
+
+    // Rechercher une variante correspondant à la taille et à la couleur
+    const matchingVariant = variants.find(variant => {
+        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+        return variant.color === color && sizeArray.includes(size);
+    });
+
+    if (!matchingVariant) {
+        console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
+    }
+
+    return matchingVariant;
+}
+
 
         // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
         function updatePrice() {
@@ -766,9 +799,25 @@
         console.log('Variants:', variants); // Vérifie la structure dans la console
 
         // Fonction pour obtenir une variante par taille et couleur
-        function getVariantBySizeAndColor(selectedSize, selectedColor) {
-            return variants.find(variant => variant.color === selectedColor && variant.sizes.includes(selectedSize));
-        }
+       function getVariantBySizeAndColor(size, color) {
+    // Vérifiez si `variants` est un tableau valide
+    if (!Array.isArray(variants) || variants.length === 0) {
+        console.error("Aucune variante disponible.");
+        return null;
+    }
+
+    // Rechercher une variante correspondant à la taille et à la couleur
+    const matchingVariant = variants.find(variant => {
+        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+        return variant.color === color && sizeArray.includes(size);
+    });
+
+    if (!matchingVariant) {
+        console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
+    }
+
+    return matchingVariant;
+}
 
         // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
         function updatePrice() {
@@ -815,67 +864,102 @@
 
 
 function getVariantBySizeAndColor(size, color) {
-    // Trouve une variante avec la couleur et contenant la taille
-    return variants.find(variant =>
-        variant.color === color && variant.sizes.includes(size)
-    );
+    // Vérifiez si `variants` est un tableau valide
+    if (!Array.isArray(variants) || variants.length === 0) {
+        console.error("Aucune variante disponible.");
+        return null;
+    }
+
+    // Rechercher une variante correspondant à la taille et à la couleur
+    const matchingVariant = variants.find(variant => {
+        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+        return variant.color === color && sizeArray.includes(size);
+    });
+
+    if (!matchingVariant) {
+        console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
+    }
+
+    return matchingVariant;
 }
+
 
 
 // Lors du changement de taille ou de couleur
-document.querySelectorAll('select[name="size"], select[name="color"]').forEach(select => {
-    select.addEventListener('change', () => {
-        const size = document.querySelector('select[name="size"]').value;
-        const color = document.querySelector('select[name="color"]').value;
+{# document.querySelector('.btn-addtocart').addEventListener('click', async (event) => {
+    event.preventDefault();
 
-        const selectedVariant = getVariantBySizeAndColor(size, color);
+    const size = document.querySelector('select[name="size"]').value;
+    const color = document.querySelector('select[name="color"]').value;
+    const variant = getVariantBySizeAndColor(size, color);
 
-        if (selectedVariant) {
-            console.log(`Variant sélectionné :`, selectedVariant);
-            document.querySelector('.btn-addtocart').dataset.variantId = selectedVariant.id;
-        } else {
-            console.warn('Aucune variante trouvée pour cette combinaison.');
-        }
-    });
-});
-
-
-
-{# document.querySelectorAll('.add-to-wishlist').forEach(button => {
-    button.addEventListener('click', async (event) => {
-        event.preventDefault();
-
-        const productId = button.getAttribute('data-product-id');
-        const url = `/wishlist/toggle/${productId}`;
-
-        try {
-    const response = await fetch(url, { method: 'POST' });
-
-    if (!response.ok) {
-        throw new Error(`Erreur HTTP : ${response.status}`);
+    if (!variant) {
+        console.error('Aucune variante trouvée pour cette combinaison.');
+        return;
     }
 
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Réponse non JSON reçue du serveur');
-    }
+    console.log(`Envoi au serveur : Variant ID = ${variant.id}, Taille = ${size}, Couleur = ${color}`);
 
-    const result = await response.json();
+    const url = `/panier/${variant.id}/ajouter/1?size=${size}&color=${color}`;
 
-    if (result.success) {
-        // Ajout ou suppression dynamique de la classe
-        button.classList.toggle('wishlist-active');
-        console.log(result.message);
-    } else {
-        alert(result.message);
+    try {
+        const response = await fetch(url, { method: 'POST' });
+        const data = await response.json();
+        console.log('Réponse du serveur :', data);
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout au panier :', error.message);
     }
-} catch (error) {
-    console.error('Erreur lors de la gestion de la wishlist:', error.message);
-}
-    });
 }); #}
 
 
+
+
+
+
+
+
+{# document.addEventListener('DOMContentLoaded', function () {
+    const colorSelect = document.getElementById('color');
+    const variantIdInput = document.getElementById('variant-id');
+    const addToCartButton = document.querySelector('.btn-addtocart');
+
+    // Tableau des variantes (injecté depuis Twig)
+    const variants = {{ product.variants|json_encode()|raw }};
+
+    // Fonction pour trouver l'ID de la variante par couleur
+    function getVariantIdByColor(selectedColor) {
+        const matchingVariant = variants.find(variant => variant.color === selectedColor);
+        return matchingVariant ? matchingVariant.id : null;
+    }
+
+    // Mettre à jour l'ID de la variante lorsque la couleur change
+    colorSelect.addEventListener('change', function () {
+        const selectedColor = this.value;
+        const variantId = getVariantIdByColor(selectedColor);
+
+        if (variantId) {
+            // Mettre à jour le champ masqué
+            variantIdInput.value = variantId;
+
+            // Mettre à jour l'attribut data-variant-id du bouton
+            addToCartButton.setAttribute('data-variant-id', variantId);
+
+            console.log(`Couleur sélectionnée : ${selectedColor}, ID de la variante : ${variantId}`);
+        } else {
+            console.error('Aucune variante trouvée pour la couleur sélectionnée.');
+        }
+    });
+
+    // Initialiser avec la première couleur sélectionnée
+    if (colorSelect.value) {
+        const initialVariantId = getVariantIdByColor(colorSelect.value);
+        if (initialVariantId) {
+            variantIdInput.value = initialVariantId;
+            addToCartButton.setAttribute('data-variant-id', initialVariantId);
+            console.log(`Initialisation : Couleur = ${colorSelect.value}, ID de la variante = ${initialVariantId}`);
+        }
+    }
+}); #}
 
 
 </script>

@@ -50,7 +50,7 @@ class ProductImage
 
     public function __toString(): string
     {
-        return $this->imageName;
+        return $this->imageName ?? 'No Image';
     }
 
     public function getId(): ?int

@@ -104,7 +104,9 @@ class HomeController extends AbstractController
             return [
                 'id' => $variant->getId(),
                 'color' => $variant->getColor(),
-                'sizes' => $variant->getSizes(),
+                'sizes' => $variant->getSizes()->map(function ($size) {
+                    return $size->getSize();
+                })->toArray(),
                 'price' => $variant->getPrice(),
                 'offVariant' => $variant->getOffVariant(),
                 'images' => array_map(function ($image) {
@@ -147,7 +149,9 @@ class HomeController extends AbstractController
         $sizes = [];
         $colors = [];
         foreach ($product->getVariants() as $variant) {
-            $sizes = array_unique(array_merge($sizes, $variant->getSizes()));
+            $variantSizes = array_map(fn($sizeStock) => $sizeStock->getSize(), $variant->getSizes()->toArray());
+            $sizes = array_unique(array_merge($sizes, $variantSizes));
+        
             if (!in_array($variant->getColor(), $colors)) {
                 $colors[] = $variant->getColor();
             }

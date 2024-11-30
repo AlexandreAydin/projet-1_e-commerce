@@ -23,11 +23,11 @@ class ProductVariant
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $color = null;
 
-    #[ORM\Column(type: 'json')]
-    private array $sizes = [];
+    #[ORM\OneToMany(mappedBy: 'productVariant', targetEntity: SizeStock::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $sizes;
 
-    #[ORM\Column]
-    private ?int $stock = null;
+    // #[ORM\Column]
+    // private ?int $stock = null;
 
     #[ORM\Column]
     private ?float $price = null;
@@ -47,7 +47,7 @@ class ProductVariant
 
     public function __construct()
     {
-        $this->sizes = []; 
+        $this->sizes = new ArrayCollection();
         $this->variantImages = new ArrayCollection();
     }
 
@@ -81,31 +81,57 @@ class ProductVariant
     }
 
 
+    public function getSizesValues(): array
+    {
+        return $this->sizes->map(function (SizeStock $sizeStock) {
+            return $sizeStock->getSize();
+        })->toArray();
+    }
+    
+
     // Getter et setter pour sizes
-    public function getSizes(): array
+  /**
+     * @return Collection<int, SizeStock>
+     */
+    public function getSizes(): Collection
     {
         return $this->sizes;
     }
-    
-    public function setSizes(?array $sizes): self
-    {
-        $this->sizes = $sizes ?? [];
-    
-        return $this;
-    }
-    
 
-    public function getStock(): ?int
+    public function addSize(SizeStock $sizeStock): self
     {
-        return $this->stock;
-    }
-
-    public function setStock(int $stock): static
-    {
-        $this->stock = $stock;
+        if (!$this->sizes->contains($sizeStock)) {
+            $this->sizes->add($sizeStock);
+            $sizeStock->setProductVariant($this); // Set the inverse relationship
+        }
 
         return $this;
     }
+
+public function removeSize(SizeStock $sizeStock): self
+{
+    if ($this->sizes->removeElement($sizeStock)) {
+        if ($sizeStock->getProductVariant() === $this) {
+            $sizeStock->setProductVariant(null); // Remove the inverse relationship
+        }
+    }
+
+    return $this;
+}
+
+    
+
+    // public function getStock(): ?int
+    // {
+    //     return $this->stock;
+    // }
+
+    // public function setStock(int $stock): static
+    // {
+    //     $this->stock = $stock;
+
+    //     return $this;
+    // }
 
     public function getPrice(): ?float
     {

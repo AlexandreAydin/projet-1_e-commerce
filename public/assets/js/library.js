@@ -72,34 +72,6 @@ export const manageWishListLink = async (event) => {
 };
 
 
-
-
-
-// Fonction pour afficher la wishlist
-// export const displayWishlist = (wishlist = null) => {
-//     addWishListEventListenerToLink();
-
-//     if (!wishlist) return;
-
-//     let tbody = document.querySelector('.wishlist_table tbody');
-//     if (tbody) {
-//         tbody.innerHTML = "";
-//         wishlist.forEach((product) => {
-//             const imageUrl = product.images ? `/images/products/${product.images}` : '/images/placeholder-image.jpg';
-//             let content = `
-//                 <tr>
-//                     <td class="product-thumbnail"><a href="#"><img src="${imageUrl}" alt="${product.name}"></a></td>
-//                     <td class="product-name"><a href="#">${product.name}</a></td>
-//                     <td class="product-price">${(product.price / 100).toFixed(2)}</td>
-//                     <td class="add-to-cart"><a href="/panier/${product.id}/ajouter" class="btn-addtocart">Ajouter Au Panier</a></td>
-//                     <td class="remove-to-wishlist"><a href="/mes-favoris/${product.id}/supprimer"><i class="ti-close"></i></a></td>
-//                 </tr>
-//             `;
-//             tbody.innerHTML += content;
-//         });
-//     }
-// }
-
 document.addEventListener('DOMContentLoaded', function () {
     // Ajoute un gestionnaire d'événements à tous les boutons de suppression
     document.querySelectorAll('.remove-wishlist-item').forEach(button => {
@@ -545,32 +517,121 @@ function removeCartItemFromDOM(uniqueKey) {
     }
 }
 
+// document.querySelectorAll('.btn-addtocart').forEach(button => {
+//     button.addEventListener('click', async (event) => {
+//         event.preventDefault();
+
+//         const variantId = button.dataset.variantId;
+//         const size = document.querySelector('select[name="size"]').value;
+//         const color = document.querySelector('select[name="color"]').value;
+//         const quantity = parseInt(document.querySelector('input#quantity').value, 10) || 1;
+
+//         console.log(`Variant ID: ${variantId}, Taille: ${size}, Couleur: ${color}, Quantité: ${quantity}`);
+
+//         const url = `/panier/${variantId}/ajouter/${quantity}?size=${size}&color=${color}`;
+
+//         try {
+//             const response = await fetch(url, { method: 'POST' });
+//             const data = await response.json();
+//             console.log('Réponse du serveur :', data);
+
+//             if (data.products) {
+//                 updateHeaderCart(data);
+//             }
+//         } catch (error) {
+//             console.error('Erreur :', error.message);
+//         }
+//     });
+// });
+
+
+// document.querySelector('.btn-addtocart').addEventListener('click', async (event) => {
+//     button.addEventListener('click', async (event) => {
+
+//     const size = document.querySelector('select[name="size"]').value;
+//     const color = document.querySelector('select[name="color"]').value;
+//     const variant = getVariantBySizeAndColor(size, color);
+
+//     if (!variant) {
+//         console.error('Aucune variante trouvée pour cette combinaison.');
+//         return;
+//     }
+
+//     console.log(`Envoi au serveur : Variant ID = ${variant.id}, Taille = ${size}, Couleur = ${color}`);
+
+//     const url = `/panier/${variant.id}/ajouter/1?size=${size}&color=${color}`;
+
+//     try {
+//         const response = await fetch(url, { method: 'POST' });
+//         const data = await response.json();
+//         console.log('Réponse du serveur :', data);
+//     } catch (error) {
+//         console.error('Erreur lors de l\'ajout au panier :', error.message);
+//     }
+// });
+// });
+
 document.querySelectorAll('.btn-addtocart').forEach(button => {
     button.addEventListener('click', async (event) => {
         event.preventDefault();
 
-        const variantId = button.dataset.variantId;
+        // Récupérer les valeurs sélectionnées
         const size = document.querySelector('select[name="size"]').value;
         const color = document.querySelector('select[name="color"]').value;
         const quantity = parseInt(document.querySelector('input#quantity').value, 10) || 1;
 
-        console.log(`Variant ID: ${variantId}, Taille: ${size}, Couleur: ${color}, Quantité: ${quantity}`);
+        // Trouver la variante correspondante
+        const variant = getVariantBySizeAndColor(size, color);
 
+        if (!variant) {
+            console.error('Aucune variante trouvée pour cette combinaison.');
+            return;
+        }
+
+        // Utiliser l'ID de la variante correcte
+        const variantId = variant.id;
+
+        console.log(`Envoi au serveur : Variant ID = ${variantId}, Taille = ${size}, Couleur = ${color}, Quantité = ${quantity}`);
+
+        // Construire l'URL de la requête
         const url = `/panier/${variantId}/ajouter/${quantity}?size=${size}&color=${color}`;
 
         try {
             const response = await fetch(url, { method: 'POST' });
             const data = await response.json();
+
             console.log('Réponse du serveur :', data);
 
+            // Mettre à jour le panier dans le header
             if (data.products) {
                 updateHeaderCart(data);
             }
         } catch (error) {
-            console.error('Erreur :', error.message);
+            console.error('Erreur lors de l\'ajout au panier :', error.message);
         }
     });
 });
+
+// Fonction pour trouver la variante par taille et couleur
+function getVariantBySizeAndColor(size, color) {
+    // Vérifier si les données de variantes sont valides
+    if (!Array.isArray(variants) || variants.length === 0) {
+        console.error("Aucune variante disponible.");
+        return null;
+    }
+
+    // Trouver une variante correspondant à la taille et la couleur
+    const matchingVariant = variants.find(variant => {
+        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+        return variant.color === color && sizeArray.includes(size);
+    });
+
+    if (!matchingVariant) {
+        console.warn(`Aucune variante trouvée pour la taille "${size}" et la couleur "${color}"`);
+    }
+
+    return matchingVariant;
+}
 
 
 

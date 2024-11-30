@@ -63,20 +63,27 @@ class CartController extends AbstractController
     
     
     
-
     #[Route('/mon-panier/{variantId}/ajouter', name: 'app_cart_increase')]
     public function increaseQuantity(Request $request, int $variantId, CartService $cartService): JsonResponse
     {
         $size = $request->query->get('size', 'DefaultSize');
         $color = $request->query->get('color', 'DefaultColor');
     
+        error_log("Données reçues : Variant ID = {$variantId}, Taille = {$size}, Couleur = {$color}");
+    
         try {
             $cartService->addToCart($variantId, 1, $size, $color);
-            return $this->json($cartService->getFullCart());
+            $cart = $cartService->getFullCart();
+            error_log("Cart après ajout : " . json_encode($cart));
+            return $this->json($cart);
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], 500);
         }
     }
+    
+    
+    
+    
     
 
 

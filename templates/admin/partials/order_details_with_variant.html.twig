@@ -2,10 +2,10 @@
     <thead>
         <tr>
             <th>Produit</th>
-            <th>Quantité--</th>
-            <th>--Couleur--</th>
-            <th>--Taille--</th>
-            <th>--Prix--</th>
+            <th>Quantité-- |</th>
+            <th>--Couleur-- |</th>
+            <th>--Taille-- |</th>
+            <th>--Prix Unitaire TTC--</th>
         </tr>
     </thead>
     <tbody>
@@ -13,11 +13,11 @@
         <tr>
             <td class='text-center '>{{ detail.productName }}</td>
             <td class='text-center text-danger'>{{ detail.quantity }}</td>
-            <td class='text-center color-red'>{{ detail.variant.color}}</td>
-            <td class='text-center color-red'>
+            <td class='text-center'>{{ detail.variant.color}}</td>
+            <td class='text-center'>
                 {{ detail.selectedSize}}
             </td>
-            <td>
+            <td class='text-center'>
                 {% set discountedPrice = detail.variant.price * (1 - (detail.variant.offVariant / 100)) %}
                 {{ discountedPrice | number_format(2, '.', ',') }} €
             </td>
