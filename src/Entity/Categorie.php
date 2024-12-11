@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\CategorieRepository;
+use Coupon;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -21,6 +22,8 @@ class Categorie
     #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Product::class)]
     private Collection $products;
 
+    private $coupons;
+
     public function __toString()
     {
         return $this->getName();
@@ -30,6 +33,7 @@ class Categorie
     public function __construct()
     {
         $this->products = new ArrayCollection();
+        $this->coupons = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -76,6 +80,20 @@ class Categorie
             }
         }
 
+        return $this;
+    }
+
+    public function addCoupon(Coupon $coupon): self
+    {
+        if (!$this->coupons->contains($coupon)) {
+            $this->coupons->add($coupon);
+        }
+        return $this;
+    }
+
+    public function removeCoupon(Coupon $coupon): self
+    {
+        $this->coupons->removeElement($coupon);
         return $this;
     }
 }

@@ -6,6 +6,7 @@ use App\Classe\Mail;
 use App\Classe\OrderServices;
 use App\Classe\StockManagerServices;
 use App\Entity\Cart;
+use App\Entity\Coupon;
 use App\Repository\OrderRepository;
 use App\Services\PaypalService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,6 +14,7 @@ use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -37,32 +39,90 @@ class PaypalCheckoutSessionController extends AbstractController
     public function createCheckoutSession(
         ?Cart $cart,
         OrderServices $orderServices,
-        EntityManagerInterface $manager
+        EntityManagerInterface $manager,
+        RequestStack $requestStack
     ): JsonResponse 
     {
         if (!$cart) {
-            return $this->redirectToRoute('app_home');
+            return $this->json(['error' => 'Le panier est introuvable.'], 400);
         }
-        
-        // Create the order using the order services
+    
+        // Récupération des informations du panier
+        $subTotalTTC = $cart->getSubTotalTTC();
+        $carrierPrice = $cart->getCarrierPrice();
+    
+        // Vérification du code promo
+        $session = $requestStack->getSession();
+        $appliedCouponData = $session->get('applied_coupon', null);
+    
+        $discountPercentage = 0; // Pourcentage de réduction
+        $coupon = null;
+    
+        if ($appliedCouponData) {
+            $coupon = $manager->getRepository(Coupon::class)->findOneBy(['code' => $appliedCouponData['code']]);
+    
+            if ($coupon instanceof Coupon && $coupon->isActive() && (!$coupon->getExpirationDate() || $coupon->getExpirationDate() >= new \DateTime())) {
+                $discountPercentage = (float) $coupon->getDiscountAmount(); // Récupère le pourcentage
+            }
+        }
+    
+        // Calculer le montant final après application du pourcentage
+        $discountAmount = ($subTotalTTC * $discountPercentage) / 100;
+        $finalTTC = $subTotalTTC - $discountAmount + $carrierPrice;
+    
+        // Création de la commande
         $order = $orderServices->createOrder($cart);
-
         if (!$order) {
-            return $this->json(['error' => "Order not found!"], 404);
+            return $this->json(['error' => 'La commande n\'a pas pu être créée.'], 500);
         }
-
-        // Call PayPal API to create an order
-        $result = $this->createOrder($order);
-
-        if (isset($result['jsonResponse']['id'])) {
-            $id = $result['jsonResponse']['id'];
-            $order->setPaypalClientSecret($id);
-            $manager->persist($order);
-            $manager->flush();
+    
+        // Associe le coupon à la commande, si applicable
+        if ($coupon) {
+            $order->setCoupon($coupon);
         }
-
-        return $this->json($result['jsonResponse']);
+    
+        // Appel de l'API PayPal pour créer une commande
+        $amountValue = number_format($finalTTC / 100, 2, '.', ''); // Conversion pour PayPal
+        $payload = [
+            'intent' => 'CAPTURE',
+            'purchase_units' => [
+                [
+                    'amount' => [
+                        'currency_code' => 'EUR',
+                        'value' => $amountValue,
+                    ],
+                ],
+            ],
+        ];
+    
+        try {
+            $accessToken = $this->generateAccessToken();
+            $url = $this->base . '/v2/checkout/orders';
+            $response = $this->client->request('POST', $url, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $accessToken,
+                ],
+                'json' => $payload,
+            ]);
+            $result = $this->handleResponse($response);
+    
+            if (isset($result['jsonResponse']['id'])) {
+                $id = $result['jsonResponse']['id'];
+                $order->setPaypalClientSecret($id);
+                $manager->persist($order);
+                $manager->flush();
+    
+                return $this->json($result['jsonResponse']);
+            }
+    
+            return $this->json(['error' => 'Impossible de créer la session PayPal.'], 500);
+        } catch (\Exception $e) {
+            error_log('Erreur lors de la création de la session PayPal : ' . $e->getMessage());
+            return $this->json(['error' => 'Erreur lors de la création de la session PayPal.'], 500);
+        }
     }
+    
 
     #[Route('/api/orders/capture{reference}', name: 'app_capture_paypal', methods:['POST'])]
     public function capturePayment(

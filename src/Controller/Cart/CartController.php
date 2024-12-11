@@ -2,11 +2,14 @@
 
 namespace App\Controller\Cart;
 
+use App\Repository\CouponRepository;
 use App\Repository\ProductVariantRepository;
 use App\Service\CartService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class CartController extends AbstractController
@@ -148,5 +151,130 @@ class CartController extends AbstractController
         $cart = $this->cartService->getFullCart();
         return $this->json($cart);
     }
+
+    // #[Route('/cart/apply-coupon', name: 'apply_coupon', methods: ['POST'])]
+    // public function applyCoupon(Request $request, SessionInterface $session, CouponRepository $couponRepository, CartService $cartService): JsonResponse
+    // {
+    //     $data = json_decode($request->getContent(), true);
+    //     $couponCode = $data['coupon_code'] ?? null;
+    
+    //     if (!$couponCode) {
+    //         return new JsonResponse(['success' => false, 'message' => 'Aucun code coupon fourni.'], 400);
+    //     }
+    
+    //     // Recherche du coupon
+    //     $coupon = $couponRepository->findOneBy(['code' => $couponCode]);
+    
+    //     if (!$coupon || !$coupon->isActive() || ($coupon->getExpirationDate() && $coupon->getExpirationDate() < new \DateTime())) {
+    //         return new JsonResponse(['success' => false, 'message' => 'Le code coupon est invalide ou expiré.'], 400);
+    //     }
+    
+    //     // Enregistrer la réduction dans la session
+    //     $discountPercentage = $coupon->getDiscountAmount();
+    //     $session->set('applied_coupon', [
+    //         'code' => $coupon->getCode(),
+    //         'discountPercentage' => $discountPercentage,
+    //     ]);
+    
+    //     // Récupérer le panier mis à jour
+    //     $cart = $cartService->getFullCart();
+    
+    //     return new JsonResponse([
+    //         'success' => true,
+    //         'message' => 'Le coupon a été appliqué avec succès.',
+    //         'discountPercentage' => $discountPercentage,
+    //         'cart' => $cart,
+    //     ]);
+    // }
+
+
+
+
+
+    #[Route('/cart/apply-coupon', name: 'apply_coupon', methods: ['POST'])]
+    public function applyCoupon(
+        Request $request,
+        SessionInterface $session,
+        CouponRepository $couponRepository,
+        CartService $cartService,
+        EntityManagerInterface $manager
+    ): JsonResponse {
+        // Log de la requête reçue
+        $data = json_decode($request->getContent(), true);
+        error_log('Requête reçue : ' . json_encode($data));
+    
+        // Validation du code promo
+        $couponCode = $data['coupon_code'] ?? null;
+        if (!$couponCode) {
+            error_log('Erreur : Aucun code coupon fourni.');
+            return new JsonResponse(['success' => false, 'message' => 'Aucun code coupon fourni.'], 400);
+        }
+    
+        // Recherche du coupon
+        $coupon = $couponRepository->findOneBy(['code' => $couponCode]);
+        if (!$coupon) {
+            error_log('Erreur : Le code coupon est introuvable.');
+            return new JsonResponse(['success' => false, 'message' => 'Le code coupon est introuvable.'], 400);
+        }
+    
+        // Vérification de l'état actif du coupon
+        if (!$coupon->isActive()) {
+            error_log('Erreur : Le code coupon est inactif.');
+            return new JsonResponse(['success' => false, 'message' => 'Le code coupon est inactif.'], 400);
+        }
+    
+        // Vérification de la date d'expiration
+        if ($coupon->getExpirationDate() && $coupon->getExpirationDate() < new \DateTime()) {
+            error_log('Erreur : Le code coupon est expiré.');
+            return new JsonResponse(['success' => false, 'message' => 'Le code coupon est expiré.'], 400);
+        }
+    
+        // Récupération du panier
+        $cart = $cartService->getCartEntity();
+        error_log('Panier récupéré : ' . json_encode($cart)); // Log pour vérifier le panier
+    
+        // Vérification du panier
+        if (!$cart) {
+            error_log('Erreur : Le panier est introuvable.');
+            return new JsonResponse(['success' => false, 'message' => 'Le panier est introuvable.'], 400);
+        }
+    
+        // Vérification de l'utilisateur
+        $user = $this->getUser();
+        if ($cart->getUser()->getId() !== $user->getId()) {
+            error_log('Erreur : L\'utilisateur actuel ne correspond pas au propriétaire du panier.');
+            return new JsonResponse(['success' => false, 'message' => 'Vous ne pouvez pas appliquer un coupon à ce panier.'], 403);
+        }
+    
+        // Application du coupon
+        $cart->setCouponApplied(true);
+        $manager->persist($cart);
+        $manager->flush();
+    
+        // Enregistrer le coupon dans la session
+        $discountPercentage = $coupon->getDiscountAmount();
+        $session->set('applied_coupon', [
+            'code' => $coupon->getCode(),
+            'discountPercentage' => $discountPercentage,
+        ]);
+    
+        // Récupérer les données du panier mises à jour
+        $cartData = $cartService->getFullCart();
+    
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Le coupon a été appliqué avec succès.',
+            'discountPercentage' => $discountPercentage,
+            'cart' => $cartData,
+        ]);
+    }
+    
+    
+
+    
+    
+    
+    
+
 
 }

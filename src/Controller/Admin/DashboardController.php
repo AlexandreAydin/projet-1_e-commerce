@@ -7,6 +7,7 @@ use App\Entity\Carrier;
 use App\Entity\Cart;
 use App\Entity\Categorie;
 use App\Entity\Contact;
+use App\Entity\Coupon;
 use App\Entity\Order;
 use App\Entity\OrderDetails;
 use App\Entity\PaymentMethod;
@@ -45,6 +46,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::subMenu('Produit', 'fas fa-shopping-cart')->setSubItems([
             MenuItem::linkToCrud('Produit', 'fas fa-shopping-cart', Product::class),
             MenuItem::linkToCrud('Image de Produit', 'fas fa-image', ProductImage::class),
+            MenuItem::linkToCrud('Coupon', 'fa-solid fa-percent', Coupon::class),
             MenuItem::linkToCrud('Commentaire', 'fas fa-user', RewiewsProduct::class),
             MenuItem::linkToCrud('Catégorie', 'fas fa-list', Categorie::class),
             MenuItem::linkToCrud('Livraison', 'fas fa-truck', Carrier::class),

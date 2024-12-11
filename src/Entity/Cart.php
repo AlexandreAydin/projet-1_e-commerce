@@ -78,6 +78,9 @@ class Cart
     #[ORM\Column (nullable:true)]
     private ?int $count = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $couponApplied = false;
+
     public function __construct()
     {
         $this->CartDetails = new ArrayCollection();
@@ -331,6 +334,17 @@ class Cart
     {
         $this->variant = $variant;
 
+        return $this;
+    }
+
+    public function isCouponApplied(): bool
+    {
+        return $this->couponApplied;
+    }
+
+    public function setCouponApplied(bool $couponApplied): self
+    {
+        $this->couponApplied = $couponApplied;
         return $this;
     }
 

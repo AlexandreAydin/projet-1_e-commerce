@@ -187,7 +187,7 @@ export const initCart = (cart = null) => {
 
 
 const addEventListenerToLink = () => {
-    const links = document.querySelectorAll('.cart_list a.plus, .cart_list a.minus, .cart_list a.item_remove');
+    const links = document.querySelectorAll('.cart_list a.plus, .cart_list a.minus,  .cart_list a.item_remove, .cart_list .coupon_code');
     links.forEach(link => {
         link.addEventListener('click', manageCartLink);
     });
@@ -201,44 +201,109 @@ function updateCartQuantityInDOM(uniqueKey, quantity) {
     }
 }
 
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const applyCouponButton = document.getElementById('apply_coupon_button');
+    const couponCodeInput = document.getElementById('coupon_code_input');
+
+    if (applyCouponButton) {
+        applyCouponButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            const couponCode = couponCodeInput.value.trim();
+            if (!couponCode) {
+                alert('Veuillez entrer un code promo.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/cart/apply-coupon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ coupon_code: couponCode }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'application du coupon.');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message); // Afficher un message de succès
+                    console.log('Réduction appliquée :', data.discountPercentage);
+
+                    // Met à jour le header avec la réduction et le panier mis à jour
+                    if (data.cart) {
+                        updateHeaderCartWithCoupon(data.cart, data.discountPercentage);
+                    } else {
+                        console.error('Le panier mis à jour n\'a pas été retourné.');
+                    }
+
+                    // Réinitialiser le champ du coupon
+                    couponCodeInput.value = '';
+                } else {
+                    alert(data.message); // Afficher le message d'erreur du serveur
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'application du coupon :', error.message);
+                alert('Une erreur est survenue lors de l\'application du coupon.');
+            }
+        });
+    }
+});
+
+
+
+
 export const updateHeaderCart = (cart) => {
-    console.log('Données reçues pour mettre à jour le header :', cart);
-
     const cartListElement = document.querySelector('.cart_list');
-    const cartCountElement = document.querySelector('.cart_count');
-    const cartPriceValue = document.querySelector('.cart_price_value');
-    const cartPriceTaxe = document.querySelector('.cart_price_taxe');
-    const cartPriceTTC = document.querySelector('.cart_price_ttc');
+const cartCountElement = document.querySelector('.cart_count');
+const cartPriceValue = document.querySelector('.cart_price_value');
+const cartPriceTaxe = document.querySelector('.cart_price_taxe');
+const cartPriceTTC = document.querySelector('.cart_price_ttc');
 
-    // Vérification si le panier est vide
-    if (!cart || !cart.products || cart.products.length === 0) {
-        console.log('Le panier est vide, mise à jour en conséquence.');
+// Vérification si le panier est vide
+if (!cart || !cart.products || cart.products.length === 0) {
+    console.log('Le panier est vide, mise à jour en conséquence.');
 
-        if (cartListElement) {
-            cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
-        }
-
-        if (cartPriceValue) cartPriceValue.innerHTML = '0.00 €';
-        if (cartPriceTaxe) cartPriceTaxe.innerHTML = '0.00 €';
-        if (cartPriceTTC) cartPriceTTC.innerHTML = '0.00 €';
-        if (cartCountElement) cartCountElement.textContent = '0';
-
-        return;
+    if (cartListElement) {
+        cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
     }
 
-    // Mise à jour des totaux globaux
-    if (cartPriceValue) {
-        cartPriceValue.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
-    }
-    if (cartPriceTaxe) {
-        cartPriceTaxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
-    }
-    if (cartPriceTTC) {
-        cartPriceTTC.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
-    }
-    if (cartCountElement) {
-        cartCountElement.textContent = cart.data.cart_count;
-    }
+    if (cartPriceValue) cartPriceValue.innerHTML = '0.00 €';
+    if (cartPriceTaxe) cartPriceTaxe.innerHTML = '0.00 €';
+    if (cartPriceTTC) cartPriceTTC.innerHTML = '0.00 €';
+    if (cartCountElement) cartCountElement.textContent = '0';
+
+    return;
+}
+
+// Définir le montant de la réduction si un coupon est appliqué
+const discountPercentage = cart.coupon ? cart.coupon.discountPercentage : 0; // Par exemple, 10 pour 10%
+const discountAmount = cart.data.subTotalTTC * (discountPercentage / 100);
+
+// Mise à jour des totaux globaux
+if (cartPriceValue) {
+    cartPriceValue.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
+}
+if (cartPriceTaxe) {
+    cartPriceTaxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
+}
+if (cartPriceTTC) {
+    const discountedTotalTTC = cart.data.subTotalTTC - discountAmount;
+    cartPriceTTC.innerHTML = `${discountedTotalTTC.toFixed(2)} €`;
+}
+if (cartCountElement) {
+    cartCountElement.textContent = cart.data.cart_count;
+}
+
+// Journal pour voir les données calculées
+console.log(`Réduction appliquée : ${discountPercentage}%. Montant total TTC après réduction : ${cart.data.subTotalTTC - discountAmount} €`);
+
 
     // Réinitialisation et mise à jour des produits dans le DOM
     if (cartListElement) {
@@ -283,6 +348,7 @@ export const updateHeaderCart = (cart) => {
                     </div>
                     <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${discountedPriceTTC.toFixed(2)} €</span></span>
                 </li>
+
             `;
             cartListElement.insertAdjacentHTML('beforeend', content);
         });
@@ -293,6 +359,35 @@ export const updateHeaderCart = (cart) => {
     // Réattachement des événements nécessaires
     attachQuantityChangeEvents(); // Assurez-vous que cette fonction existe pour gérer les boutons "plus" et "moins"
 };
+
+const updateHeaderCartWithCoupon = (cart, discountPercentage) => {
+    if (!cart || !cart.data) {
+        console.error('Erreur : Les données du panier ne sont pas valides.', cart);
+        return;
+    }
+
+    console.log('Mise à jour du header avec réduction :', cart, discountPercentage);
+
+    const cartPriceValue = document.querySelector('.cart_price_value');
+    const cartPriceTaxe = document.querySelector('.cart_price_taxe');
+    const cartPriceTTC = document.querySelector('.cart_price_ttc');
+
+    const currentTotalTTC = parseFloat(cart.data.subTotalTTC);
+    const discountAmount = (currentTotalTTC * discountPercentage) / 100;
+    const newTotalTTC = (currentTotalTTC - discountAmount).toFixed(2);
+
+    const currentTax = parseFloat(cart.data.Taxe);
+    const newTax = (currentTax * (newTotalTTC / currentTotalTTC)).toFixed(2);
+
+    const newHT = (newTotalTTC - newTax).toFixed(2);
+
+    if (cartPriceValue) cartPriceValue.innerHTML = `${newHT} €`;
+    if (cartPriceTaxe) cartPriceTaxe.innerHTML = `${newTax} €`;
+    if (cartPriceTTC) cartPriceTTC.innerHTML = `${newTotalTTC} €`;
+
+    console.log(`Totaux mis à jour : HT = ${newHT}, Taxes = ${newTax}, TTC = ${newTotalTTC}`);
+};
+
 
 document.querySelectorAll('.plus').forEach(button => {
     button.addEventListener('click', async function (event) {
@@ -673,5 +768,66 @@ const transformCartResponse = (serverResponse) => {
 
 
 
+// document.getElementById('apply-coupon-form').addEventListener('submit', async function (event) {
+//     event.preventDefault();
+
+//     const couponCode = document.querySelector('[name="coupon_code"]').value;
+
+//     try {
+//         const response = await fetch('/cart/apply-coupon', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify({ coupon_code: couponCode }),
+//         });
+
+//         if (!response.ok) {
+//             throw new Error('Erreur lors de l\'application du coupon');
+//         }
+
+//         const data = await response.json();
+
+//         if (data.success) {
+//             // Met à jour les totaux dynamiquement
+//             updateCartTotalsWithCoupon(data.discountAmount);
+
+//             // Affiche un message de succès
+//             console.log(data.message);
+//         } else {
+//             // Affiche un message d'erreur
+//             alert(data.message);
+//         }
+//     } catch (error) {
+//         console.error('Erreur lors de l\'application du coupon :', error.message);
+//     }
+// });
 
 
+const updateCartTotalsWithCoupon = (discountAmount) => {
+    // Récupérer les éléments DOM des totaux
+    const totalHTElement = document.querySelector('.cart_price_value');
+    const totalTaxeElement = document.querySelector('.cart_price_taxe');
+    const totalTTCElement = document.querySelector('.cart_price_ttc');
+
+    const discount = parseFloat(discountAmount);
+
+    // Récupérer les valeurs actuelles
+    const currentTotalTTC = parseFloat(totalTTCElement.textContent.replace('€', '').trim());
+    const currentTax = parseFloat(totalTaxeElement.textContent.replace('€', '').trim());
+    const currentHT = parseFloat(totalHTElement.textContent.replace('€', '').trim());
+
+    // Nouveau total TTC après réduction
+    const newTotalTTC = (currentTotalTTC - discount).toFixed(2);
+
+    // Recalculer la Taxe et le HT
+    const newTax = (currentTax * (newTotalTTC / currentTotalTTC)).toFixed(2);
+    const newHT = (newTotalTTC - newTax).toFixed(2);
+
+    // Mettre à jour le DOM
+    if (totalTTCElement) totalTTCElement.textContent = `${newTotalTTC} €`;
+    if (totalTaxeElement) totalTaxeElement.textContent = `${newTax} €`;
+    if (totalHTElement) totalHTElement.textContent = `${newHT} €`;
+
+    console.log(`Totaux mis à jour : TTC = ${newTotalTTC}, Taxes = ${newTax}, HT = ${newHT}`);
+};

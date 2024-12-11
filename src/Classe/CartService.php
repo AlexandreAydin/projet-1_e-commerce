@@ -2,26 +2,55 @@
 
 namespace App\Service;
 
+use App\Entity\Cart;
+use App\Repository\CartRepository;
 use App\Repository\ProductRepository;
 use App\Repository\ProductVariantRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class CartService
 {
     private $requestStack;
     private $repoProduct;
+    private $security;
+    private $cartRepository;
     private $repoProductVariant;
+    
+    private EntityManagerInterface $manager;
     private $tva = 0.2;
 
     public function __construct(RequestStack $requestStack,
     ProductRepository $repoProduct,
+    CartRepository $cartRepository,
+    EntityManagerInterface $manager,
+    Security $security,
     ProductVariantRepository $repoProductVariant)
     {
         $this->requestStack = $requestStack;
+        $this->security = $security;
+        $this->cartRepository = $cartRepository;
+        $this->manager = $manager;
         $this->repoProduct = $repoProduct;
         $this->repoProductVariant = $repoProductVariant;
         
     }
+
+
+
+    public function getCartEntity(): ?Cart
+    {
+        $user = $this->security->getUser(); // Vérifie l'utilisateur connecté
+        if (!$user) {
+            return null; // Si aucun utilisateur n'est connecté
+        }
+
+        return $this->cartRepository->findOneBy(['user' => $user]);
+    }
+
+
+
 
     private function getSession()
     {
@@ -155,13 +184,26 @@ class CartService
         $this->updateCart([]); // Réinitialiser le panier
     }
 
-    /**
-     * Mettre à jour le panier dans la session
-     */
-    public function updateCart($cart)
+    public function updateCart($cartData): array
     {
-        $this->getSession()->set('cart', $cart);  // Mettre à jour le panier dans la session
+        $cart = $this->getCart(); // Obtenez le panier actuel
+        $this->saveCart($cartData); // Sauvegarder les changements dans le panier
+    
+        // Si le panier est vide, supprimer le code promo
+        if (empty($cartData)) {
+            $this->getSession()->remove('applied_coupon'); // Supprimez le code promo de la session
+            $cartEntity = $this->getCartEntity();
+            if ($cartEntity) {
+                $cartEntity->setCouponApplied(false); // Réinitialiser l'état du coupon
+                $this->manager->persist($cartEntity);
+                $this->manager->flush();
+            }
+        }
+    
+        return $this->getFullCart();
     }
+    
+    
     /**
      * Récupérer le panier depuis la session
      */
@@ -242,6 +284,67 @@ class CartService
         return round($value, 2); // Utilise round pour gérer les valeurs exactes
     }
     
+    // public function getFullCart(): array
+    // {
+    //     $cart = $this->getCart();
+    //     $fullCart = [
+    //         'products' => [],
+    //         'data' => [],
+    //     ];
+    
+    //     foreach ($cart as $item) {
+    //         $variant = $this->repoProductVariant->find($item['variantId']);
+    //         if (!$variant) {
+    //             error_log("Variante introuvable pour ID: {$item['variantId']}");
+    //             continue;
+    //         }
+    
+    //         $product = $variant->getProduct();
+    //         $priceTTC = $variant->getPrice();
+    //         $discount = $variant->getOffVariant() / 100;
+    //         $priceAfterDiscountTTC = $priceTTC * (1 - $discount);
+    
+    //         error_log("Produit: {$product->getName()} - ID variante: {$variant->getId()} - Prix TTC: $priceTTC - Prix après remise: $priceAfterDiscountTTC");
+    
+    //         $fullCart['products'][] = [
+    //             'product' => [
+    //                 'id' => $product->getId(),
+    //                 'name' => $product->getName(),
+    //                 'slug' => $product->getSlug(),
+    //                 'images' => array_map(
+    //                     fn($img) => $img->getImageName(), 
+    //                     $variant->getVariantImages()->toArray()
+    //                 ),
+    //             ],
+    //             'variant' => [
+    //                 'id' => $variant->getId(),
+    //                 'price' => $variant->getPrice(),
+    //                 'offVariant' => $variant->getOffVariant(),
+    //                 'size' => $item['selectedSize'],
+    //                 'color' => $item['selectedColor'],
+    //             ],
+    //             'quantity' => $item['quantity'],
+    //         ];
+            
+    //     }
+    
+    //     $fullCart['data'] = [
+    //         'cart_count' => count($cart),
+    //         'subTotalHT' => $this->calculateSubTotalHT($fullCart),
+    //         'Taxe' => $this->calculateTax($fullCart),
+    //         'subTotalTTC' => $this->calculateSubTotalTTC($fullCart),
+    //     ];
+    
+    //     return $fullCart;
+    // }
+
+    private function isCouponApplied(): bool
+    {
+        $cart = $this->getCartEntity(); // Supposons que cette méthode récupère l'entité du panier.
+        return $cart && $cart->isCouponApplied(); // Vérifie si le coupon est appliqué (booléen dans l'entité `Cart`).
+    }
+
+    
     public function getFullCart(): array
     {
         $cart = $this->getCart();
@@ -249,21 +352,26 @@ class CartService
             'products' => [],
             'data' => [],
         ];
-    
+
+        $totalTTCWithoutDiscount = 0; // Total TTC sans réduction
+        $totalTTCWithBaseDiscount = 0; // Total TTC avec réduction de base
+        $promoDiscountAmount = 0; // Réduction par code promo
+
         foreach ($cart as $item) {
             $variant = $this->repoProductVariant->find($item['variantId']);
             if (!$variant) {
-                error_log("Variante introuvable pour ID: {$item['variantId']}");
                 continue;
             }
-    
+
             $product = $variant->getProduct();
-            $priceTTC = $variant->getPrice();
-            $discount = $variant->getOffVariant() / 100;
-            $priceAfterDiscountTTC = $priceTTC * (1 - $discount);
-    
-            error_log("Produit: {$product->getName()} - ID variante: {$variant->getId()} - Prix TTC: $priceTTC - Prix après remise: $priceAfterDiscountTTC");
-    
+            $priceTTC = $variant->getPrice(); // Prix TTC sans réduction
+            $baseDiscount = $variant->getOffVariant() / 100; // Réduction de base (ex : 50%)
+            $priceAfterBaseDiscountTTC = $priceTTC * (1 - $baseDiscount); // Prix TTC après réduction de base
+
+            // Ajouter les totaux
+            $totalTTCWithoutDiscount += $priceTTC * $item['quantity'];
+            $totalTTCWithBaseDiscount += $priceAfterBaseDiscountTTC * $item['quantity'];
+
             $fullCart['products'][] = [
                 'product' => [
                     'id' => $product->getId(),
@@ -283,20 +391,41 @@ class CartService
                 ],
                 'quantity' => $item['quantity'],
             ];
-            
         }
-    
+
+        // Gestion du code promo
+        $appliedCoupon = $this->getSession()->get('applied_coupon', null);
+        if ($appliedCoupon) {
+            $promoDiscountPercentage = $appliedCoupon['discountPercentage'] ?? 0;
+            $promoDiscountAmount = $totalTTCWithBaseDiscount * ($promoDiscountPercentage / 100);
+        }
+
+        // Calcul final après application de toutes les réductions
+        $finalTTC = $totalTTCWithBaseDiscount - $promoDiscountAmount;
+        $promoDiscountPercentage = $appliedCoupon['discountPercentage'] ?? 0;
+
         $fullCart['data'] = [
             'cart_count' => count($cart),
             'subTotalHT' => $this->calculateSubTotalHT($fullCart),
             'Taxe' => $this->calculateTax($fullCart),
-            'subTotalTTC' => $this->calculateSubTotalTTC($fullCart),
+            'subTotalTTCWithoutDiscount' => $totalTTCWithoutDiscount, // Total TTC avant toute réduction
+            'subTotalTTCWithBaseDiscount' => $totalTTCWithBaseDiscount, // Total TTC après réduction de base
+            'subTotalTTC' => $this->calculateSubTotalTTC($fullCart),// Total TTC après toutes réductions
+            'appliedDiscountAmount' => $promoDiscountAmount, // Montant de la réduction
+            'appliedDiscountPercentage' => $promoDiscountPercentage, 
+            'isCouponApplied' => $this->isCouponApplied(),
         ];
-    
+
+
+
+        // Ajouter les informations du code promo
+        $fullCart['appliedCouponCode'] = $appliedCoupon['code'] ?? 'Aucun';
+        $fullCart['appliedDiscountAmount'] = $promoDiscountAmount;
+
         return $fullCart;
     }
     
-    
+
 
 
     /**

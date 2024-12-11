@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\OrderRepository;
+use \App\EntityCoupon;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -84,8 +85,15 @@ class Order
     #[ORM\ManyToOne(targetEntity: ProductVariant::class)]
     #[ORM\JoinColumn(nullable: true)] // Permet NULL si aucune variante n'est associée
     private ?ProductVariant $variant = null;
-    
 
+    #[ORM\ManyToOne(targetEntity: Coupon::class, inversedBy: 'orders')]
+    private ?Coupon $coupon = null;
+    
+    #[ORM\Column(type: 'boolean')]
+    private bool $couponApplied = false;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    private ?float $discountAmount = null;
 
     public function __construct()
     {
@@ -378,5 +386,37 @@ class Order
         return $this;
     }
 
+    public function getCoupon(): ?Coupon
+    {
+        return $this->coupon;
+    }
+
+    public function setCoupon(?Coupon $coupon): self
+    {
+        $this->coupon = $coupon;
+        return $this;
+    }
+
+    public function isCouponApplied(): bool
+    {
+        return $this->couponApplied;
+    }
+
+    public function setCouponApplied(bool $couponApplied): self
+    {
+        $this->couponApplied = $couponApplied;
+        return $this;
+    }
+
+    public function getDiscountAmount(): ?float
+    {
+        return $this->discountAmount;
+    }
+
+    public function setDiscountAmount(?float $discountAmount): self
+    {
+        $this->discountAmount = $discountAmount;
+        return $this;
+    }
 
 }

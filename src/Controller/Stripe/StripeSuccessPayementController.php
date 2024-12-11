@@ -9,6 +9,7 @@ use App\Service\CartService;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -21,7 +22,8 @@ class StripeSuccessPayementController extends AbstractController
         CartService $cartServices,
         ClasseStockManagerServices $stockManager,
         UrlGeneratorInterface $router,
-        ProductRepository $productRepository,
+        ProductRepository $productRepository, 
+        RequestStack $requestStack,
         EntityManagerInterface $manager
     ): Response {
         if (!$order || $order->getUser() !== $this->getUser()) {
@@ -29,11 +31,18 @@ class StripeSuccessPayementController extends AbstractController
         }
     
         $mail = new Mail();
+
         
         // Commande payée
         if (!$order->getIsPaid()) {
             $order->setIsPaid(true);
             $stockManager->deStock($order);
+             // Vérifiez si un coupon a été appliqué avec RequestStack
+            $session = $requestStack->getSession();
+            $appliedCoupon = $session->get('applied_coupon');
+            if ($appliedCoupon) {
+                $order->setCouponApplied(true);
+            }
             $manager->flush();
             $cartServices->deleteCart();
             $content = "Bonjour " . $order->getUser()->getFirstname() . 

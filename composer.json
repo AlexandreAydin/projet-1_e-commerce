@@ -12,7 +12,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.14",
         "dompdf/dompdf": "^2.0",
-        "easycorp/easyadmin-bundle": "^4.6",
+        "easycorp/easyadmin-bundle": "4.8.6",
         "friendsofsymfony/ckeditor-bundle": "^2.4",
         "google/apiclient": "2.7",
         "helios-ag/fm-elfinder-bundle": "^12.3",

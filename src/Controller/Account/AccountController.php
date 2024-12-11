@@ -2,11 +2,13 @@
 
 namespace App\Controller\Account;
 
+use App\Entity\Coupon;
 use App\Entity\Order;
 use App\Entity\OrderDetails;
 use App\Repository\OrderRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -27,8 +29,25 @@ class AccountController extends AbstractController
     }
 
     #[Route('/compte/{id}', name: 'app_account_show')]
-    public function show(Order $order,): Response
+    public function show(OrderRepository $orderRepository, int $id, RequestStack $requestStack, EntityManagerInterface $manager): Response
     {
+
+        $order = $orderRepository->find($id);
+
+        if (!$order || $order->getUser() !== $this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        $appliedCoupon = $requestStack->getSession()->get('applied_coupon');
+
+        if ($appliedCoupon) {
+            $coupon = $manager->getRepository(Coupon::class)->findOneBy(['code' => $appliedCoupon['code']]);
+            if ($coupon) {
+                $order->setCoupon($coupon);
+                $order->setDiscountAmount($coupon->getDiscountAmount());
+            }
+        }
+
         if (!$order || $order->getUser() !== $this->getUser()) {
             return $this->redirectToRoute('app_home');
         }
@@ -38,6 +57,7 @@ class AccountController extends AbstractController
         }
     
         $orderDetails = $order->getOrderDetails()->first(); 
+        
     
         return $this->render('pages/account/detail_order.html.twig', [
             'order' => $order,
