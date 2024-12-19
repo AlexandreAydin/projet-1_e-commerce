@@ -119,6 +119,17 @@ public function removeSize(SizeStock $sizeStock): self
     return $this;
 }
 
+public function getStockForSize(string $size): ?string
+{
+    foreach ($this->sizes as $sizeEntity) {
+        if ($sizeEntity->getSize() === $size) {
+            return $sizeEntity->getStock();
+        }
+    }
+
+    return null; // Retourne null si la taille n'est pas trouvée
+}
+
     
 
     // public function getStock(): ?int

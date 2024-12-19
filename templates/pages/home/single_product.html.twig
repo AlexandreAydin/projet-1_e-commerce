@@ -95,7 +95,9 @@
                                 <select name="size" id="size" class="form-control">
                                     {% for variant in product.variants %}
                                         {% for size in variant.sizes %}
-                                            <option value="{{ size }}" data-color="{{ variant.color }}">{{ size }}</option>
+                                            <option value="{{ size.size }}" data-variant-id="{{ variant.id }}" data-stock="{{ size.stock }}" data-color="{{ variant.color }}">
+                                                {{ size.size }}
+                                            </option>
                                         {% endfor %}
                                     {% endfor %}
                                 </select>
@@ -123,11 +125,11 @@
                                     </div>
                                 {% else %}
                                 <div class="cart-product-quantity mb-4">
-                                    <div class="quantity">
-                                        <input type="button" value="-" class="minus">
-                                        <input type="number" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty">
-                                        <input type="button" value="+" class="plus">
-                                    </div>
+                                <div class="quantity">
+                                    <input type="button" value="-" class="minus">
+                                    <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
+                                    <input type="button" value="+" class="plus">
+                                </div>
                                 </div>
 
                                 {# TODO: Implement product quantity selection #}
@@ -579,7 +581,7 @@
         // Injecter les variantes préparées depuis PHP en utilisant json_encode
         let variants = {{ variants|json_encode()|raw }};
         
-        console.log('Variants:', variants); // Vérifie la structure dans la console
+       // console.log('Variants:', variants); // Vérifie la structure dans la console
 
         // Fonction pour obtenir une variante par taille et couleur
         function getVariantBySizeAndColor(size, color) {
@@ -662,7 +664,7 @@
         // Injecter les variantes préparées depuis PHP en utilisant json_encode
         let variants = {{ variants|json_encode()|raw }};
         
-        console.log('Variants:', variants); // Vérifie la structure dans la console
+       // console.log('Variants:', variants); // Vérifie la structure dans la console
 
         // Fonction pour obtenir une variante par taille et couleur
        function getVariantBySizeAndColor(size, color) {
@@ -741,7 +743,7 @@
             if (selectedVariant && selectedVariant.images.length > 0) {
                 // Mettre à jour l'image principale
                 const firstImage = selectedVariant.images[0].imageName;
-                console.log(`Chemin de l'image: /images/products/${firstImage}`);  // Vérifiez ici l'URL générée
+               // console.log(`Chemin de l'image: /images/products/${firstImage}`);  // Vérifiez ici l'URL générée
                 mainImage.src = `/images/products/${firstImage}`;
 
                 // Vider les miniatures précédentes
@@ -796,28 +798,28 @@
         // Variantes injectées depuis PHP via Twig
         let variants = {{ variants|json_encode()|raw }};
         
-        console.log('Variants:', variants); // Vérifie la structure dans la console
+        // console.log('Variants:', variants); // Vérifie la structure dans la console
 
         // Fonction pour obtenir une variante par taille et couleur
        function getVariantBySizeAndColor(size, color) {
-    // Vérifiez si `variants` est un tableau valide
-    if (!Array.isArray(variants) || variants.length === 0) {
-        console.error("Aucune variante disponible.");
-        return null;
-    }
+        // Vérifiez si `variants` est un tableau valide
+        if (!Array.isArray(variants) || variants.length === 0) {
+            console.error("Aucune variante disponible.");
+            return null;
+        }
 
-    // Rechercher une variante correspondant à la taille et à la couleur
-    const matchingVariant = variants.find(variant => {
-        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
-        return variant.color === color && sizeArray.includes(size);
-    });
+        // Rechercher une variante correspondant à la taille et à la couleur
+        const matchingVariant = variants.find(variant => {
+                const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+                return variant.color === color && sizeArray.includes(size);
+            });
 
-    if (!matchingVariant) {
-        console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
-    }
+            if (!matchingVariant) {
+                console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
+            }
 
-    return matchingVariant;
-}
+            return matchingVariant;
+        }
 
         // Fonction pour mettre à jour les prix et la réduction selon la sélection de taille et de couleur
         function updatePrice() {
@@ -859,29 +861,29 @@
     });
 
 
-  const variants = {{ variants|json_encode()|raw }};
-    console.log('Variants voir:', variants); 
+    const variants = {{ variants|json_encode()|raw }};
+    // console.log('Variants voir:', variants); 
 
 
-function getVariantBySizeAndColor(size, color) {
-    // Vérifiez si `variants` est un tableau valide
-    if (!Array.isArray(variants) || variants.length === 0) {
-        console.error("Aucune variante disponible.");
-        return null;
+    function getVariantBySizeAndColor(size, color) {
+        // Vérifiez si `variants` est un tableau valide
+        if (!Array.isArray(variants) || variants.length === 0) {
+            console.error("Aucune variante disponible.");
+            return null;
+        }
+
+        // Rechercher une variante correspondant à la taille et à la couleur
+        const matchingVariant = variants.find(variant => {
+            const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+            return variant.color === color && sizeArray.includes(size);
+        });
+
+        if (!matchingVariant) {
+            console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
+        }
+
+        return matchingVariant;
     }
-
-    // Rechercher une variante correspondant à la taille et à la couleur
-    const matchingVariant = variants.find(variant => {
-        const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
-        return variant.color === color && sizeArray.includes(size);
-    });
-
-    if (!matchingVariant) {
-        console.warn(`Aucune variante trouvée pour la taille ${size} et la couleur ${color}`);
-    }
-
-    return matchingVariant;
-}
 
 
 
@@ -960,6 +962,92 @@ function getVariantBySizeAndColor(size, color) {
         }
     }
 }); #}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const sizeSelect = document.getElementById('size'); // Sélection de la taille
+    const colorSelect = document.getElementById('color'); // Sélection de la couleur (si applicable)
+    const quantityInput = document.getElementById('quantity'); // Input de la quantité
+    const incrementButton = document.querySelector('.plus'); // Bouton "+"
+    let maxStock = 0; // Stock maximum
+
+    // Fonction pour récupérer le stock via l'API
+    async function fetchStock(size, variantId) {
+        try {
+            //console.log(`Requête vers l'API : /api/get-stock?size=${size}&variantId=${variantId}`);
+            const response = await fetch(`/api/get-stock?size=${size}&variantId=${variantId}`);
+            const data = await response.json();
+            //console.log('Réponse de l\'API :', data);
+
+            if (data.stock !== undefined) {
+                //console.log(`Stock récupéré : ${data.stock}`);
+                return parseInt(data.stock, 10);
+            } else {
+                //console.error('Erreur lors de la récupération du stock:', data.error);
+                return 0;
+            }
+        } catch (error) {
+            //console.error('Erreur réseau lors de la récupération du stock:', error);
+            return 0;
+        }
+    }
+
+    // Mettre à jour le stock
+    async function updateStock() {
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex]; // Option sélectionnée
+        const selectedSize = selectedOption.value;
+        const variantId = selectedOption.getAttribute('data-variant-id'); // ID de la variante
+        //console.log(`Taille sélectionnée : ${selectedSize}`);
+        //console.log(`ID de la variante : ${variantId}`);
+
+        if (!selectedSize || !variantId) {
+            console.warn('Taille ou variante non sélectionnée.');
+            return;
+        }
+
+        maxStock = await fetchStock(selectedSize, variantId); // Récupérer le stock depuis l'API
+        //console.log(`Stock maximum mis à jour : ${maxStock}`);
+        resetQuantity(); // Réinitialiser la quantité à 1
+        updateIncrementButton(); // Vérifier le bouton "+"
+    }
+
+    // Réinitialiser la quantité à 1
+    function resetQuantity() {
+        quantityInput.value = 1;
+        //console.log('Quantité réinitialisée à 1');
+    }
+
+    // Masquer le bouton "+" si la quantité atteint le stock maximum
+    function updateIncrementButton() {
+        const quantity = parseInt(quantityInput.value, 10) || 1;
+        //console.log(`Quantité actuelle : ${quantity}, Stock maximum : ${maxStock}`);
+
+        // Masquer le bouton "+" si la quantité atteint le stock maximum
+        incrementButton.style.display = quantity >= maxStock ? 'none' : 'inline-block';
+    }
+
+    // Gestion des changements de taille
+    sizeSelect.addEventListener('change', updateStock);
+
+    // Gestion des changements de couleur (si applicable)
+    if (colorSelect) {
+        colorSelect.addEventListener('change', () => {
+            //console.log('Couleur modifiée');
+            resetQuantity(); // Réinitialiser la quantité à 1 lors du changement de couleur
+            updateIncrementButton(); // Vérifier le bouton "+"
+        });
+    }
+
+    // Initialisation
+    updateStock();
+});
+
+
+
+
+
+
+
+
 
 
 </script>

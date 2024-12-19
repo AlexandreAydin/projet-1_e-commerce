@@ -199,9 +199,7 @@ function updateCartQuantityInDOM(uniqueKey, quantity) {
         qtyElement.value = quantity;
         console.log(`Quantité mise à jour pour la clé ${uniqueKey} : ${quantity}`);
     }
-}
-
-
+}  
 
 document.addEventListener('DOMContentLoaded', () => {
     const applyCouponButton = document.getElementById('apply_coupon_button');
@@ -259,51 +257,196 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
+
+
+
+
+// export const updateHeaderCart = async (cart) => {
+//     const cartListElement = document.querySelector('.cart_list');
+//     const cartCountElement = document.querySelector('.cart_count');
+//     const cartPriceValue = document.querySelector('.cart_price_value');
+//     const cartPriceTaxe = document.querySelector('.cart_price_taxe');
+//     const cartPriceTTC = document.querySelector('.cart_price_ttc');
+
+//     if (!cart || !cart.products || cart.products.length === 0) {
+//         console.log('Le panier est vide, mise à jour en conséquence.');
+
+//         if (cartListElement) {
+//             cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
+//         }
+
+//         if (cartPriceValue) cartPriceValue.innerHTML = '0.00 €';
+//         if (cartPriceTaxe) cartPriceTaxe.innerHTML = '0.00 €';
+//         if (cartPriceTTC) cartPriceTTC.innerHTML = '0.00 €';
+//         if (cartCountElement) cartCountElement.textContent = '0';
+
+//         return;
+//     }
+
+//     if (cartPriceValue) {
+//         cartPriceValue.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
+//     }
+//     if (cartPriceTaxe) {
+//         cartPriceTaxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
+//     }
+//     if (cartPriceTTC) {
+//         cartPriceTTC.innerHTML = `${cart.data.subTotalTTC.toFixed(2)} €`;
+//     }
+//     if (cartCountElement) {
+//         cartCountElement.textContent = cart.data.cart_count;
+//     }
+
+//     console.log(`Total TTC : ${cart.data.subTotalTTC} €`);
+
+//     if (cartListElement) {
+//         cartListElement.innerHTML = ''; // Vide la liste avant de la remplir
+
+//         for (const item of cart.products) {
+//             const { variant, quantity, product } = item;
+
+//             console.log(`Traitement du produit : ${product.name}`);
+
+//             const uniqueKey = `${variant.id}-${variant.size}-${variant.color}`;
+//             const discount = variant.offVariant ? (variant.offVariant / 100) : 0;
+//             const discountedPriceTTC = variant.price * (1 - discount);
+//             const imageUrl =
+//                 product.images && product.images.length > 0
+//                     ? `/images/products/${product.images[0]}`
+//                     : '/images/products/default.jpg';
+
+//             // Construire l'élément HTML
+//             const content = `
+//                 <li data-variant-key="${uniqueKey}">
+//                     <a href="/produit/${product.slug}" class="product-thumbnail">
+//                         <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
+//                         ${product.name} (${variant.size || 'Default'}, ${variant.color || 'Default'})
+//                     </a>
+//                     <a href="/mon-panier/${variant.id}/tout-supprimer" 
+//                         class="item_remove" 
+//                         data-variant-id="${variant.id}" 
+//                         data-size="${variant.size}" 
+//                         data-color="${variant.color}">
+//                             <i class="ion-close"></i>
+//                     </a>
+
+//                     <div class="cart-product-quantity mb-4">
+//                         <div class="quantity">
+//                             <button class="minus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">-</button>
+//                             <input type="text" value="${quantity}" class="qty" readonly>
+//                             <button class="plus" 
+//                                 data-variant-id="${variant.id}" 
+//                                 data-size="${variant.size}" 
+//                                 data-color="${variant.color}" 
+//                                 ${quantity >= variant.stock ? 'disabled' : ''}>+</button>
+//                         </div>
+//                     </div>
+//                     <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${discountedPriceTTC.toFixed(2)} €</span></span>
+//                 </li>
+//             `;
+//             cartListElement.insertAdjacentHTML('beforeend', content);
+//         }
+
+//         // Réattachement des événements pour les boutons dynamiques
+//         cartListElement.querySelectorAll('.plus').forEach(button => {
+//             button.addEventListener('click', async (event) => {
+//                 event.preventDefault();
+//                 const variantId = button.getAttribute('data-variant-id');
+//                 const size = button.getAttribute('data-size');
+//                 const color = button.getAttribute('data-color');
+
+//                 try {
+//                     const response = await fetch(`/mon-panier/${variantId}/ajouter?size=${size}&color=${color}`, { method: 'POST' });
+//                     const data = await response.json();
+//                     console.log('Réponse après ajout :', data);
+//                     updateHeaderCart(data); // Mise à jour du panier après ajout
+//                 } catch (error) {
+//                     console.error('Erreur lors de l\'ajout :', error);
+//                 }
+//             });
+//         });
+
+//         cartListElement.querySelectorAll('.minus').forEach(button => {
+//             button.addEventListener('click', async (event) => {
+//                 event.preventDefault();
+//                 const variantId = button.getAttribute('data-variant-id');
+//                 const size = button.getAttribute('data-size');
+//                 const color = button.getAttribute('data-color');
+
+//                 try {
+//                     const response = await fetch(`/mon-panier/${variantId}/diminuer?size=${size}&color=${color}`, { method: 'POST' });
+//                     const data = await response.json();
+//                     console.log('Réponse après diminution :', data);
+//                     updateHeaderCart(data); // Mise à jour du panier après diminution
+//                 } catch (error) {
+//                     console.error('Erreur lors de la diminution :', error);
+//                 }
+//             });
+//         });
+//     }
+
+//     console.log('Réattachement des événements terminé.');
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const updateHeaderCart = (cart) => {
     const cartListElement = document.querySelector('.cart_list');
-const cartCountElement = document.querySelector('.cart_count');
-const cartPriceValue = document.querySelector('.cart_price_value');
-const cartPriceTaxe = document.querySelector('.cart_price_taxe');
-const cartPriceTTC = document.querySelector('.cart_price_ttc');
+    const cartCountElement = document.querySelector('.cart_count');
+    const cartPriceValue = document.querySelector('.cart_price_value');
+    const cartPriceTaxe = document.querySelector('.cart_price_taxe');
+    const cartPriceTTC = document.querySelector('.cart_price_ttc');
 
-// Vérification si le panier est vide
-if (!cart || !cart.products || cart.products.length === 0) {
-    console.log('Le panier est vide, mise à jour en conséquence.');
+    // Vérification si le panier est vide
+    if (!cart || !cart.products || cart.products.length === 0) {
+        console.log('Le panier est vide, mise à jour en conséquence.');
 
-    if (cartListElement) {
-        cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
+        if (cartListElement) {
+            cartListElement.innerHTML = '<li class="empty-cart">Votre panier est vide.</li>';
+        }
+
+        if (cartPriceValue) cartPriceValue.innerHTML = '0.00 €';
+        if (cartPriceTaxe) cartPriceTaxe.innerHTML = '0.00 €';
+        if (cartPriceTTC) cartPriceTTC.innerHTML = '0.00 €';
+        if (cartCountElement) cartCountElement.textContent = '0';
+
+        return;
     }
 
-    if (cartPriceValue) cartPriceValue.innerHTML = '0.00 €';
-    if (cartPriceTaxe) cartPriceTaxe.innerHTML = '0.00 €';
-    if (cartPriceTTC) cartPriceTTC.innerHTML = '0.00 €';
-    if (cartCountElement) cartCountElement.textContent = '0';
+    // Définir le montant de la réduction si un coupon est appliqué
+    const discountPercentage = cart.coupon ? cart.coupon.discountPercentage : 0; // Par exemple, 10 pour 10%
+    const discountAmount = cart.data.subTotalTTC * (discountPercentage / 100);
 
-    return;
-}
-
-// Définir le montant de la réduction si un coupon est appliqué
-const discountPercentage = cart.coupon ? cart.coupon.discountPercentage : 0; // Par exemple, 10 pour 10%
-const discountAmount = cart.data.subTotalTTC * (discountPercentage / 100);
-
-// Mise à jour des totaux globaux
-if (cartPriceValue) {
-    cartPriceValue.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
-}
-if (cartPriceTaxe) {
-    cartPriceTaxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
-}
-if (cartPriceTTC) {
-    const discountedTotalTTC = cart.data.subTotalTTC - discountAmount;
-    cartPriceTTC.innerHTML = `${discountedTotalTTC.toFixed(2)} €`;
-}
-if (cartCountElement) {
-    cartCountElement.textContent = cart.data.cart_count;
-}
-
-// Journal pour voir les données calculées
-console.log(`Réduction appliquée : ${discountPercentage}%. Montant total TTC après réduction : ${cart.data.subTotalTTC - discountAmount} €`);
-
+    // Mise à jour des totaux globaux
+    if (cartPriceValue) {
+        cartPriceValue.innerHTML = `${cart.data.subTotalHT.toFixed(2)} €`;
+    }
+    if (cartPriceTaxe) {
+        cartPriceTaxe.innerHTML = `${cart.data.Taxe.toFixed(2)} €`;
+    }
+    if (cartPriceTTC) {
+        const discountedTotalTTC = cart.data.subTotalTTC - discountAmount;
+        cartPriceTTC.innerHTML = `${discountedTotalTTC.toFixed(2)} €`;
+    }
+    if (cartCountElement) {
+        cartCountElement.textContent = cart.data.cart_count;
+    }
 
     // Réinitialisation et mise à jour des produits dans le DOM
     if (cartListElement) {
@@ -311,19 +454,23 @@ console.log(`Réduction appliquée : ${discountPercentage}%. Montant total TTC a
 
         cart.products.forEach((item) => {
             const { variant, quantity, product } = item;
-
+        
             // Construire une clé unique pour éviter les doublons
             const uniqueKey = `${variant.id}-${variant.size}-${variant.color}`;
-
+        
             // Calcul du prix TTC avec remise
             const discount = variant.offVariant ? (variant.offVariant / 100) : 0;
             const discountedPriceTTC = variant.price * (1 - discount);
+        
             // Vérifier si l'image existe
             const imageUrl =
                 product.images && product.images.length > 0
                     ? `/images/products/${product.images[0]}`
                     : '/images/products/default.jpg';
-
+        
+            // Vérifier si le bouton "+" doit être caché
+            const hidePlus = quantity >= variant.stock ? 'display: none;' : '';
+        
             // HTML pour chaque produit
             const content = `
                 <li data-variant-key="${uniqueKey}">
@@ -337,28 +484,30 @@ console.log(`Réduction appliquée : ${discountPercentage}%. Montant total TTC a
                         data-size="${variant.size}" 
                         data-color="${variant.color}">
                             <i class="ion-close"></i>
-                        </a>
-
+                    </a>
+        
                     <div class="cart-product-quantity mb-4">
                         <div class="quantity">
                             <a href="/mon-panier/${variant.id}/diminuer" class="minus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">-</a>
                             <input type="text" value="${quantity}" class="qty" readonly>
-                            <a href="/mon-panier/${variant.id}/ajouter" class="plus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}">+</a>
+                            <a href="/mon-panier/${variant.id}/ajouter" class="plus" data-variant-id="${variant.id}" data-size="${variant.size}" data-color="${variant.color}" style="${hidePlus}">+</a>
                         </div>
                     </div>
                     <span class="cart_quantity text-dark qty">${quantity} x <span class="cart_amount">${discountedPriceTTC.toFixed(2)} €</span></span>
                 </li>
-
             `;
             cartListElement.insertAdjacentHTML('beforeend', content);
         });
+        
     }
 
-    console.log('Réattachement des événements.');
+    console.log('Réattachement des événementsssss.');
 
     // Réattachement des événements nécessaires
     attachQuantityChangeEvents(); // Assurez-vous que cette fonction existe pour gérer les boutons "plus" et "moins"
 };
+
+
 
 const updateHeaderCartWithCoupon = (cart, discountPercentage) => {
     if (!cart || !cart.data) {

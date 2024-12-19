@@ -71,13 +71,37 @@ class CartService
             throw new \Exception('Variante non trouvée.');
         }
     
-        // Calcul du prix final avec remise
-        $finalPrice = $variant->getPrice() * (1 - $variant->getOffVariant() / 100);
+        // Récupérer le stock en fonction de la taille
+        $sizeStock = null;
+        foreach ($variant->getSizes() as $sizeEntity) {
+            if ($sizeEntity->getSize() === $size) {
+                $sizeStock = $sizeEntity->getStock();
+                break;
+            }
+        }
     
-        // Logs pour déboguer
-        error_log("Ajout au panier : Variant ID = {$variantId}, Taille = {$size}, Couleur = {$color}");
-        error_log("Prix de base : {$variant->getPrice()}, Remise : {$variant->getOffVariant()}%, Prix final : {$finalPrice}");
+        if ($sizeStock === null) {
+            throw new \Exception('Stock pour la taille spécifiée introuvable.');
+        }
     
+        // Vérification de la limite de stock
+        $currentQuantity = 0;
+        foreach ($cart as &$item) {
+            if (
+                $item['variantId'] === $variantId &&
+                $item['selectedSize'] === $size &&
+                $item['selectedColor'] === $color
+            ) {
+                $currentQuantity = $item['quantity'];
+                break;
+            }
+        }
+    
+        if ($currentQuantity + $quantity > $sizeStock) {
+            throw new \Exception('Quantité demandée supérieure au stock disponible.');
+        }
+    
+        // Ajouter au panier
         foreach ($cart as &$item) {
             if (
                 $item['variantId'] === $variantId &&
@@ -86,7 +110,6 @@ class CartService
             ) {
                 $item['quantity'] += $quantity;
                 $this->saveCart($cart);
-                error_log("Panier mis à jour : " . json_encode($cart));
                 return;
             }
         }
@@ -96,14 +119,12 @@ class CartService
             'quantity' => $quantity,
             'selectedSize' => $size,
             'selectedColor' => $color,
-            'price' => $finalPrice, // Prix après remise
-            'basePrice' => $variant->getPrice(),
-            'offVariant' => $variant->getOffVariant(),
+            'price' => $variant->getPrice(),
         ];
     
         $this->saveCart($cart);
-        error_log("Panier après ajout : " . json_encode($cart));
     }
+    
     
     
     
@@ -347,38 +368,54 @@ class CartService
     
     public function getFullCart(): array
     {
-        $cart = $this->getCart();
+        $cart = $this->getCart(); // Récupérer le panier actuel
         $fullCart = [
             'products' => [],
             'data' => [],
         ];
-
-        $totalTTCWithoutDiscount = 0; // Total TTC sans réduction
-        $totalTTCWithBaseDiscount = 0; // Total TTC avec réduction de base
-        $promoDiscountAmount = 0; // Réduction par code promo
-
+    
+        // Initialiser les totaux
+        $totalTTCWithoutDiscount = 0; // Total TTC avant réduction
+        $totalTTCWithBaseDiscount = 0; // Total TTC après réduction de base
+        $promoDiscountAmount = 0; // Réduction appliquée par code promo
+    
         foreach ($cart as $item) {
             $variant = $this->repoProductVariant->find($item['variantId']);
             if (!$variant) {
-                continue;
+                continue; // Ignorer si la variante n'est pas trouvée
             }
-
+    
             $product = $variant->getProduct();
-            $priceTTC = $variant->getPrice(); // Prix TTC sans réduction
-            $baseDiscount = $variant->getOffVariant() / 100; // Réduction de base (ex : 50%)
+    
+            // Récupérer le stock pour la taille sélectionnée
+            $stock = null;
+            foreach ($variant->getSizes() as $sizeEntity) {
+                if ($sizeEntity->getSize() === $item['selectedSize']) {
+                    $stock = $sizeEntity->getStock();
+                    break;
+                }
+            }
+    
+            // Par défaut, définir le stock à 0 si introuvable
+            $stock = $stock ?? 0;
+    
+            // Calcul des prix
+            $priceTTC = $variant->getPrice(); // Prix TTC avant réduction
+            $baseDiscount = $variant->getOffVariant() / 100; // Réduction de base en pourcentage
             $priceAfterBaseDiscountTTC = $priceTTC * (1 - $baseDiscount); // Prix TTC après réduction de base
-
-            // Ajouter les totaux
+    
+            // Ajouter au total TTC
             $totalTTCWithoutDiscount += $priceTTC * $item['quantity'];
             $totalTTCWithBaseDiscount += $priceAfterBaseDiscountTTC * $item['quantity'];
-
+    
+            // Ajouter le produit au tableau des produits détaillés
             $fullCart['products'][] = [
                 'product' => [
                     'id' => $product->getId(),
                     'name' => $product->getName(),
                     'slug' => $product->getSlug(),
                     'images' => array_map(
-                        fn($img) => $img->getImageName(), 
+                        fn($img) => $img->getImageName(),
                         $variant->getVariantImages()->toArray()
                     ),
                 ],
@@ -388,42 +425,45 @@ class CartService
                     'offVariant' => $variant->getOffVariant(),
                     'size' => $item['selectedSize'],
                     'color' => $item['selectedColor'],
+                    'stock' => $stock,
                 ],
                 'quantity' => $item['quantity'],
+                'maxQuantityReached' => $item['quantity'] >= $stock, // Indique si la quantité atteint le stock
             ];
         }
-
-        // Gestion du code promo
+    
+        // Gestion des réductions par code promo
         $appliedCoupon = $this->getSession()->get('applied_coupon', null);
         if ($appliedCoupon) {
             $promoDiscountPercentage = $appliedCoupon['discountPercentage'] ?? 0;
             $promoDiscountAmount = $totalTTCWithBaseDiscount * ($promoDiscountPercentage / 100);
         }
-
+    
         // Calcul final après application de toutes les réductions
         $finalTTC = $totalTTCWithBaseDiscount - $promoDiscountAmount;
         $promoDiscountPercentage = $appliedCoupon['discountPercentage'] ?? 0;
-
+    
+        // Ajouter les totaux dans la section 'data'
         $fullCart['data'] = [
             'cart_count' => count($cart),
-            'subTotalHT' => $this->calculateSubTotalHT($fullCart),
-            'Taxe' => $this->calculateTax($fullCart),
-            'subTotalTTCWithoutDiscount' => $totalTTCWithoutDiscount, // Total TTC avant toute réduction
+            'subTotalHT' => $this->calculateSubTotalHT($fullCart) ?? 0, // Total HT (avec sécurité)
+            'Taxe' => $this->calculateTax($fullCart) ?? 0, // Taxe calculée
+            'subTotalTTCWithoutDiscount' => $totalTTCWithoutDiscount, // Total TTC avant réduction
             'subTotalTTCWithBaseDiscount' => $totalTTCWithBaseDiscount, // Total TTC après réduction de base
-            'subTotalTTC' => $this->calculateSubTotalTTC($fullCart),// Total TTC après toutes réductions
-            'appliedDiscountAmount' => $promoDiscountAmount, // Montant de la réduction
-            'appliedDiscountPercentage' => $promoDiscountPercentage, 
+            'subTotalTTC' => $finalTTC, // Total TTC après toutes réductions
+            'appliedDiscountAmount' => $promoDiscountAmount, // Montant de la réduction appliquée
+            'appliedDiscountPercentage' => $promoDiscountPercentage,
             'isCouponApplied' => $this->isCouponApplied(),
         ];
-
-
-
+    
         // Ajouter les informations du code promo
         $fullCart['appliedCouponCode'] = $appliedCoupon['code'] ?? 'Aucun';
         $fullCart['appliedDiscountAmount'] = $promoDiscountAmount;
-
+    
         return $fullCart;
     }
+    
+    
     
 
 

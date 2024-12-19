@@ -14,6 +14,7 @@ use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use App\Repository\ProductVariantRepository;
 use App\Repository\RewiewsProductRepository;
+use App\Repository\SizeStockRepository;
 use App\Service\CartService;
 use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,8 +26,7 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Filesystem\Filesystem;
 use FFMpeg\FFMpeg;
 use FFMpeg\FFProbe;
-
-
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class HomeController extends AbstractController
 {
@@ -78,6 +78,25 @@ class HomeController extends AbstractController
         ]);
     }
 
+
+    #[Route('/api/get-stock', name: 'api_get_stock', methods: ['GET'])]
+    public function getStock(Request $request, SizeStockRepository $sizeStockRepository): JsonResponse
+    {
+        $size = $request->query->get('size');
+        $variantId = $request->query->get('variantId');
+
+        // Récupérer le stock pour la variante et la taille spécifiées
+        $stock = $sizeStockRepository->findOneBy([
+            'size' => $size,
+            'productVariant' => $variantId,
+        ]);
+
+        if (!$stock) {
+            return new JsonResponse(['error' => 'Stock not found'], 404);
+        }
+
+        return new JsonResponse(['stock' => $stock->getStock()]);
+    }
 
 
 
