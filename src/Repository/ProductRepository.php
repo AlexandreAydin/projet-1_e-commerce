@@ -42,36 +42,52 @@ class ProductRepository extends ServiceEntityRepository
     /**
     * @return Product[] Returns an array of Product objects
     */
-   public function findWithSearch($search)
-   {
-     $query = $this->createQueryBuilder('p');
+    public function findWithSearch($search)
+    {
+        $query = $this->createQueryBuilder('p')
+            ->leftJoin('p.variants', 'v'); // Join with ProductVariant entity
+    
+        // Filtrer sur le prix de base du produit
+        if ($search->getMinPrice()) {
+            $query = $query->andWhere('p.price >= :minPrice')
+                           ->setParameter('minPrice', $search->getMinPrice()*100);
+        }
+    
+        if ($search->getMaxPrice()) {
+            $query = $query->andWhere('p.price <= :maxPrice')
+                           ->setParameter('maxPrice', $search->getMaxPrice()*100);
+        }
+    
+        // Filtrer sur le prix des variantes, en tenant compte des réductions
+        if ($search->getMinPrice()) {
+            $query = $query->orWhere(
+                '(v.price * (1 - COALESCE(v.offVariant, 0) / 100) >= :minVariantPrice)')
+                ->setParameter('minVariantPrice', $search->getMinPrice()*100);
+        }
+    
+        if ($search->getMaxPrice()) {
+            $query = $query->orWhere(
+                '(v.price * (1 - COALESCE(v.offVariant, 0) / 100) <= :maxVariantPrice)')
+                ->setParameter('maxVariantPrice', $search->getMaxPrice()*100);
+        }
 
-    //Price
-    if ($search->getMinPrice()) {
-        $query = $query->andWhere('p.price >= ' . $search->getMinPrice()*100);
+        if (!empty($search->categories)) {
+            $query = $query->andWhere('p.categorie IN (:categories)')
+                           ->setParameter('categories', $search->categories);
+        }
+
+        // dump($search);exit();
+    
+        // Filtre sur les chaînes de recherche
+        if (!empty($search->string)) {
+            $query = $query
+                ->andWhere('p.name LIKE :string')
+                ->setParameter('string', "%{$search->string}%");
+        }
+    
+        return $query->getQuery()->getResult();
     }
-
-     if($search->getMaxPrice()){
-        $query= $query->andWhere('p.price <=' .$search->getMaxPrice()*100);
-    }
-
-    if (!empty($search->string)) {
-        $query = $query
-        ->andWhere('p.name LIKE :string')
-        ->setParameter('string', "%{$search->string}%");
-    }
-
-    // Categories
-    if($search->getCategories()){
-            $query = $query->join('p.categorie','c')
-                            ->andWhere('c.id IN (:categories)')
-                            ->setParameter('categories',$search->getCategories());
-    }
-
-    // dd( $query->getQuery());
-    return $query->getQuery()->getResult();
-
-   }
+    
 
 
    public function findAllOrderedByIdDesc()

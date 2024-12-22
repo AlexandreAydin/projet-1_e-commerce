@@ -16,7 +16,7 @@ class SizeStock
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $size = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: "integer", nullable: true)]
     private ?string $stock = null;
 
     #[ORM\ManyToOne(targetEntity: ProductVariant::class, inversedBy: 'sizes')]

@@ -108,27 +108,37 @@ class ProductVariant
         return $this;
     }
 
-public function removeSize(SizeStock $sizeStock): self
-{
-    if ($this->sizes->removeElement($sizeStock)) {
-        if ($sizeStock->getProductVariant() === $this) {
-            $sizeStock->setProductVariant(null); // Remove the inverse relationship
+    public function removeSize(SizeStock $sizeStock): self
+    {
+        if ($this->sizes->removeElement($sizeStock)) {
+            if ($sizeStock->getProductVariant() === $this) {
+                $sizeStock->setProductVariant(null); // Remove the inverse relationship
+            }
         }
+
+        return $this;
     }
 
-    return $this;
-}
-
-public function getStockForSize(string $size): ?string
-{
-    foreach ($this->sizes as $sizeEntity) {
-        if ($sizeEntity->getSize() === $size) {
-            return $sizeEntity->getStock();
+    public function getStockForSize(string $size): ?string
+    {
+        foreach ($this->sizes as $sizeEntity) {
+            if ($sizeEntity->getSize() === $size) {
+                return $sizeEntity->getStock();
+            }
         }
+
+        return null; // Retourne null si la taille n'est pas trouvée
     }
 
-    return null; // Retourne null si la taille n'est pas trouvée
-}
+    public function getSizeStockDetails(): array
+    {
+        return $this->sizes->map(function (SizeStock $sizeStock) {
+            return [
+                'size' => $sizeStock->getSize(),
+                'stock' => $sizeStock->getStock()
+            ];
+        })->toArray();
+    }
 
     
 

@@ -303,34 +303,40 @@ class HomeController extends AbstractController
 
 
     #[Route('/boutique', name: 'app_shop')]
-    public function shop(ProductRepository $repoProduct,WishListService $wishListService, RewiewsProductRepository $reviewsRepo,Request $request): Response
+    public function shop(
+    ProductRepository $repoProduct,
+    WishListService $wishListService,
+    ProductVariantRepository $repoVariant,
+    RewiewsProductRepository $reviewsRepo,
+    Request $request): Response
     {
         $products = $repoProduct->findAllOrderedByIdDesc();
 
         $search = new SearchProduct();
-        $form = $this->createForm(SearchProductType::class,$search);
+        $form = $this->createForm(SearchProductType::class, $search);
         $form->handleRequest($request);
 
-        if($form->isSubmitted() && $form->isValid()){
-            $products= $repoProduct->findWithSearch($search);  
+        if ($form->isSubmitted() && $form->isValid()) {
+            $products = $repoProduct->findWithSearch($search);
         }
 
         $productRatings = []; // Create a new array to hold the average rating for each product.
+        $isInWishlist = []; // Create a new array to hold the wishlist status for each product.
 
         foreach ($products as $product) {
             $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
+            $product->getVariants(); // This method now retrieves variants.
         }
 
-        
-        $isInWishlist = $wishListService->isProductInWishlist($product->getId());
-        
         return $this->render('pages/home/shop.html.twig', [
-            'products' => $products, 
+            'products' => $products,
             'search' => $form->createView(),
             'productRatings' => $productRatings,
             'isInWishlist' => $isInWishlist,
         ]);
     }
+
 }
 
 

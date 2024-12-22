@@ -114,16 +114,7 @@
                         
              
                         <div class="cart_extra col-12  ">
-                                {% if product.quantity == 0  %}
-                                    <div>
-                                        <br>
-                                        <span> 
-                                            Ce produit est indisponible pour le moment.
-                                        </span>
-                                        <br>
-                                        <br>
-                                    </div>
-                                {% else %}
+                                <div id="stockMessage" class="stock-message" style="display: none;"> Ce produit est indisponible pour le moment.</div>
                                 <div class="cart-product-quantity mb-4">
                                 <div class="quantity">
                                     <input type="button" value="-" class="minus">
@@ -149,7 +140,6 @@
 
 
                         <pre>{{ dump(variants) }}</pre>
-                        {% endif %}
                         <hr />
                         <ul class="product-meta col-12">
                             <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
@@ -963,7 +953,9 @@
     }
 }); #}
 
-document.addEventListener('DOMContentLoaded', function () {
+ {# TODO: quand input est au max-stock n'affiches plus icon + #}
+
+{# document.addEventListener('DOMContentLoaded', function () {
     const sizeSelect = document.getElementById('size'); // Sélection de la taille
     const colorSelect = document.getElementById('color'); // Sélection de la couleur (si applicable)
     const quantityInput = document.getElementById('quantity'); // Input de la quantité
@@ -1039,7 +1031,94 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialisation
     updateStock();
+}); #}
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const sizeSelect = document.getElementById('size');
+    const colorSelect = document.getElementById('color');
+    const quantityInput = document.getElementById('quantity');
+    const incrementButton = document.querySelector('.plus');
+    const decreaseButton = document.querySelector('.minus');
+    const addToCartContainer = document.querySelector('.cart_btn'); // Assurez-vous que c'est le bon sélecteur pour votre bouton et votre quantité
+    let maxStock = 0;
+
+    async function fetchStock(size, variantId) {
+        try {
+            const response = await fetch(`/api/get-stock?size=${size}&variantId=${variantId}`);
+            const data = await response.json();
+            return data.stock !== undefined ? parseInt(data.stock, 10) : 0;
+        } catch (error) {
+            console.error('Erreur réseau lors de la récupération du stock:', error);
+            return 0;
+        }
+    }
+
+    async function updateStock() {
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const selectedSize = selectedOption.value;
+        const variantId = selectedOption.getAttribute('data-variant-id');
+
+        if (!selectedSize || !variantId) {
+            console.warn('Taille ou variante non sélectionnée.');
+            return;
+        }
+
+        maxStock = await fetchStock(selectedSize, variantId);
+        resetQuantity();
+        updateIncrementButton();
+
+        // Ajouter cette condition pour gérer la visibilité de l'input et du bouton
+        if (maxStock > 0) {
+            quantityInput.style.display = 'block';
+            incrementButton.style.display = 'block';
+            addToCartContainer.style.display = 'block';
+            decreaseButton.style.display = 'block';
+            stockMessage.style.display = 'none';
+
+        } else {
+            quantityInput.style.display = 'none';
+            incrementButton.style.display = 'none';
+            addToCartContainer.style.display = 'none';
+            decreaseButton.style.display = 'none';
+            stockMessage.style.display = 'block';
+        }
+    }
+
+    function resetQuantity() {
+        quantityInput.value = 1;
+    }
+
+    function updateIncrementButton() {
+        const quantity = parseInt(quantityInput.value, 10) || 1;
+        incrementButton.style.display = quantity >= maxStock ? 'none' : 'inline-block';
+    }
+
+    sizeSelect.addEventListener('change', updateStock);
+    if (colorSelect) {
+        colorSelect.addEventListener('change', () => {
+            resetQuantity();
+            updateIncrementButton();
+            updateStock(); // Assurez-vous d'appeler updateStock pour recalculer le stock
+        });
+    }
+
+    updateStock(); // Initialiser au chargement
 });
+
+
+
+
+
+
+
+
+
+
 
 
 
