@@ -103,6 +103,18 @@ class Product
     #[ORM\JoinColumn(nullable: true)]
     private Collection $variants;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $ean = null;
+
+    #[ORM\ManyToOne(inversedBy: 'products')]
+    private ?SubCategorie $subCategorie = null;
+
+    #[ORM\ManyToOne(inversedBy: 'products')]
+    private ?ProductBrand $productBrand = null;
+
+    #[ORM\ManyToOne(inversedBy: 'products')]
+    private ?BrandModel $brandModel = null;
+
 
         public function __construct()
         {
@@ -539,6 +551,54 @@ class Product
                 $variant->setProduct(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEan(): ?int
+    {
+        return $this->ean;
+    }
+
+    public function setEan(?int $ean): static
+    {
+        $this->ean = $ean;
+
+        return $this;
+    }
+
+    public function getSubCategorie(): ?SubCategorie
+    {
+        return $this->subCategorie;
+    }
+
+    public function setSubCategorie(?SubCategorie $subCategorie): static
+    {
+        $this->subCategorie = $subCategorie;
+
+        return $this;
+    }
+
+    public function getProductBrand(): ?ProductBrand
+    {
+        return $this->productBrand;
+    }
+
+    public function setProductBrand(?ProductBrand $productBrand): static
+    {
+        $this->productBrand = $productBrand;
+
+        return $this;
+    }
+
+    public function getBrandModel(): ?BrandModel
+    {
+        return $this->brandModel;
+    }
+
+    public function setBrandModel(?BrandModel $brandModel): static
+    {
+        $this->brandModel = $brandModel;
 
         return $this;
     }

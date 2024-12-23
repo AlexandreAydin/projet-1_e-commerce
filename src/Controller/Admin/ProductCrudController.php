@@ -68,7 +68,11 @@ class ProductCrudController extends AbstractCrudController
             // ->setLabel('Tailles'),
             CollectionField::new('images')
                 ->setEntryType(ProductImageType::class),
+            IntegerField::new('ean'),
             AssociationField::new('categorie'),
+            AssociationField::new('subCategorie'),
+            AssociationField::new('productBrand'),
+            AssociationField::new('brandModel'),
             TextEditorField::new('description2')
                     ->setFormType(CKEditorType::class)
                     ->hideOnIndex(),

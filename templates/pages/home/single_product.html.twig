@@ -8,35 +8,28 @@
 {% endblock %}
  
 {% block body %}
-     <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
+    <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
     <div class="section">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
                     <div class="product-image">
-                  <div class="main_image_container position-relative">
-    <div class="mb-3" style="width: 100%; height: 600px">
-        <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
-    </div>
-    <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
-    href="{{ path('wishlist_toggle', {id: product.id}) }}" 
-    data-product-id="{{ product.id }}">
-        <i class="fa fa-heart"></i>
-    </a>
+                        <div class="main_image_container position-relative">
+                            <div class="mb-3" style="width: 100%; height: 600px">
+                                <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
+                            </div>
+                            <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
+                            href="{{ path('wishlist_toggle', {id: product.id}) }}" 
+                            data-product-id="{{ product.id }}">
+                                <i class="fa fa-heart"></i>
+                            </a>        
+                        </div>
 
-
-</div>
-
-                    <div id="thumbnails" class="row">
-                        <!-- Les miniatures seront générées dynamiquement avec JS -->
+                        <div id="thumbnails" class="row">
+                            <!-- Les miniatures seront générées dynamiquement avec JS -->
+                        </div>
                     </div>
                 </div>
-
-
-            
-
-                </div>
-
                 <div class="col-lg-6 col-md-6">
                     <div class="pr_detail">
                         <div class="product_description">
@@ -50,11 +43,11 @@
                                     </div>
                                 {% endif %}
                             </div> #}
-                             <div class="product_price d-flex variant-price">
-                                <span id="variant-price" class="price">-- €</span> <!-- Prix après réduction -->
-                                <del id="old-price" style="display: none;">-- €</del> <!-- Prix original barré -->
+                            <div class="product_price d-flex variant-price">
+                                <span id="variant-price" class="price">-- €</span>
+                                <del id="old-price" style="display: none;">-- €</del>
                                 <div id="variant-off" class="on_sale" style="display: none;">
-                                <span>--% réduction</span> <!-- Réduction affichée -->
+                                <span>--% réduction</span>
                             </div>
                         </div> 
                             <div class="rating_wrap">
@@ -65,8 +58,10 @@
                             </div>
                             <br>
                             <br>
-                            <div >
-                                <p>{{ product.description | raw }}</p>
+                            <br>
+                            <br>
+                            <div class='mt-4'>
+                                <p class='mt-4'>{{ product.description | raw }}</p>
                             </div>
 
                             <div class="product_sort_info">
@@ -74,6 +69,9 @@
                                     <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
                                     <li><i class="linearicons-truck"></i>Livraison Rapide</li>
                                     <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
+                                    {% if product.ean %}
+                                    <li><i class="linearicons-barcode"></i> EAN / CodeBar: {{product.ean}}</li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </div>
@@ -111,13 +109,6 @@
                             </div>
                         </div>
 
-                        {# <div class="product_price d-flex variant-price">
-                                <span id="variant-price" class="price">-- €</span> <!-- Prix après réduction -->
-                                <del id="old-price" style="display: none;">-- €</del> <!-- Prix original barré -->
-                                <div id="variant-off" class="on_sale" style="display: none;">
-                                <span>--% réduction</span> <!-- Réduction affichée -->
-                            </div>
-                        </div>  #}
                         <div class="cart_extra col-12  ">
                                 <div id="stockMessage" class="stock-message" style="display: none;"> Ce produit est indisponible pour le moment.</div>
                                 <div class="cart-product-quantity mb-4">
@@ -138,20 +129,30 @@
                                             </a>
                                     <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
                                 </div>
-                        </div>      
-                    
+                        </div>     
     
                         <ul class="product-meta col-12">
-                            <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
+                            {% if product.categorie %}
+                                <li>Catégorie: <a href="#">{{ product.categorie.name }}</a></li>
+                            {% endif %}
+                            {% if product.subCategorie %}
+                                <li>Sous Catégorie: <a href="#">{{ product.subCategorie.name }}</a>{% else %}</li>
+                            {% endif %}
+                            {% if product.productBrand %}
+                                <li>Marque: <a href="#">{{product.productBrand.name }}</a>{% else %}</li>
+                            {% endif %}
+                            {% if product.brandModel %}
+                                <li>Modéle: <a href="#">{{product.brandModel.name }}</a>{% else %}</li>
+                            {% endif %}
                             {# <li>Tags: {{ product.tags }}</li> #}
                         </ul>
                     </div>
                 </div>
             </div>
             <br><br>
-             {% if product.illustrationText1 %}
-            <div class="row nav nav-tabs">
-            </div>
+            {% if product.illustrationText1 %}
+                <div class="row nav nav-tabs">
+                </div>
                 <div class="row nav nav-tabs">
                     <div class="large_divider clearfix mt-4">
                         {{ product.illustrationText1 | raw }}
@@ -398,14 +399,11 @@
                                         {{ form_end(form) }}
                                     {% endif %}
                                 </div>
-
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-12">
                     <div class="small_divider"></div>
@@ -413,7 +411,6 @@
                     <div class="medium_divider"></div>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-12">
                     <div class="heading_s1">

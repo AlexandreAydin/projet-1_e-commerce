@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Address;
+use App\Entity\BrandModel;
 use App\Entity\Carrier;
 use App\Entity\Cart;
 use App\Entity\Categorie;
@@ -12,8 +13,10 @@ use App\Entity\Order;
 use App\Entity\OrderDetails;
 use App\Entity\PaymentMethod;
 use App\Entity\Product;
+use App\Entity\ProductBrand;
 use App\Entity\ProductImage;
 use App\Entity\RewiewsProduct;
+use App\Entity\SubCategorie;
 use App\Entity\User;
 use App\Entity\Wishlist;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,10 +50,12 @@ class DashboardController extends AbstractDashboardController
             MenuItem::linkToCrud('Produit', 'fas fa-shopping-cart', Product::class),
             MenuItem::linkToCrud('Image de Produit', 'fas fa-image', ProductImage::class),
             MenuItem::linkToCrud('Coupon', 'fa-solid fa-percent', Coupon::class),
-            MenuItem::linkToCrud('Commentaire', 'fas fa-user', RewiewsProduct::class),
+            MenuItem::linkToCrud('Commentaire', 'fa-solid fa-comment', RewiewsProduct::class),
             MenuItem::linkToCrud('Catégorie', 'fas fa-list', Categorie::class),
+            MenuItem::linkToCrud('Sous Catégorie', 'fas fa-list', SubCategorie::class),
+            MenuItem::linkToCrud('Marque', 'fa fa-trademark', ProductBrand::class),
+            MenuItem::linkToCrud('Modéle de la marque', 'fa fa-tags', BrandModel::class),
             MenuItem::linkToCrud('Livraison', 'fas fa-truck', Carrier::class),
-            
         ]);
         yield MenuItem::subMenu('Utilisateur', 'fas fa-user')->setSubItems([
             MenuItem::linkToCrud('Utilisateur', 'fas fa-user', User::class),
