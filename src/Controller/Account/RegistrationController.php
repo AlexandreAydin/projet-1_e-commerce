@@ -41,15 +41,15 @@ class RegistrationController extends AbstractController
             $mail = new Mail();
             $to_email = $user->getEmail();
             $to_name = $user->getFirstName();
-            $subject = 'Bienvenue sur Amanoz !';
+            $subject = 'Bienvenue sur Yilmi Market !';
             
             $content = "Bonjour ".$to_name.",<br/>";
-            $content .= "Bienvenue sur Amanoz ! Nous sommes ravis de vous compter parmi nos clients. Votre inscription a bien été prise en compte.<br/><br/>";
+            $content .= "Bienvenue sur Yilmi Market ! Nous sommes ravis de vous compter parmi nos clients. Votre inscription a bien été prise en compte.<br/><br/>";
             $content .= "Parcourez nos différentes catégories pour découvrir nos produits phares et profitez de nos offres spéciales et de nos nouveautés régulièrement mises à jour.<br/><br/>";
             $content .= "N'hésitez pas à nous contacter si vous avez des questions ou besoin d'assistance lors de vos achats.<br/><br/>";
-            $content .= "Bonne découverte et bons achats sur Amanoz !<br/>";
+            $content .= "Bonne découverte et bons achats sur Yilmi Market !<br/>";
             $content .= "Cordialement,<br/>";
-            $content .= "L'équipe de Amanoz";
+            $content .= "L'équipe de Yilmi Market";
     
             $mail->send($to_email, $to_name, $subject, $content);
             

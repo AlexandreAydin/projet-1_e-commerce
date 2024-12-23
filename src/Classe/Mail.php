@@ -18,8 +18,8 @@ class Mail
             'Messages' => [
                 [
                     'From' => [
-                        'Email' => "contact@sweetdate.fr",
-                        'Name' => "Amanoz"
+                        'Email' => "contact@yilmimarket.fr",
+                        'Name' => "YilmiMarket"
                     ],
                     'To' => [
                         [
