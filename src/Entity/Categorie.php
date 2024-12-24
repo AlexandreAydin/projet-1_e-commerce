@@ -25,7 +25,7 @@ class Categorie
     #[ORM\Column(length: 255, unique:true)]
     private ?string $slug = null;
 
-    #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Product::class)]
+    #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Product::class, fetch: 'EAGER', cascade: ['persist', 'remove'])]
     private Collection $products;
 
     private $coupons;

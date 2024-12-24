@@ -5,11 +5,6 @@ namespace App\Entity;
 class SearchProduct
 {
 
-    /**
-     * @var string
-     */
-    public $string = '';
-
     private ?int $minPrice = null;
 
     private ?int $maxPrice = null;

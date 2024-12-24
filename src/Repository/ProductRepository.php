@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Product;
+use App\Entity\SearchProduct;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -79,11 +80,11 @@ class ProductRepository extends ServiceEntityRepository
         // dump($search);exit();
     
         // Filtre sur les chaînes de recherche
-        if (!empty($search->string)) {
-            $query = $query
-                ->andWhere('p.name LIKE :string')
-                ->setParameter('string', "%{$search->string}%");
-        }
+        // if (!empty($search->string)) {
+        //     $query = $query
+        //         ->andWhere('p.name LIKE :string')
+        //         ->setParameter('string', "%{$search->string}%");
+        // }
     
         return $query->getQuery()->getResult();
     }
@@ -155,6 +156,148 @@ class ProductRepository extends ServiceEntityRepository
        ;
    }
 
+
+
+
+
+
+
+
+
+
+
+   public function findBySearchQuery(string $query, ?array $categories = null): array {
+    $qb = $this->createQueryBuilder('p')
+               ->where('p.name LIKE :query OR p.description LIKE :query');
+
+    if ($categories) {
+        $qb->andWhere('p.categorie IN (:categories)')
+           ->setParameter('categories', $categories);
+    }
+
+    $qb->setParameter('query', '%' . $query . '%');
+
+    return $qb->getQuery()->getResult();
+}
+
+
+
+
+
+
+
+
+
+    // public function findBySearchQuery(string $query): array {
+    //     return $this->createQueryBuilder('p')
+    //         ->where('p.name LIKE :query OR p.description LIKE :query')
+    //         ->setParameter('query', '%' . $query . '%')
+    //         ->getQuery()
+    //         ->getResult();
+    // }
+
+    
+
+    
+    
+    
+
+
+
+
+
+
+
+
+
+    // public function findByFilters(SearchProduct $search): array {
+    //     $qb = $this->createQueryBuilder('p')
+    //                ->leftJoin('p.variants', 'v')
+    //                ->groupBy('p.id');  // Grouper les résultats pour éviter les doublons.
+    
+    //     // Utiliser andX() pour combiner les conditions de manière logique
+    //     $priceConditions = $qb->expr()->andX();
+    
+    //     // Ajout des conditions pour le prix minimum des variantes
+    //     if ($search->getMinPrice() !== null) {
+    //         $priceConditions->add($qb->expr()->gte(
+    //             'v.price * (1 - COALESCE(v.offVariant, 0) / 100)', ':minPrice'  // Calcul du prix des variantes après réduction
+    //         ));
+    //         $qb->setParameter('minPrice', $search->getMinPrice());
+    //     }
+    
+    //     // Ajout des conditions pour le prix maximum des variantes
+    //     if ($search->getMaxPrice() !== null) {
+    //         $priceConditions->add($qb->expr()->lte(
+    //             'v.price * (1 - COALESCE(v.offVariant, 0) / 100)', ':maxPrice'  // Calcul du prix des variantes après réduction
+    //         ));
+    //         $qb->setParameter('maxPrice', $search->getMaxPrice());
+    //     }
+    
+    //     // Ajouter les conditions de prix à la requête si nécessaire
+    //     if ($priceConditions->count() > 0) {
+    //         $qb->andWhere($priceConditions);
+    //     }
+    
+    //     // Filtrage par catégories si spécifié
+    //     if (!empty($search->getCategories())) {
+    //         $qb->andWhere('p.categorie IN (:categories)')
+    //            ->setParameter('categories', $search->getCategories());
+    //     }
+        
+    
+    //     // Exécution de la requête pour obtenir les résultats
+    //     $result = $qb->getQuery()->getResult();
+       
+    //     dd($result);exit();
+    //     return $result;  // Retourner les résultats filtrés
+    // }
+    
+    
+    
+    public function findByFilters(SearchProduct $search, string $query = null): array {
+        $qb = $this->createQueryBuilder('p')
+                   ->leftJoin('p.variants', 'v')
+                   ->groupBy('p.id')
+                   ->orderBy('p.name', 'ASC');  // Ajout de l'ordre de tri sur le nom du produit
+    
+        // Si un terme de recherche est spécifié, appliquez-le
+        if ($query) {
+            $qb->andWhere($qb->expr()->orX(
+                'p.name LIKE :query',
+                'p.description LIKE :query'
+            ))->setParameter('query', '%' . $query . '%');
+        }
+    
+        // Appliquez les filtres de catégories
+        if (!empty($search->getCategories())) {
+            $qb->andWhere('p.categorie IN (:categories)')
+               ->setParameter('categories', $search->getCategories());
+        }
+    
+        // Filtres de prix ajustés pour inclure les variantes
+        if ($search->getMinPrice() !== null) {
+            $qb->andWhere($qb->expr()->orX(
+                $qb->expr()->gte('p.price', ':minPrice'),
+                $qb->expr()->gte('v.price * (1 - COALESCE(v.offVariant, 0) / 100)', ':minPrice')
+            ))->setParameter('minPrice', $search->getMinPrice());
+        }
+    
+        if ($search->getMaxPrice() !== null) {
+            $qb->andWhere($qb->expr()->orX(
+                $qb->expr()->lte('p.price', ':maxPrice'),
+                $qb->expr()->lte('v.price * (1 - COALESCE(v.offVariant, 0) / 100)', ':maxPrice')
+            ))->setParameter('maxPrice', $search->getMaxPrice());
+        }
+    
+        return $qb->getQuery()->getResult();
+    }
+    
+    
+    
+    
+    
+    
 
 
 //    /**

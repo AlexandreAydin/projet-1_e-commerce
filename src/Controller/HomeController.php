@@ -24,8 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Filesystem\Filesystem;
-use FFMpeg\FFMpeg;
-use FFMpeg\FFProbe;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class HomeController extends AbstractController
@@ -291,7 +290,6 @@ class HomeController extends AbstractController
 
 
 
-
     
 
 
@@ -300,42 +298,121 @@ class HomeController extends AbstractController
 
 
     
+
+
+    
+    // #[Route('/boutique', name: 'app_shop')]
+    // public function shop(
+    //     ProductRepository $repoProduct,
+    //     WishListService $wishListService,
+    //     RewiewsProductRepository $reviewsRepo,
+    //     FormFactoryInterface $formFactory,
+    //     Request $request
+    // ): Response {
+    //     // Création et gestion du formulaire de recherche avancée
+    //     $search = new SearchProduct();
+    //     $form = $formFactory->create(SearchProductType::class, $search, [
+    //         'method' => 'GET', // ou 'POST' selon votre cas
+    //     ]);
+    //     $form->handleRequest($request);
+    
+    //     // Récupération du terme de recherche depuis la requête
+    //     $query = $request->query->get('query', '');
+    
+    //     // Initialisation des produits
+    //     $products = [];
+    
+    //     // Vérifier si le formulaire a été soumis et est valide
+    //     if ($form->isSubmitted() && $form->isValid()) {
+    //         // dd($form->isSubmitted(), $form->isValid());exit();
+    //         $products = $repoProduct->findByFilters($search);
+    //     } else if (!empty($query)) {
+    //         // Si un terme de recherche est fourni, effectuer une recherche textuelle
+    //         $products = $repoProduct->findBySearchQuery($query);
+    //     } else {
+    //         // Sinon, charger tous les produits
+    //         $products = $repoProduct->findAll();
+    //     }
+
+    //     // dd($products);exit();
+    
+    //     // Compilation des informations supplémentaires pour chaque produit
+    //     $productRatings = [];
+    //     $isInWishlist = [];
+    //     foreach ($products as $product) {
+    //         $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+    //         $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
+    //     }
+    
+    //     // Rendu de la vue avec toutes les données nécessaires
+    //     return $this->render('pages/home/shop.html.twig', [
+    //         'products' => $products,
+    //         'search' => $form->createView(),
+    //         'productRatings' => $productRatings,
+    //         'isInWishlist' => $isInWishlist,
+    //     ]);
+    // }
+    
+
+
+
+
 
 
     #[Route('/boutique', name: 'app_shop')]
     public function shop(
-    ProductRepository $repoProduct,
-    WishListService $wishListService,
-    ProductVariantRepository $repoVariant,
-    RewiewsProductRepository $reviewsRepo,
-    Request $request): Response
-    {
-        $products = $repoProduct->findAllOrderedByIdDesc();
-
+        WishListService $wishListService,
+        RewiewsProductRepository $reviewsRepo,
+        FormFactoryInterface $formFactory,
+        Request $request,
+        ProductRepository $repoProduct): Response {
+        // Création et gestion du formulaire de recherche avancée
         $search = new SearchProduct();
-        $form = $this->createForm(SearchProductType::class, $search);
+        $form = $this->createForm(SearchProductType::class, $search, [
+            'method' => 'GET', // Utilisez GET pour permettre aux utilisateurs de partager des URLs de recherche
+        ]);
         $form->handleRequest($request);
 
+        // Récupération du terme de recherche depuis la requête
+        $query = $request->query->get('query', '');
+
+        // Initialisation des produits
+        $products = [];
+
+        // Vérifier si le formulaire a été soumis et est valide
         if ($form->isSubmitted() && $form->isValid()) {
-            $products = $repoProduct->findWithSearch($search);
+            // Filtrer les produits selon les critères spécifiés
+            $products = $repoProduct->findByFilters($search, $query);
+        } else if (!empty($query)) {
+            // Si un terme de recherche est fourni, effectuer une recherche textuelle
+            $products = $repoProduct->findBySearchQuery($query);
+        } else {
+            // Sinon, charger tous les produits
+            $products = $repoProduct->findAll();
         }
 
-        $productRatings = []; // Create a new array to hold the average rating for each product.
-        $isInWishlist = []; // Create a new array to hold the wishlist status for each product.
+        // Affichage d'un message si aucun produit ne correspond aux critères
+        if (empty($products)) {
+            $this->addFlash('error', 'Désolé, aucun produit ne correspond au résultat de votre recherche.');
+        }
 
+        $productRatings = [];
+        $isInWishlist = [];
         foreach ($products as $product) {
             $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
             $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-            $product->getVariants(); // This method now retrieves variants.
         }
 
+        // Rendu de la vue avec toutes les données nécessaires
         return $this->render('pages/home/shop.html.twig', [
             'products' => $products,
             'search' => $form->createView(),
             'productRatings' => $productRatings,
-            'isInWishlist' => $isInWishlist,
+             'isInWishlist' => $isInWishlist,
         ]);
     }
+     
+    
 
 }
 

@@ -99,7 +99,7 @@ class Product
     #[ORM\ManyToMany(targetEntity: Wishlist::class, mappedBy: 'products')]
     private Collection $wishlists;
 
-    #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductVariant::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductVariant::class, fetch: 'EAGER', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: true)]
     private Collection $variants;
 

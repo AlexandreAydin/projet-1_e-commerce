@@ -69,6 +69,18 @@
                         </div>
                         <div class="search_overlay"></div>
                     </li> #}
+                        {# <form action="{{ path('app_shop', {'query': searchQuery | default('') }) }}" method="get">
+                            <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ searchQuery | default('') }}" required>
+                            <button type="submit">Rechercher</button>
+                        </form> #}
+                        {# <form action="{{ path('app_shop', {'query': searchQuery | default('') }) }}" method="get">
+                            <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}" required>
+                            <button type="submit">Rechercher</button>
+                        </form> #}
+                        <form action="{{ path('app_shop') }}" method="get">
+                            <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}" required>
+                            <button type="submit">Rechercher</button>
+                        </form>
                     <li>
                         <a class="text-decoration-none" href="{{ path('app_wishList')}}">
                             <i class="icon-heart style-none"></i>
