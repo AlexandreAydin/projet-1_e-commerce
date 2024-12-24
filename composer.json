@@ -16,6 +16,7 @@
         "friendsofsymfony/ckeditor-bundle": "^2.4",
         "google/apiclient": "2.7",
         "helios-ag/fm-elfinder-bundle": "^12.3",
+        "knplabs/knp-paginator-bundle": "^6.6",
         "knpuniversity/oauth2-client-bundle": "^2.15",
         "league/oauth2-google": "^4.0",
         "mailjet/mailjet-apiv3-php": "^1.5",

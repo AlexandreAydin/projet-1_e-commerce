@@ -138,6 +138,23 @@ class ProductRepository extends ServiceEntityRepository
            ->getResult();
    }
 
+   public function findByCategorySlug($slug)
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.categorie', 'c')
+            ->where('c.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery();
+    }
+
+   public function paginationQuery()
+   {
+       return $this->createQueryBuilder('a')
+           ->orderBy('a.id', 'ASC')
+           ->getQuery()
+       ;
+   }
+
 
 
 //    /**

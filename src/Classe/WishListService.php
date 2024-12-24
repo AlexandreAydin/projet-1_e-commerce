@@ -126,7 +126,7 @@ class WishListService
                     'id' => $product->getId(),
                     'name' => $product->getName(),
                     'slug' => $product->getSlug(),
-                    'images' => $product->getImages()->first()->getImageName(),
+                    // 'images' => $product->getImages()->first()->getImageName(),
                     'price' => $product->getPrice(),
                     'quantity' => $product->getQuantity(),
                 ];

@@ -35,5 +35,6 @@ class ProductController extends AbstractController
             'image_file' => $imageFile,
         ]);
     }
+
 }
 
