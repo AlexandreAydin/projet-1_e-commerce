@@ -166,24 +166,48 @@ class ProductRepository extends ServiceEntityRepository
 
 
 
+    // public function findBySearchQuery(string $query, ?array $categories = null): array 
+    // {
+    //     $qb = $this->createQueryBuilder('p')
+    //             ->where('
+    //                 p.name LIKE :query OR
+    //                 p.description LIKE :query OR
+    //                 p.ean LIKE :query  ');
+
+    //     if ($categories) {
+    //         $qb->andWhere('p.categorie IN (:categories)')
+    //         ->setParameter('categories', $categories);
+    //     }
+
+    //     $qb->setParameter('query', '%' . $query . '%');
+
+    //     return $qb->getQuery()->getResult();
+    // }
+
+
+
     public function findBySearchQuery(string $query, ?array $categories = null): array 
     {
         $qb = $this->createQueryBuilder('p')
-                ->where('p.name LIKE :query OR p.description LIKE :query');
-
+            ->leftJoin('p.productBrand', 'pb') // Joindre l'entité ProductBrand
+            ->leftJoin('p.brandModel', 'bm')   // Joindre l'entité BrandModel
+            ->where('
+                p.name LIKE :query OR
+                p.description LIKE :query OR
+                p.ean LIKE :query OR
+                pb.name LIKE :query OR
+                bm.name LIKE :query
+            ')
+            ->setParameter('query', '%' . $query . '%');
+    
         if ($categories) {
             $qb->andWhere('p.categorie IN (:categories)')
-            ->setParameter('categories', $categories);
+               ->setParameter('categories', $categories);
         }
-
-        $qb->setParameter('query', '%' . $query . '%');
-
+    
         return $qb->getQuery()->getResult();
     }
-
-
-
-
+    
 
 
 
