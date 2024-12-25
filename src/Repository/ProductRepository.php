@@ -166,19 +166,20 @@ class ProductRepository extends ServiceEntityRepository
 
 
 
-   public function findBySearchQuery(string $query, ?array $categories = null): array {
-    $qb = $this->createQueryBuilder('p')
-               ->where('p.name LIKE :query OR p.description LIKE :query');
+    public function findBySearchQuery(string $query, ?array $categories = null): array 
+    {
+        $qb = $this->createQueryBuilder('p')
+                ->where('p.name LIKE :query OR p.description LIKE :query');
 
-    if ($categories) {
-        $qb->andWhere('p.categorie IN (:categories)')
-           ->setParameter('categories', $categories);
+        if ($categories) {
+            $qb->andWhere('p.categorie IN (:categories)')
+            ->setParameter('categories', $categories);
+        }
+
+        $qb->setParameter('query', '%' . $query . '%');
+
+        return $qb->getQuery()->getResult();
     }
-
-    $qb->setParameter('query', '%' . $query . '%');
-
-    return $qb->getQuery()->getResult();
-}
 
 
 
@@ -255,13 +256,13 @@ class ProductRepository extends ServiceEntityRepository
     
     
     
-    public function findByFilters(SearchProduct $search, string $query = null): array {
+    public function findByFilters(SearchProduct $search, string $query = null): array
+    {
         $qb = $this->createQueryBuilder('p')
-                   ->leftJoin('p.variants', 'v')
-                   ->groupBy('p.id')
-                   ->orderBy('p.name', 'ASC');  // Ajout de l'ordre de tri sur le nom du produit
+            ->leftJoin('p.variants', 'v')
+            ->groupBy('p.id')
+            ->orderBy('p.name', 'ASC');
     
-        // Si un terme de recherche est spécifié, appliquez-le
         if ($query) {
             $qb->andWhere($qb->expr()->orX(
                 'p.name LIKE :query',
@@ -269,29 +270,51 @@ class ProductRepository extends ServiceEntityRepository
             ))->setParameter('query', '%' . $query . '%');
         }
     
-        // Appliquez les filtres de catégories
         if (!empty($search->getCategories())) {
             $qb->andWhere('p.categorie IN (:categories)')
                ->setParameter('categories', $search->getCategories());
         }
     
-        // Filtres de prix ajustés pour inclure les variantes
+        if (!empty($search->getSubCategories())) {
+            $qb->andWhere('p.subCategorie IN (:subCategories)')
+               ->setParameter('subCategories', $search->getSubCategories());
+        }
+
+        if (!empty($search->getProductBrand())) {
+            $qb->andWhere('p.productBrand IN (:productBrand)')
+               ->setParameter('productBrand', $search->getProductBrand());
+        }
+
+        
+        if (!empty($search->getBrandModel())) {
+            $qb->andWhere('p.brandModel IN (:brandModel)')
+               ->setParameter('brandModel', $search->getBrandModel());
+        }
+
+        // dd($search->getBrandModel());exit();
+
+        // dd([
+        //     'categories' => $search->getCategories(),
+        //     'subCategories' => $search->getSubCategories()
+        // ]);
+    
         if ($search->getMinPrice() !== null) {
             $qb->andWhere($qb->expr()->orX(
-                $qb->expr()->gte('p.price', ':minPrice'),
-                $qb->expr()->gte('v.price * (1 - COALESCE(v.offVariant, 0) / 100)', ':minPrice')
+                'p.price >= :minPrice',
+                'v.price * (1 - COALESCE(v.offVariant, 0) / 100) >= :minPrice'
             ))->setParameter('minPrice', $search->getMinPrice());
         }
     
         if ($search->getMaxPrice() !== null) {
             $qb->andWhere($qb->expr()->orX(
-                $qb->expr()->lte('p.price', ':maxPrice'),
-                $qb->expr()->lte('v.price * (1 - COALESCE(v.offVariant, 0) / 100)', ':maxPrice')
+                'p.price <= :maxPrice',
+                'v.price * (1 - COALESCE(v.offVariant, 0) / 100) <= :maxPrice'
             ))->setParameter('maxPrice', $search->getMaxPrice());
         }
     
         return $qb->getQuery()->getResult();
     }
+    
     
     
     

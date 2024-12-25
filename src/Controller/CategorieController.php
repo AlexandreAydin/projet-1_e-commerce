@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class CategorieController extends AbstractController
 {
@@ -273,6 +274,137 @@ class CategorieController extends AbstractController
         ]);
     }
 
+
+
+    #[Route('/get-categories-with-subcategories', name: 'get_categories_with_subcategories', methods: ['GET'])]
+    public function getCategoriesWithSubcategories(CategorieRepository $categorieRepository): JsonResponse
+    {
+        $categories = $categorieRepository->findAll();
+        $response = [];
+    
+        foreach ($categories as $category) {
+            $subcategories = [];
+            foreach ($category->getSubCategories() as $subcategory) {
+                $subcategories[] = [
+                    'id' => $subcategory->getId(),
+                    'name' => $subcategory->getName(),
+                ];
+            }
+    
+            $response[] = [
+                'id' => $category->getId(),
+                'name' => $category->getName(),
+                'subcategories' => $subcategories,
+            ];
+        }
+    
+        return new JsonResponse($response);
+    }
+    
+    
+
+
+
+    // #[Route('/get-subcategories', name: 'get_subcategories', methods: ['POST'])]
+    // public function getSubcategories(Request $request, SubCategorieRepository $subCategorieRepository): JsonResponse
+    // {
+    //     try {
+    //         // Décoder les données JSON envoyées par le frontend
+    //         $data = json_decode($request->getContent(), true);
+    
+    //         // Vérifier les données envoyées
+    //         if (!isset($data['categories']) || !is_array($data['categories'])) {
+    //             return new JsonResponse(['error' => 'Invalid input: categories is missing or invalid'], 400);
+    //         }
+    
+    //         $categoryIds = $data['categories'];
+    
+    //         // Récupérer les sous-catégories correspondantes
+    //         $subcategories = $subCategorieRepository->findSubcategoriesByCategoryIds($categoryIds);
+    
+    //         return new JsonResponse($subcategories); // Retourne les sous-catégories en JSON
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse(['error' => $e->getMessage()], 500);
+    //     }
+    // }
+    
+    
+    
+    //   #[Route('/get-subcategories', name: 'get_subcategories', methods: ['POST'])]
+    // public function getSubcategories(Request $request, SubCategorieRepository $subCategorieRepository): JsonResponse
+    // {
+    //     try {
+    //         // Décoder les données JSON envoyées par le frontend
+    //         $data = json_decode($request->getContent(), true);
+    
+    //         // Vérifier les données envoyées
+    //         if (!isset($data['categories']) || !is_array($data['categories'])) {
+    //             return new JsonResponse(['error' => 'Invalid input: categories is missing or invalid'], 400);
+    //         }
+    
+    //         $categoryIds = $data['categories'];
+    
+    //         // Récupérer les sous-catégories correspondantes
+    //         $subcategories = $subCategorieRepository->findSubcategoriesByCategoryIds($categoryIds);
+    
+    //         return new JsonResponse($subcategories); // Retourne les sous-catégories en JSON
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse(['error' => $e->getMessage()], 500);
+    //     }
+    // }
+
+    
+    
+    #[Route('/get-subcategories', name: 'get_subcategories', methods: ['POST'])]
+    public function getSubcategories(Request $request, SubCategorieRepository $subCategorieRepository): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['categories']) || !is_array($data['categories'])) {
+                return new JsonResponse(['error' => 'Invalid input'], 400);
+            }
+
+            $categoryIds = $data['categories'];
+            $subcategories = $subCategorieRepository->findSubcategoriesByCategoryIds($categoryIds);
+
+            return new JsonResponse($subcategories);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    #[Route('/get-brandModel', name: 'get_brandModel', methods: ['POST'])]
+    public function getBrandModel(Request $request, BrandModelRepository $brandModelRepository): JsonResponse
+    {
+        try {
+            // Récupération et décodage des données JSON
+            $data = json_decode($request->getContent(), true);
+    
+            // Vérification des données entrantes
+            if (!isset($data['productBrand']) || !is_array($data['productBrand'])) {
+                return new JsonResponse(['error' => 'Invalid input: productBrand is missing or not an array'], 400);
+            }
+    
+            $productBrandIds = $data['productBrand'];
+    
+            // Appel à la méthode du repository pour récupérer les modèles associés
+            $brandModels = $brandModelRepository->findBrandModelByProductBrandIds($productBrandIds);
+    
+            // Retourne les données au format JSON
+            return new JsonResponse($brandModels);
+        } catch (\Exception $e) {
+            // Gestion des erreurs
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+    
+    
+    
+    
+
+    
 
     
     

@@ -39,6 +39,21 @@ class SubCategorieRepository extends ServiceEntityRepository
         }
     }
 
+
+    public function findSubcategoriesByCategoryIds(array $categoryIds): array
+    {
+        $qb = $this->createQueryBuilder('sc')
+            ->select('sc.id, sc.name') // Limitez aux champs nécessaires
+            ->join('sc.categories', 'c')
+            ->where('c.id IN (:categoryIds)')
+            ->setParameter('categoryIds', $categoryIds);
+    
+        return $qb->getQuery()->useResultCache(true, 3600, 'subcategories_cache')->getArrayResult();
+    }
+    
+
+
+
 //    /**
 //     * @return SubCategorie[] Returns an array of SubCategorie objects
 //     */
