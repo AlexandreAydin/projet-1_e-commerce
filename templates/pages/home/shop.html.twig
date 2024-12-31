@@ -115,7 +115,7 @@ input[type="number"] {
                         </form> #}
                         <form action="{{ path('app_shop') }}" method="get">
                             {{ form_start(search) }}
-                             <input type="text" name="query" id="query-input" class="d-none" placeholder="Rechercher des produits..." value="">
+                             <input type="text" name="query" class='d-none' id="query-input" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}">
 
                             {# <div class="widget">
                                 <h5 class="widget_title">Categories</h5>

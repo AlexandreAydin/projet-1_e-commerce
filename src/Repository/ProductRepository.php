@@ -6,6 +6,7 @@ use App\Entity\Product;
 use App\Entity\SearchProduct;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\DBAL\Connection;
 
 /**
  * @extends ServiceEntityRepository<Product>
@@ -17,9 +18,14 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ProductRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+
+    private Connection $connection;
+
+
+    public function __construct(ManagerRegistry $registry,Connection $connection)
     {
         parent::__construct($registry, Product::class);
+        $this->connection = $connection;
     }
 
     public function save(Product $entity, bool $flush = false): void
@@ -186,19 +192,48 @@ class ProductRepository extends ServiceEntityRepository
 
 
 
-    public function findBySearchQuery(string $query, ?array $categories = null): array 
+    // public function findBySearchQuery(string $query, ?array $categories = null): array 
+    // {
+    //     $qb = $this->createQueryBuilder('p')
+    //         ->leftJoin('p.productBrand', 'pb') // Joindre l'entité ProductBrand
+    //         ->leftJoin('p.brandModel', 'bm')   // Joindre l'entité BrandModel
+    //         ->where('
+    //             p.name LIKE :query OR
+    //             p.description LIKE :query OR
+    //             p.ean LIKE :query OR
+    //             pb.name LIKE :query OR
+    //             bm.name LIKE :query
+    //         ')
+    //         ->setParameter('query', '%' . $query . '%');
+    
+    //     if ($categories) {
+    //         $qb->andWhere('p.categorie IN (:categories)')
+    //            ->setParameter('categories', $categories);
+    //     }
+    
+    //     return $qb->getQuery()->getResult();
+    // }
+
+
+    public function findBySearchQuery(string $query, ?array $categories = null): array
     {
         $qb = $this->createQueryBuilder('p')
-            ->leftJoin('p.productBrand', 'pb') // Joindre l'entité ProductBrand
-            ->leftJoin('p.brandModel', 'bm')   // Joindre l'entité BrandModel
+            ->leftJoin('p.productBrand', 'pb')
+            ->leftJoin('p.brandModel', 'bm')
+            ->leftJoin('p.categorie', 'c')
+            ->leftJoin('p.subCategorie', 'sc')
             ->where('
                 p.name LIKE :query OR
                 p.description LIKE :query OR
+                p.description2 LIKE :query OR
+                p.illustrationText1 LIKE :query OR
                 p.ean LIKE :query OR
+                c.name LIKE :query OR
+                sc.name LIKE :query OR
                 pb.name LIKE :query OR
                 bm.name LIKE :query
             ')
-            ->setParameter('query', '%' . $query . '%');
+            ->setParameter('query', '%' . $query . '%'); // Recherche avec correspondance partielle
     
         if ($categories) {
             $qb->andWhere('p.categorie IN (:categories)')
@@ -208,7 +243,99 @@ class ProductRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
     
+    
 
+
+
+    public function findProductsBySimilarBrandModel(string $query): array
+    {
+        $cleanedQuery = strtolower(str_replace(' ', '', $query));
+        $sql = "
+            SELECT 
+                p.*, 
+                LEVENSHTEIN(REPLACE(LOWER(bm.name), ' ', ''), REPLACE(LOWER(:query), ' ', '')) AS distance
+            FROM 
+                product p
+            JOIN 
+                brand_model bm ON p.brand_model_id = bm.id
+            WHERE 
+                LEVENSHTEIN(REPLACE(LOWER(bm.name), ' ', ''), REPLACE(LOWER(:query), ' ', '')) < 6
+            ORDER BY 
+                distance ASC;
+
+        ";
+    
+        $stmt = $this->connection->prepare($sql);
+    
+        try {
+            $result = $stmt->executeQuery(['query' => $cleanedQuery]);
+            return $result->fetchAllAssociative();
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Database error: ' . $e->getMessage());
+        }
+    }
+    
+    
+
+    
+    
+    
+
+    // a ajouter dans php myadmin pour chercher au nom pres du produit
+    
+//     DELIMITER $$
+
+// CREATE FUNCTION LEVENSHTEIN(s1 VARCHAR(255), s2 VARCHAR(255)) RETURNS INT
+// DETERMINISTIC
+// BEGIN
+//     DECLARE s1_len, s2_len, i, j, cost INT;
+//     DECLARE d TEXT;
+//     DECLARE result INT;
+
+//     SET s1_len = CHAR_LENGTH(s1);
+//     SET s2_len = CHAR_LENGTH(s2);
+
+//     IF s1_len = 0 THEN RETURN s2_len; END IF;
+//     IF s2_len = 0 THEN RETURN s1_len; END IF;
+
+//     -- Initialise le tableau comme une chaîne de caractères
+//     SET d = REPEAT('0', (s1_len + 1) * (s2_len + 1));
+
+//     -- Remplit la première ligne
+//     SET i = 0;
+//     WHILE i <= s1_len DO
+//         SET d = INSERT(d, i * (s2_len + 1) + 1, 1, CHAR(i));
+//         SET i = i + 1;
+//     END WHILE;
+
+//     -- Remplit la première colonne
+//     SET j = 0;
+//     WHILE j <= s2_len DO
+//         SET d = INSERT(d, j + 1, 1, CHAR(j));
+//         SET j = j + 1;
+//     END WHILE;
+
+//     -- Calcul de la distance de Levenshtein
+//     SET i = 1;
+//     WHILE i <= s1_len DO
+//         SET j = 1;
+//         WHILE j <= s2_len DO
+//             SET cost = IF(SUBSTRING(s1, i, 1) = SUBSTRING(s2, j, 1), 0, 1);
+//             SET result = LEAST(
+//                 ORD(SUBSTRING(d, (i - 1) * (s2_len + 1) + j + 1, 1)) + 1,
+//                 ORD(SUBSTRING(d, i * (s2_len + 1) + j - 1, 1)) + 1,
+//                 ORD(SUBSTRING(d, (i - 1) * (s2_len + 1) + j - 1, 1)) + cost
+//             );
+//             SET d = INSERT(d, i * (s2_len + 1) + j + 1, 1, CHAR(result));
+//             SET j = j + 1;
+//         END WHILE;
+//         SET i = i + 1;
+//     END WHILE;
+
+//     RETURN ORD(SUBSTRING(d, s1_len * (s2_len + 1) + s2_len + 1, 1));
+// END $$
+
+// DELIMITER ;
 
 
 

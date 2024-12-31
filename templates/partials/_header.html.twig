@@ -1,15 +1,38 @@
-<header  class="header_wrap fixed-top header_with_topbar">
+<header  class="header_wrap fixed-top header_with_topbar container">
     <div  class="bottom_header dark_skin main_menu_uppercase">
-        <div  class="container mt-4">
+        <div  class="container mx-4">
             <nav  class="navbar navbar-expand-lg">
                 <a 
-                    routerlink="/" class="navbar-brand" ng-reflect-router-link="/" href="/">
-                    <h2 >Yilmi Market</h2>
+                    routerlink="/" 
+                    class="navbar-brand text-center" 
+                    ng-reflect-router-link="/" 
+                    href="/">
+                    <img 
+                        src="{{ asset('assets/images/logo_transparent_background.png') }}" 
+                        alt="logo_transparent_background.png" 
+                        height="50"
+                        class="mt-2">
+                    <span class="d-block" style="font-size: 1rem; margin-left:15px; margin-top:-10px">Yilmi Market</span>
                 </a>
+                <form action="{{ path('app_shop') }}" method="get" class="d-flex justify-content-center">
+                    <div class="input-group" style="margin-left:70px; max-width:600px; min-width:30rem;">
+                        <div class=" position-relative w-100">
+                            <input 
+                                type="text" 
+                                name="query" 
+                                class="form-control rounded-pill" 
+                                placeholder="Rechercher..." 
+                                value="{{ app.request.query.get('query') }}" 
+                                style="padding-left: 2rem; border: 0.5px solid gray; font-size: 0.8rem; height: 35px;" 
+                                required>
+                            <i  class="fa-solid  fa-magnifying-glass position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                        </div>
+                    </div>
+                </form>
                 <button id="menu-btns" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-expanded="false" class="navbar-toggler ">
                     <span class="ion-android-menu"></span>
                 </button>
-                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse" style="margin-left: 10rem;">
+                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse" style='margin-left:5rem'>
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link" href="{{path("app_home")}}">Accueil
@@ -21,41 +44,52 @@
                             </a>
                         </li> 
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Nouveauté 
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="{{ path('app_contact')}}">Contact
                             </a>
                         </li>
                         {% if app.user %}
-                                <li class="nav-item dropdown user-name" style="">
-                                    <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                                        <i class="ti-user">  
-                                            {{ app.user.firstName }}
-                                        </i>  
-                                    </a>
-                                    <div class="dropdown-menu bg-light">
-                                        <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                        <li class="nav-item dropdown user-name app-user-icon1" style="">
+                            <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-user" style="font-size: 0.9rem;">  
+                                    {{ app.user.firstName }}
+                                </i>  
+                            </a>
+                            <div class="dropdown-menu bg-light">
+                                <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                                 {% if is_granted('ROLE_ADMIN') %}
+                                <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="/admin">Administration</a>
                                         <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="/admin">Administration</a>
-                                            <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
-                                    </div>
-                                </li>
-                            {% else %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{path("app_login")}}">Connexion
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ path('app_register')}}">Inscription
-                                    </a>
-                                </li>
-                            {% endif %}				
+                                    {% endif %}
+                                <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="nav-item dropdown app-user-icon1">
+                        <a 
+                            class="nav-link dropdown-toggle" 
+                            href="#" 
+                            id="userDropdown" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                            <i class="ti-user" style="font-size: 1rem;"></i>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_register') }}">Inscription</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_login') }}">Connexion</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% endif %}	
+                    
                     </ul>
                 </div> 
-                <ul class="navbar-nav attr-nav align-items-center">
+                <ul class="navbar-nav attr-nav align-items-center two-icons">
                     {# <li>
                         <a href="javascript:void(0);" class="nav-link search_trigger">
                             <i class="linearicons-magnifier"></i>
@@ -77,10 +111,64 @@
                             <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}" required>
                             <button type="submit">Rechercher</button>
                         </form> #}
-                        <form action="{{ path('app_shop') }}" method="get">
+                        {# <form action="{{ path('app_shop') }}" method="get">
                             <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}" required>
                             <button type="submit">Rechercher</button>
-                        </form>
+                        </form> #}
+                        {# <form action="{{ path('app_shop') }}" method="get" class="d-flex justify-content-center">
+                            <div class="input-group" style="max-width: 300px;">
+                                <div class="position-relative w-100">
+                                    <input 
+                                        type="text" 
+                                        name="query" 
+                                        class="form-control rounded-pill" 
+                                        placeholder="Rechercher..." 
+                                        value="{{ app.request.query.get('query') }}" 
+                                        style="padding-left: 2rem; border: 0.5px solid gray; font-size: 0.8rem; height: 35px;" 
+                                        required>
+                                    <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                                </div>
+                            </div>
+                        </form> #}
+                        {% if app.user %}
+                        <li class="nav-item dropdown user-name app-user-icon2" style="">
+                            <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-user" style="font-size: 0.9rem;">  
+                                    {{ app.user.firstName }}
+                                </i>  
+                            </a>
+                            <div class="dropdown-menu bg-light app-user-icon2">
+                                <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                                {% if is_granted('ROLE_ADMIN') %}
+                                <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="/admin">Administration</a>
+                                        <div class="dropdown-divider"></div>
+                                {% endif %}
+                                <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="nav-item dropdown app-user-icon2">
+                        <a 
+                            class="nav-link dropdown-toggle" 
+                            href="#" 
+                            id="userDropdown" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                            <i class="ti-user" style="font-size: 1rem;"></i>
+                        </a>
+                        <ul class="dropdown-menu app-user-icon2" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_register') }}">Inscription</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_login') }}">Connexion</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% endif %}	
                     <li>
                         <a class="text-decoration-none" href="{{ path('app_wishList')}}">
                             <i class="icon-heart style-none"></i>

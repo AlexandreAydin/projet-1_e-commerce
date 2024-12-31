@@ -367,6 +367,7 @@ class CategorieController extends AbstractController
 
             $categoryIds = $data['categories'];
             $subcategories = $subCategorieRepository->findSubcategoriesByCategoryIds($categoryIds);
+            
 
             return new JsonResponse($subcategories);
         } catch (\Exception $e) {

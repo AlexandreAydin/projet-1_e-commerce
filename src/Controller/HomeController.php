@@ -392,9 +392,28 @@ class HomeController extends AbstractController
         }
 
         // Affichage d'un message si aucun produit ne correspond aux critères
+        // if (empty($products)) {
+        //     $this->addFlash('error', 'Désolé, aucun produit ne correspond au résultat de votre recherche.');
+        // }
         if (empty($products)) {
-            $this->addFlash('error', 'Désolé, aucun produit ne correspond au résultat de votre recherche.');
+            $this->addFlash('error', 'Aucun produit trouvé. Voici des suggestions basées sur vos critères.');
+            $cleanedQuery = strtolower(str_replace(' ', '', $query));
+            $products = $repoProduct->findProductsBySimilarBrandModel($cleanedQuery);
+        
+            if (empty($products)) {
+                $this->addFlash('error', 'Aucune suggestion trouvée.');
+            } else {
+                // Si vous avez besoin de convertir les tableaux en objets Product :
+                $products = array_map(function ($productData) use ($repoProduct) {
+                    return $repoProduct->find($productData['id']); // Recharger les entités par leur ID
+                }, $products);
+            }
         }
+        
+        
+   
+        
+        
 
         $productRatings = [];
         $isInWishlist = [];

@@ -7111,15 +7111,124 @@ blockquote p:last-child {
 
 
 
+	.app-user-icon1 {
+		display: none;
+	}
+
 	@media (max-width: 991px) {
+
 		header .icon-heart{
-			padding: 23px 30px 23px 30px;
+			padding: 25px 15px;
 			display: flex;
 			justify-content: center;
 			align-items: center;
 		}
+
+		.navbar-toggler { 
+			margin-top: -65px;
+		}
+
+
+		.two-icons{
+			margin-top: -80px;
+   			margin-right: 40px;
+		}
+
+
+		/* .navbar-nav {
+			margin-top: -85px;
+   			margin-right: 40px;
+		} */
+
+		.input-group {
+			max-width:25rem !important;
+			min-width:25rem !important;
+			margin-left:0px !important;
+			margin-top: -60px;
+		}
+
+		.input-group i {
+			margin-top: -10px;
+		} 
+		
+		.app-user-icon1 {
+			display: block;
+		}
+
+		.app-user-icon2 {
+			display: none;
+		}
+		
+		
+		
+	}
+
+
+	@media (max-width: 768px) {
+		.header_wrap.container {
+			width: 100%; /* Supprime l'effet de la classe container */
+			max-width: none; /* Annule les limitations de largeur */
+			padding-left: 0; /* Supprime les marges intérieures */
+			padding-right: 0;
+		}
+		.input-group {
+			max-width: 15rem !important;
+			min-width: 15rem !important;
+
+			margin-top: -60px;
+		}
+	
+		.two-icons {
+			margin-left: auto; /* Aligne à droite */
+			display: flex;
+		}
+	
+		#menu-btns { 
+			margin-left: auto;
+			margin-right: 10px;
+			margin-left: auto !important; /* Aligne à droite */
+		}
 	}
 	
+	
 
+
+	@media (max-width: 576px) {
+		.header_wrap.container {
+			width: 100%; /* Supprime l'effet de la classe container */
+			max-width: none; /* Annule les limitations de largeur */
+			padding-left: 0; /* Supprime les marges intérieures */
+			padding-right: 0;
+		}
+
+		.navbar-brand {
+			margin-left: -40px;
+		}
+
+		.input-group {
+			max-width: 11rem !important;
+			min-width: 11rem !important;
+			margin-right: 50px;
+			margin-top: -60px;
+		}
+	
+		.two-icons {
+			margin-left: auto; /* Aligne à droite */
+			display: flex;
+		}
+
+		header .icon-heart{
+			padding: 25px 0px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+	
+		#menu-btns { 
+			margin-left: auto;
+			margin-right: 10px;
+			margin-left: auto !important; /* Aligne à droite */
+		}
+	}
 
 	
