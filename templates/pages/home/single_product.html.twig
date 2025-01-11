@@ -43,7 +43,7 @@
                                     </div>
                                 {% endif %}
                             </div> #}
-                            <div class="product_price d-flex variant-price">
+                            <div class="product_price d-flex variant-price" style=" margin-left: 0;">
                                 <span id="variant-price" class="price">-- €</span>
                                 <del id="old-price" style="display: none;">-- €</del>
                                 <div id="variant-off" class="on_sale" style="display: none;">
@@ -112,11 +112,11 @@
                         <div class="cart_extra col-12  ">
                                 <div id="stockMessage" class="stock-message" style="display: none;"> Ce produit est indisponible pour le moment.</div>
                                 <div class="cart-product-quantity mb-4">
-                                <div class="quantity">
-                                    <input type="button" value="-" class="minus">
-                                    <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
-                                    <input type="button" value="+" class="plus">
-                                </div>
+                                    <div class="quantity">
+                                        <input type="button" value="-" class="minus">
+                                        <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
+                                        <input type="button" value="+" class="plus">
+                                    </div>
                                 </div>
 
                                 {# TODO: Implement product quantity selection #}
@@ -131,7 +131,7 @@
                                 </div>
                         </div>     
     
-                        <ul class="product-meta col-12">
+                        <ul class="product-meta col-12 mt-4">
                             {% if product.categorie %}
                                 <li>Catégorie: <a href="#">{{ product.categorie.name }}</a></li>
                             {% endif %}

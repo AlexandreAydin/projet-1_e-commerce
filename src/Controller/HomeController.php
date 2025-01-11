@@ -398,7 +398,8 @@ class HomeController extends AbstractController
         if (empty($products)) {
             $this->addFlash('error', 'Aucun produit trouvé. Voici des suggestions basées sur vos critères.');
             $cleanedQuery = strtolower(str_replace(' ', '', $query));
-            $products = $repoProduct->findProductsBySimilarBrandModel($cleanedQuery);
+            $products = $repoProduct->findProductsBySimilar($cleanedQuery);
+
         
             if (empty($products)) {
                 $this->addFlash('error', 'Aucune suggestion trouvée.');

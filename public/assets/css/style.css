@@ -7074,45 +7074,90 @@ blockquote p:last-child {
 
 /************************ CHECKOUT *************************/
 
-.checkout .content,.checkout #address, #carrier, #informations {
-	margin-top: 23px;
-	border: 5px solid #E439A1;
-	border-radius: 15px;
-	padding: 25px;
-}
-.form-check{
-	border-bottom: 5px solid;
-	margin: 13px;
-}
- label,#address, #carrier,#informations {
-	font-weight: bold;
-	color: black;
-	font-size: .9em
-}
-.checkout div.heading_s1 > div.content .form-check{
-	border-bottom: 2px solid;
-	margin: 10px;
-}
-#checkout_informations{
-	margin-top: 23px;
-	border: 5px solid #E439A1;
-	height: 80px;
-	border-radius: 15px;
-}
-
-#menu-btn {
-    display: none;
-}
+	.checkout .content,.checkout #address, #carrier, #informations {
+		margin-top: 23px;
+		border: 5px solid #E439A1;
+		border-radius: 15px;
+		padding: 25px;
+	}
+	.form-check{
+		border-bottom: 5px solid;
+		margin: 13px;
+	}
+	label,#address, #carrier,#informations {
+		font-weight: bold;
+		color: black;
+		font-size: .9em
+	}
+	.checkout div.heading_s1 > div.content .form-check{
+		border-bottom: 2px solid;
+		margin: 10px;
+	}
+	#checkout_informations{
+		margin-top: 23px;
+		border: 5px solid #E439A1;
+		height: 80px;
+		border-radius: 15px;
+	}
 
 
-.navbar-dark {
-    background-color: black !important; /* Utilisez !important pour vous assurer que cela surpasse les autres styles. */
-}
+/************************ Header *************************/
+	.header-logo img{
+		height:50px;
+	}
+
+	.logo-text{
+		font-size: 1rem;
+		margin-left:15px;
+		margin-top:-10px
+	}
+
+	#menu-btn {
+		display: none;
+	}
+
+
+	.navbar-dark {
+		background-color: black !important; /* Utilisez !important pour vous assurer que cela surpasse les autres styles. */
+	}
 
 
 
 	.app-user-icon1 {
 		display: none;
+	}
+
+	.input-group {
+		margin-left:70px; max-width:600px; min-width:20rem;
+	}
+
+	#navbarSupportedContent {
+		margin-left:15rem
+	}
+
+	@media (max-width: 1300px) {
+		#navbarSupportedContent{
+			margin-left:10rem;
+		}
+
+	}
+
+	@media (max-width: 1200px) {
+		#navbarSupportedContent{
+			margin-left:5rem;
+		}
+	}
+
+	@media (max-width: 1160px) {
+		#navbarSupportedContent{
+			margin-left:3rem;
+		}
+	}
+
+	@media (max-width: 1160px) {
+		#navbarSupportedContent{
+			margin-left:0rem;
+		}
 	}
 
 	@media (max-width: 991px) {
@@ -7142,7 +7187,7 @@ blockquote p:last-child {
 
 		.input-group {
 			max-width:25rem !important;
-			min-width:25rem !important;
+			/* min-width:25rem !important; */
 			margin-left:0px !important;
 			margin-top: -60px;
 		}
@@ -7194,15 +7239,24 @@ blockquote p:last-child {
 
 
 	@media (max-width: 576px) {
-		.header_wrap.container {
-			width: 100%; /* Supprime l'effet de la classe container */
-			max-width: none; /* Annule les limitations de largeur */
-			padding-left: 0; /* Supprime les marges intérieures */
-			padding-right: 0;
+
+		.header-logo{
+			margin-left: -20px;
 		}
 
-		.navbar-brand {
-			margin-left: -40px;
+		.header-logo img{
+			height:45px;
+
+		}
+
+		.bottom_header {
+			max-width: none; /* Ou autre propriété pour 'arrêter' le conteneur */
+			margin-left: 0 auto !important;  /* Supprimer les marges spécifiques ou les ajuster selon le besoin */
+			padding: 0; 
+		}
+
+		.logo-text{
+			margin-left: 7px;
 		}
 
 		.input-group {

@@ -246,34 +246,72 @@ class ProductRepository extends ServiceEntityRepository
     
 
 
-
-    public function findProductsBySimilarBrandModel(string $query): array
+    public function findProductsBySimilar(string $query): array
     {
+        $entityManager = $this->getEntityManager();
+        $conn = $entityManager->getConnection();
+    
+        // Prepare the search term for LIKE conditions and Levenshtein comparisons
+        $likeQuery = '%' . $query . '%';
         $cleanedQuery = strtolower(str_replace(' ', '', $query));
+    
+        // Construct the SQL query using dynamic parameters correctly
         $sql = "
-            SELECT 
-                p.*, 
-                LEVENSHTEIN(REPLACE(LOWER(bm.name), ' ', ''), REPLACE(LOWER(:query), ' ', '')) AS distance
-            FROM 
-                product p
-            JOIN 
-                brand_model bm ON p.brand_model_id = bm.id
-            WHERE 
-                LEVENSHTEIN(REPLACE(LOWER(bm.name), ' ', ''), REPLACE(LOWER(:query), ' ', '')) < 6
-            ORDER BY 
-                distance ASC;
-
+            SELECT DISTINCT p.*, 
+                LEVENSHTEIN(LOWER(p.name), :cleanedQuery) AS levenshtein_distance,
+                LEVENSHTEIN(LOWER(pb.name), :cleanedQuery) AS brand_levenshtein_distance,
+                LEVENSHTEIN(LOWER(bm.name), :cleanedQuery) AS model_levenshtein_distance,
+                LEVENSHTEIN(LOWER(c.name), :cleanedQuery) AS category_levenshtein_distance,
+                LEVENSHTEIN(LOWER(sc.name), :cleanedQuery) AS subcategory_levenshtein_distance,
+                LEVENSHTEIN(LOWER(p.description), :cleanedQuery) AS description_levenshtein_distance
+                FROM product p
+                    LEFT JOIN product_brand pb ON p.product_brand_id = pb.id
+                    LEFT JOIN brand_model bm ON p.brand_model_id = bm.id
+                    LEFT JOIN categorie c ON p.categorie_id = c.id
+                    LEFT JOIN sub_categorie sc ON p.sub_categorie_id = sc.id
+                WHERE 
+                    LEVENSHTEIN(LOWER(p.name), :cleanedQuery) <= :thresholdQuery
+                    OR LEVENSHTEIN(LOWER(pb.name), :cleanedQuery) <= :threshold
+                    OR LEVENSHTEIN(LOWER(bm.name), :cleanedQuery) <= :threshold
+                    OR LEVENSHTEIN(LOWER(c.name), :cleanedQuery) <= :threshold
+                    OR LEVENSHTEIN(LOWER(sc.name), :cleanedQuery) <= :threshold
+                    OR LEVENSHTEIN(LOWER(p.description), :cleanedQuery) <= :threshold
+                    OR LOWER(p.name) LIKE :likeQuery
+                    OR LOWER(pb.name) LIKE :likeQuery
+                    OR LOWER(bm.name) LIKE :likeQuery
+                    OR LOWER(c.name) LIKE :likeQuery
+                    OR LOWER(sc.name) LIKE :likeQuery
+                    OR LOWER(p.description) LIKE :likeQuery
+                    OR LOWER(p.description2) LIKE :likeQuery
+                    OR LOWER(p.illustration_text1) LIKE :likeQuery
+                ORDER BY levenshtein_distance DESC, brand_levenshtein_distance DESC, model_levenshtein_distance DESC,
+                    category_levenshtein_distance DESC, subcategory_levenshtein_distance DESC,description_levenshtein_distance DESC;
         ";
+
     
-        $stmt = $this->connection->prepare($sql);
+
     
-        try {
-            $result = $stmt->executeQuery(['query' => $cleanedQuery]);
-            return $result->fetchAllAssociative();
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Database error: ' . $e->getMessage());
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue('cleanedQuery', $cleanedQuery);
+        $stmt->bindValue('likeQuery', $likeQuery);
+        $stmt->bindValue('threshold', 3);  // Adjust this threshold based on your needs
+        $stmt->bindValue('thresholdQuery', 5);  // Adjust this threshold based on your needs
+        
+        $result = $stmt->executeQuery();
+    
+        $results = [];
+        while ($row = $result->fetchAssociative()) {
+            $results[] = $row;
         }
+    
+        return $results;
     }
+    
+    
+    
+    
+    
+    
     
     
 

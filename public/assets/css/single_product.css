@@ -17,7 +17,11 @@
 
 
 .cart_extra{
-    margin-top: 140px;
+    margin-top: 60px;
+}
+
+.cart-product-quantity{
+    margin-left : -10px
 }
 
 .main_image_container {
@@ -47,4 +51,3 @@
 .add-to-wishlist.wishlist-active .fa-heart {
     color: red; /* Couleur pour les produits dans la wishlist */
 }
-

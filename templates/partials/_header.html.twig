@@ -1,21 +1,20 @@
 <header  class="header_wrap fixed-top header_with_topbar container">
     <div  class="bottom_header dark_skin main_menu_uppercase">
-        <div  class="container mx-4">
+        <div  class="container">
             <nav  class="navbar navbar-expand-lg">
                 <a 
                     routerlink="/" 
-                    class="navbar-brand text-center" 
+                    class="navbar-brand text-center header-logo " 
                     ng-reflect-router-link="/" 
                     href="/">
                     <img 
                         src="{{ asset('assets/images/logo_transparent_background.png') }}" 
                         alt="logo_transparent_background.png" 
-                        height="50"
                         class="mt-2">
-                    <span class="d-block" style="font-size: 1rem; margin-left:15px; margin-top:-10px">Yilmi Market</span>
+                    <span class="d-block logo-text">Yilmi Market</span>
                 </a>
                 <form action="{{ path('app_shop') }}" method="get" class="d-flex justify-content-center">
-                    <div class="input-group" style="margin-left:70px; max-width:600px; min-width:30rem;">
+                    <div class="input-group">
                         <div class=" position-relative w-100">
                             <input 
                                 type="text" 
@@ -32,7 +31,7 @@
                 <button id="menu-btns" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-expanded="false" class="navbar-toggler ">
                     <span class="ion-android-menu"></span>
                 </button>
-                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse" style='margin-left:5rem'>
+                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link" href="{{path("app_home")}}">Accueil

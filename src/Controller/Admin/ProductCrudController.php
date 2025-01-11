@@ -56,7 +56,7 @@ class ProductCrudController extends AbstractCrudController
                 ->onlyOnForms(),
             MoneyField::new('price')->setCurrency('EUR'),
             IntegerField::new('off','reduction en %'),
-            IntegerField::new('quantity'),
+            IntegerField::new('quantity')  ->hideOnIndex(),
             BooleanField::new('isBestSeller'),
             BooleanField::new('isNewArrival'),
             BooleanField::new('isFeatured'),
@@ -67,12 +67,13 @@ class ProductCrudController extends AbstractCrudController
             // ->allowDelete(true)               // Autoriser la suppression de tailles
             // ->setLabel('Tailles'),
             CollectionField::new('images')
-                ->setEntryType(ProductImageType::class),
+                ->setEntryType(ProductImageType::class)
+                ->hideOnIndex(),
             IntegerField::new('ean'),
-            AssociationField::new('categorie'),
-            AssociationField::new('subCategorie'),
-            AssociationField::new('productBrand'),
-            AssociationField::new('brandModel'),
+            AssociationField::new('categorie')->hideOnIndex(),
+            AssociationField::new('subCategorie')->hideOnIndex(),
+            AssociationField::new('productBrand')->hideOnIndex(),
+            AssociationField::new('brandModel')->hideOnIndex(),
             TextEditorField::new('description2')
                     ->setFormType(CKEditorType::class)
                     ->hideOnIndex(),

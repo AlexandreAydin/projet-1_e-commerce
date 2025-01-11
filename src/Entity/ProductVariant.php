@@ -32,7 +32,7 @@ class ProductVariant
     #[ORM\Column]
     private ?float $price = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(nullable: false)]
     private ?int $offVariant = null;
 
     #[ORM\OneToMany(mappedBy: 'variantProduct', targetEntity: ProductImage::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
