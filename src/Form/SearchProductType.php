@@ -21,10 +21,13 @@ class SearchProductType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
 
+        $filteredCategories = $options['filtered_categories'] ?? [];
+        $filteredBrands     = $options['filtered_brands'] ?? [];
+
         $builder
             ->add('categories', EntityType::class, [
                 'class' => Categorie::class,
-                'choice_label' => 'name',
+                'choices'  => $filteredCategories,
                 'multiple' => true,
                 'expanded' => true, // Checkboxes
                 'required' => false,
@@ -42,7 +45,7 @@ class SearchProductType extends AbstractType
             ])
             ->add('productBrand', EntityType::class, [
                 'class' => ProductBrand::class,
-                'choice_label' => 'name',
+                'choices'  => $filteredBrands,
                 'multiple' => true,
                 'expanded' => true, 
                 'required' => false,
@@ -75,7 +78,12 @@ class SearchProductType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            // Default configurations if needed
+            // Si vous avez un data_class pour ce formulaire, par ex. :
+            // 'data_class' => SearchProduct::class,
+    
+            // On définit par défaut les deux options personnalisées :
+            'filtered_categories' => [],
+            'filtered_brands'     => [],
         ]);
     }
 }

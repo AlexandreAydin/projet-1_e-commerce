@@ -240,7 +240,11 @@ class ProductRepository extends ServiceEntityRepository
                ->setParameter('categories', $categories);
         }
     
-        return $qb->getQuery()->getResult();
+        // return $qb->getQuery()->orderBy('p.id', 'DESC')->getResult();
+        return $qb
+            ->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
     
     
@@ -501,7 +505,11 @@ class ProductRepository extends ServiceEntityRepository
             ))->setParameter('maxPrice', $search->getMaxPrice());
         }
     
-        return $qb->getQuery()->getResult();
+        // return $qb->getQuery()->getResult();
+        return $qb
+            ->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
     
     

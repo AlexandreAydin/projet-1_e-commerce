@@ -423,6 +423,67 @@ class HomeController extends AbstractController
             $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
         }
 
+        $categoriesForFilter = [];
+        $brandsForFilter     = [];
+    
+        // On parcourt tous les produits retournés
+        foreach ($products as $product) {
+            // Récupérer la catégorie
+            if ($product->getCategorie()) {
+                $cat = $product->getCategorie();
+                // Stocker par ID pour éviter doublons
+                $categoriesForFilter[$cat->getId()] = $cat;
+            }
+    
+            // Récupérer la marque
+            if ($product->getProductBrand()) {
+                $brandsForFilter[$product->getProductBrand()->getId()] = $product->getProductBrand();
+            }
+        }
+
+        $form = $formFactory->create(SearchProductType::class, $search, [
+            'method'             => 'GET',
+            'filtered_categories'=> $categoriesForFilter,
+            'filtered_brands'    => $brandsForFilter,
+        ]);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Filtrer les produits selon les critères spécifiés
+            $products = $repoProduct->findByFilters($search, $query);
+        } else if (!empty($query)) {
+            // Si un terme de recherche est fourni, effectuer une recherche textuelle
+            $products = $repoProduct->findBySearchQuery($query);
+        } else {
+            // Sinon, charger tous les produits
+            $products = $repoProduct->findBy([], ['id' => 'DESC']);
+
+        }
+
+        $categoriesForFilter = [];
+        $brandsForFilter     = [];
+    
+        // On parcourt tous les produits retournés
+        foreach ($products as $product) {
+            // Récupérer la catégorie
+            if ($product->getCategorie()) {
+                $cat = $product->getCategorie();
+                // Stocker par ID pour éviter doublons
+                $categoriesForFilter[$cat->getId()] = $cat;
+            }
+    
+            // Récupérer la marque
+            if ($product->getProductBrand()) {
+                $brandsForFilter[$product->getProductBrand()->getId()] = $product->getProductBrand();
+            }
+        }
+
+        $form = $formFactory->create(SearchProductType::class, $search, [
+            'method'             => 'GET',
+            'filtered_categories'=> $categoriesForFilter,
+            'filtered_brands'    => $brandsForFilter,
+        ]);
+        
         // Rendu de la vue avec toutes les données nécessaires
         return $this->render('pages/home/shop.html.twig', [
             'products' => $products,
