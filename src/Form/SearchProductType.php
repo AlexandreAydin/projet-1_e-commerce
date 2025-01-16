@@ -22,7 +22,9 @@ class SearchProductType extends AbstractType
     {
 
         $filteredCategories = $options['filtered_categories'] ?? [];
+        $filteredSubCategories = $options['filtered_subCategories'] ?? [];
         $filteredBrands     = $options['filtered_brands'] ?? [];
+        $filteredBrandsModel     = $options['filtered_brandsModel'] ?? [];
 
         $builder
             ->add('categories', EntityType::class, [
@@ -35,13 +37,14 @@ class SearchProductType extends AbstractType
             ])
             ->add('subCategories', EntityType::class, [
                 'class' => SubCategorie::class,
+                'choices' => $filteredSubCategories,
                 'choice_label' => 'name',
                 "label" => '',
                 'multiple' => true,
                 'expanded' => true,
                 'required' => false,
                 'attr' => ['class' => 'js-subcategories'], // Classe JS pour interaction dynamique
-                'choices' => $this->subCategorieRepository->findAll(),
+                // 'choices' => $this->subCategorieRepository->findAll(),
             ])
             ->add('productBrand', EntityType::class, [
                 'class' => ProductBrand::class,
@@ -54,12 +57,13 @@ class SearchProductType extends AbstractType
             ->add('brandModel', EntityType::class, [
                 'class' => BrandModel::class,
                 'choice_label' => 'name',
+                'choices'  => $filteredBrandsModel,
                 "label" => '',
                 'multiple' => true,
                 'expanded' => true,
                 'required' => false,
                 'attr' => ['class' => 'js-brandModel'], // Classe JS pour interaction dynamique
-                'choices' => $this->brandModelRepository->findAll(),
+                // 'choices' => $this->brandModelRepository->findAll(),
             ])
             ->add('minPrice', IntegerType::class, [
                 'required' => false,
@@ -83,7 +87,9 @@ class SearchProductType extends AbstractType
     
             // On définit par défaut les deux options personnalisées :
             'filtered_categories' => [],
+            'filtered_subCategories'=> [],
             'filtered_brands'     => [],
+            'filtered_brandsModel'=> [],
         ]);
     }
 }

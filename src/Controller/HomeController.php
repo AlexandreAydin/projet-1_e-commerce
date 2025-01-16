@@ -364,6 +364,7 @@ class HomeController extends AbstractController
         WishListService $wishListService,
         RewiewsProductRepository $reviewsRepo,
         FormFactoryInterface $formFactory,
+        EntityManagerInterface $em,
         Request $request,
         ProductRepository $repoProduct): Response {
         // Création et gestion du formulaire de recherche avancée
@@ -410,11 +411,6 @@ class HomeController extends AbstractController
                 }, $products);
             }
         }
-        
-        
-   
-        
-        
 
         $productRatings = [];
         $isInWishlist = [];
@@ -424,27 +420,64 @@ class HomeController extends AbstractController
         }
 
         $categoriesForFilter = [];
-        $brandsForFilter     = [];
-    
-        // On parcourt tous les produits retournés
-        foreach ($products as $product) {
-            // Récupérer la catégorie
-            if ($product->getCategorie()) {
-                $cat = $product->getCategorie();
-                // Stocker par ID pour éviter doublons
-                $categoriesForFilter[$cat->getId()] = $cat;
+    $subCategoriesForFilter = [];
+    $brandsForFilter = [];
+    $brandsModelForFilter = [];
+
+    // On parcourt tous les produits retournés
+    foreach ($products as $product) {
+        // 🔹 Récupérer la catégorie
+        if ($product->getCategorie()) {
+            $categoriesForFilter[$product->getCategorie()->getId()] = $product->getCategorie();
+        }
+
+        // 🔹 Récupérer la sous-catégorie
+        if ($product->getSubCategorie()) {
+            $subCat = $product->getSubCategorie();
+
+            // ✅ Forcer Doctrine à charger la sous-catégorie avant de l'ajouter
+            if ($em->contains($subCat)) {
+                $em->refresh($subCat);
             }
-    
-            // Récupérer la marque
-            if ($product->getProductBrand()) {
-                $brandsForFilter[$product->getProductBrand()->getId()] = $product->getProductBrand();
+
+            if (!array_key_exists($subCat->getId(), $subCategoriesForFilter)) {
+                $subCategoriesForFilter[$subCat->getId()] = $subCat;
             }
         }
 
+        // 🔹 Récupérer la marque
+        if ($product->getProductBrand()) {
+            $brand = $product->getProductBrand();
+            if (!array_key_exists($brand->getId(), $brandsForFilter)) {
+                $brandsForFilter[$brand->getId()] = $brand;
+            }
+        }
+
+        // 🔹 Récupérer le modèle de la marque
+        if ($product->getBrandModel()) {
+            $brandModel = $product->getBrandModel();
+
+            // ✅ Forcer Doctrine à charger le modèle avant de l'ajouter
+            if ($em->contains($brandModel)) {
+                $em->refresh($brandModel);
+            }
+
+            if (!array_key_exists($brandModel->getId(), $brandsModelForFilter)) {
+                $brandsModelForFilter[$brandModel->getId()] = $brandModel;
+            }
+        }
+    }
+
+        // dump($subCategoriesForFilter);
+        // die();
+
+
         $form = $formFactory->create(SearchProductType::class, $search, [
-            'method'             => 'GET',
-            'filtered_categories'=> $categoriesForFilter,
-            'filtered_brands'    => $brandsForFilter,
+            'method'                 => 'GET',
+            'filtered_categories'    => $categoriesForFilter,
+            'filtered_subCategories' => $subCategoriesForFilter,
+            'filtered_brands'        => $brandsForFilter,
+            'filtered_brandsModel'   => $brandsModelForFilter,
         ]);
 
         $form->handleRequest($request);
@@ -461,7 +494,9 @@ class HomeController extends AbstractController
         }
 
         $categoriesForFilter = [];
+        $subCategoriesForFilter = [];
         $brandsForFilter     = [];
+        $brandsModelForFilter = [];
     
         // On parcourt tous les produits retournés
         foreach ($products as $product) {
@@ -471,18 +506,49 @@ class HomeController extends AbstractController
                 // Stocker par ID pour éviter doublons
                 $categoriesForFilter[$cat->getId()] = $cat;
             }
-    
+
+            if ($product->getSubCategorie()) {
+                $subCat = $product->getSubCategorie();
+        
+                // ✅ Forcer Doctrine à charger la sous-catégorie avant de l'ajouter
+                if ($em->contains($subCat)) {
+                    $em->refresh($subCat);
+                }
+        
+                if (!array_key_exists($subCat->getId(), $subCategoriesForFilter)) {
+                    $subCategoriesForFilter[$subCat->getId()] = $subCat;
+                }
+            }
+
             // Récupérer la marque
             if ($product->getProductBrand()) {
                 $brandsForFilter[$product->getProductBrand()->getId()] = $product->getProductBrand();
             }
+
+            if ($product->getBrandModel()) {
+                $brandsModel = $product->getBrandModel();
+        
+                // ✅ Forcer Doctrine à charger la sous-catégorie avant de l'ajouter
+                if ($em->contains($brandsModel)) {
+                    $em->refresh($brandsModel);
+                }
+        
+                if (!array_key_exists($brandsModel->getId(), $brandsModelForFilter)) {
+                    $brandsModelForFilter[$brandsModel->getId()] = $brandsModel;
+                }
+            }
         }
+//         dump($subCategoriesForFilter);
+// die();
 
         $form = $formFactory->create(SearchProductType::class, $search, [
             'method'             => 'GET',
             'filtered_categories'=> $categoriesForFilter,
+            'filtered_subCategories' => $subCategoriesForFilter,
             'filtered_brands'    => $brandsForFilter,
+            'filtered_brandsModel'    => $brandsModelForFilter,
         ]);
+
         
         // Rendu de la vue avec toutes les données nécessaires
         return $this->render('pages/home/shop.html.twig', [

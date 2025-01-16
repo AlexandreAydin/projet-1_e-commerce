@@ -153,384 +153,148 @@ input[type="number"] {
 
 
 
+{# Permet d'affiché uniqument sous categorie et model du produit qui existe avec js   #}
+{% for product in products %}
+    <div class="product-card" class="d-non"
+         data-id="{{ product.id }}" 
+         data-subcategory-id="{{ product.subCategorie ? product.subCategorie.id : '' }}" data-brandModel-id="{{ product.brandModel.id }}">
+    </div>
+{% endfor %}
+
+
+
 
 
 <script>
-console.log('qzertyqsd')
+//console.log('qzertyqsd')
 
 
 
-
-{# document.addEventListener('DOMContentLoaded', () => {
-    const categoriesCheckboxes = document.querySelectorAll('.js-categories-container input[type="checkbox"]');
-    const subCategoriesContainer = document.querySelector('.js-subcategories-container');
-    const subcategoryCache = {}; // Cache simple pour les sous-catégories
-
-    if (!subCategoriesContainer) {
-        console.error('Subcategories container not found!');
-        return;
-    }
-
-    /**
-     * Affiche les sous-catégories dans le conteneur
-     * @param {Array} data - Liste des sous-catégories à afficher
-     */
-    const renderSubcategories = (data) => {
-        subCategoriesContainer.innerHTML = ''; // Vide le conteneur avant d'ajouter des données
-        data.forEach(subCategory => {
-            const div = document.createElement('div');
-            div.classList.add('subcategory-item');
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'subCategories[]';
-            checkbox.value = subCategory.id;
-
-            const label = document.createElement('label');
-            label.textContent = subCategory.name;
-
-            div.appendChild(checkbox);
-            div.appendChild(label);
-            subCategoriesContainer.appendChild(div);
-        });
-    };
-
-    /**
-     * Récupère les sous-catégories depuis le serveur ou le cache
-     * @param {Array} selectedCategories - Liste des catégories sélectionnées
-     */
-    const fetchAndDisplaySubcategories = async (selectedCategories) => {
-        const cacheKey = selectedCategories.sort().join(','); // Génère une clé unique pour le cache
-        if (subcategoryCache[cacheKey]) {
-            renderSubcategories(subcategoryCache[cacheKey]); // Utilise les données du cache si disponibles
-            return;
-        }
-
-        try {
-            const response = await fetch('/get-subcategories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categories: selectedCategories })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch subcategories');
-            }
-
-            const data = await response.json();
-            subcategoryCache[cacheKey] = data; // Ajoute les données au cache
-            renderSubcategories(data); // Rendu dynamique
-        } catch (error) {
-            console.error('Error fetching subcategories:', error);
-        }
-    };
-
-    /**
-     * Gestion des catégories sélectionnées
-     */
-    const handleCategoryChange = () => {
-        const selectedCategories = Array.from(categoriesCheckboxes)
-            .filter(cb => cb.checked)
-            .map(cb => cb.value);
-
-        if (selectedCategories.length > 0) {
-            fetchAndDisplaySubcategories(selectedCategories);
-        } else {
-            subCategoriesContainer.innerHTML = ''; // Vide le conteneur si aucune catégorie n'est sélectionnée
-        }
-    };
-
-    // Vérifie les catégories déjà sélectionnées au chargement
-    const initialSelectedCategories = Array.from(categoriesCheckboxes)
-        .filter(cb => cb.checked)
-        .map(cb => cb.value);
-
-    if (initialSelectedCategories.length > 0) {
-        fetchAndDisplaySubcategories(initialSelectedCategories); // Charge les sous-catégories initiales
-    }
-
-    // Ajoute un écouteur pour détecter les changements sur les cases à cocher
-    categoriesCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', handleCategoryChange);
-    });
-}); #}
-
-
-{# document.addEventListener('DOMContentLoaded', () => {
-    const categoriesCheckboxes = document.querySelectorAll('.js-categories-container input[type="checkbox"]');
-    const subcategoryCache = {}; // Cache pour les sous-catégories
-
-    /**
-     * Ajoute les sous-catégories dynamiquement sous leurs catégories parentes
-     * @param {Array} data - Liste des sous-catégories
-     * @param {String} categoryId - ID de la catégorie parente
-     */
-    const renderSubcategories = (data, categoryId) => {
-        const subcategoriesContainer = document.querySelector('.js-subcategories-container');
-        if (!subcategoriesContainer) {
-            console.error('Subcategories container not found!');
-            return;
-        }
-
-        // Trouver la position de la catégorie parent
-        const categoryElement = document.querySelector(
-            `.js-categories-container input[value="${categoryId}"]`
-        );
-        if (!categoryElement) {
-            console.error(`Category with ID ${categoryId} not found.`);
-            return;
-        }
-
-        // Insère les sous-catégories sous la catégorie parent
-        const parentDiv = categoryElement.closest('div');
-        let subcategoryDiv = parentDiv.querySelector('.subcategory-list');
-        if (!subcategoryDiv) {
-            subcategoryDiv = document.createElement('div');
-            subcategoryDiv.classList.add('subcategory-list');
-            parentDiv.appendChild(subcategoryDiv);
-        }
-
-        subcategoryDiv.innerHTML = ''; // Vide les anciennes sous-catégories
-
-        data.forEach((subCategory) => {
-            const subcategoryItem = document.createElement('div');
-            subcategoryItem.classList.add('subcategory-item');
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'subCategories[]';
-            checkbox.value = subCategory.id;
-
-            const label = document.createElement('label');
-            label.textContent = subCategory.name;
-
-            subcategoryItem.appendChild(checkbox);
-            subcategoryItem.appendChild(label);
-            subcategoryDiv.appendChild(subcategoryItem);
-        });
-    };
-
-    /**
-     * Récupère les sous-catégories depuis le serveur ou le cache
-     * @param {String} categoryId - ID de la catégorie
-     */
-    const fetchAndDisplaySubcategories = async (categoryId) => {
-        if (subcategoryCache[categoryId]) {
-            renderSubcategories(subcategoryCache[categoryId], categoryId); // Utilise le cache
-            return;
-        }
-
-        try {
-            const response = await fetch('/get-subcategories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categories: [categoryId] }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch subcategories');
-            }
-
-            const data = await response.json();
-            subcategoryCache[categoryId] = data; // Met en cache les sous-catégories
-            renderSubcategories(data, categoryId);
-        } catch (error) {
-            console.error('Error fetching subcategories:', error);
-        }
-    };
-
-    /**
-     * Gestion des changements de catégories
-     */
-    const handleCategoryChange = (event) => {
-        const categoryId = event.target.value;
-        if (event.target.checked) {
-            fetchAndDisplaySubcategories(categoryId); // Charge et affiche les sous-catégories
-        } else {
-            // Retire les sous-catégories si la catégorie est décochée
-            const parentDiv = event.target.closest('div');
-            const subcategoryDiv = parentDiv.querySelector('.subcategory-list');
-            if (subcategoryDiv) {
-                subcategoryDiv.remove();
-            }
-        }
-    };
-
-    // Ajoute un écouteur sur chaque case à cocher des catégories
-    categoriesCheckboxes.forEach((checkbox) => {
-        checkbox.addEventListener('change', handleCategoryChange);
-    });
-}); #}
-
-
-{# document.addEventListener('DOMContentLoaded', () => {
-    const categoriesCheckboxes = document.querySelectorAll('.js-categories-container input[type="checkbox"]');
-    const subcategoryCache = {}; // Cache pour éviter les requêtes répétées
-
-    /**
-     * Ajoute les sous-catégories dynamiquement sous leurs catégories parentes
-     * @param {Array} data - Liste des sous-catégories
-     * @param {String} categoryId - ID de la catégorie parente
-     */
-    const renderSubcategories = (data, categoryId) => {
-        const subcategoriesContainer = document.querySelector('.js-subcategories-container');
-        if (!subcategoriesContainer) {
-            console.error('Subcategories container not found!');
-            return;
-        }
-
-        const categoryElement = document.querySelector(
-            `.js-categories-container input[value="${categoryId}"]`
-        );
-        if (!categoryElement) {
-            console.error(`Category with ID ${categoryId} not found.`);
-            return;
-        }
-
-        const parentDiv = categoryElement.closest('div');
-        let subcategoryDiv = parentDiv.querySelector('.subcategory-list');
-        if (!subcategoryDiv) {
-            subcategoryDiv = document.createElement('div');
-            subcategoryDiv.classList.add('subcategory-list');
-            parentDiv.appendChild(subcategoryDiv);
-        }
-
-        subcategoryDiv.innerHTML = ''; // Vide les anciennes sous-catégories
-
-        data.forEach((subCategory) => {
-            const subcategoryItem = document.createElement('div');
-            subcategoryItem.classList.add('subcategory-item');
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'search_product[subCategories][]'; // Nom attendu par Symfony
-            checkbox.value = subCategory.id;
-            checkbox.id = `search_product_subCategories_${subCategory.id}`; // ID formaté attendu
-
-            // Vérifie si la sous-catégorie est déjà cochée
-            const existingCheckbox = document.querySelector(`.js-subcategories-container input[value="${subCategory.id}"]`);
-            if (existingCheckbox && existingCheckbox.checked) {
-                checkbox.checked = true;
-            }
-
-            const label = document.createElement('label');
-            label.textContent = subCategory.name;
-            label.setAttribute('for', `search_product_subCategories_${subCategory.id}`); // Lien entre le label et la checkbox
-
-            subcategoryItem.appendChild(checkbox);
-            subcategoryItem.appendChild(label);
-            subcategoryDiv.appendChild(subcategoryItem);
-        });
-    };
-
-
-
-
-
-    /**
-     * Récupère les sous-catégories depuis le serveur ou le cache
-     * @param {String} categoryId - ID de la catégorie
-     */
-    const fetchAndDisplaySubcategories = async (categoryId) => {
-        if (subcategoryCache[categoryId]) {
-            renderSubcategories(subcategoryCache[categoryId], categoryId); // Utilise le cache
-            return;
-        }
-
-        try {
-            const response = await fetch('/get-subcategories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categories: [categoryId] }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch subcategories');
-            }
-
-            const data = await response.json();
-            subcategoryCache[categoryId] = data; // Met en cache les sous-catégories
-            renderSubcategories(data, categoryId);
-        } catch (error) {
-            console.error('Error fetching subcategories:', error);
-        }
-    };
-
-    /**
-     * Gestion des changements de catégories
-     */
-    const handleCategoryChange = (event) => {
-        const categoryId = event.target.value;
-        if (event.target.checked) {
-            fetchAndDisplaySubcategories(categoryId); // Charge et affiche les sous-catégories
-        } else {
-            // Retire les sous-catégories si la catégorie est décochée
-            const parentDiv = event.target.closest('div');
-            const subcategoryDiv = parentDiv.querySelector('.subcategory-list');
-            if (subcategoryDiv) {
-                subcategoryDiv.remove();
-            }
-        }
-    };
-
-    // Vérifie les catégories déjà sélectionnées au chargement
-    categoriesCheckboxes.forEach((checkbox) => {
-        if (checkbox.checked) {
-            fetchAndDisplaySubcategories(checkbox.value); // Charge les sous-catégories si la catégorie est cochée
-        }
-
-        // Ajoute un écouteur pour détecter les changements
-        checkbox.addEventListener('change', handleCategoryChange);
-    });
-}); #}
-
-
-
-
-
-
-
+// affiches les produit uniqument pour 
 document.addEventListener('DOMContentLoaded', () => {
+    /*** VARIABLES GLOBALES ***/
     const categoriesCheckboxes = document.querySelectorAll('.js-categories-container input[type="checkbox"]');
-    const subcategoryCache = {}; // Cache pour éviter les requêtes répétées
+    const subcategoryCache = {}; // Cache pour éviter des requêtes inutiles
 
     /**
-     * Ajoute les sous-catégories dynamiquement sous leurs catégories parentes.
-     * @param {Array} data - Liste des sous-catégories.
-     * @param {String} categoryId - ID de la catégorie parente.
+     * Vérifie que les produits affichés ont bien `data-subcategory-id`
+     * et récupère uniquement les sous-catégories des produits visibles
+     */
+    const getVisibleSubcategories = () => {
+        const visibleProducts = document.querySelectorAll('.product-card');
+
+        if (visibleProducts.length === 0) {
+            console.warn(`⚠️ Aucun produit visible trouvé ! Vérifie que les produits existent dans le HTML.`);
+            return [];
+        }
+
+        const subcategoryIds = new Set();
+
+        //console.log(`📢 Produits détectés sur la page:`, visibleProducts);
+
+        visibleProducts.forEach(product => {
+            const subcategoryId = product.getAttribute('data-subcategory-id');
+
+            if (subcategoryId) {
+                subcategoryIds.add(parseInt(subcategoryId));
+                //console.log(`🔍 Produit ID=${product.getAttribute('data-id')} → Sous-catégorie=${subcategoryId}`);
+            } else {
+                console.warn(`⚠️ Le produit ${product.getAttribute('data-id')} n'a pas de sous-catégorie.`);
+            }
+        });
+
+        //console.log(`✅ Sous-catégories réellement utilisées par les produits visibles:`, Array.from(subcategoryIds));
+        return Array.from(subcategoryIds);
+    };
+
+
+
+    /**
+     * Récupère les sous-catégories et affiche uniquement celles liées aux produits visibles
+     * @param {String} categoryId - ID de la catégorie
+     */
+    const fetchAndDisplaySubcategories = async (categoryId) => {
+        //console.log(`🔄 Récupération des sous-catégories pour la catégorie ${categoryId}`);
+
+        try {
+            const response = await fetch('/get-subcategories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categories: [categoryId] }),
+            });
+
+            if (!response.ok) throw new Error('❌ Erreur lors de la récupération des sous-catégories');
+
+            const data = await response.json();
+            //console.log(`✅ Sous-catégories reçues pour la catégorie ${categoryId}:`, data);
+
+            // Vérifie quelles sous-catégories sont réellement utilisées
+            const validSubcategories = getVisibleSubcategories();
+            if (validSubcategories.length === 0) {
+                console.warn(`⚠️ Aucune sous-catégorie visible trouvée après filtrage.`);
+            }
+
+            const filteredData = data.filter(subCategory => validSubcategories.includes(subCategory.id));
+
+            //console.log(`📌 Sous-catégories après filtrage :`, filteredData);
+
+            renderSubcategories(filteredData, categoryId);
+            updateSubcategories();
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération des sous-catégories:', error);
+        }
+    };
+
+    /**
+     * Affiche dynamiquement les sous-catégories sous leurs catégories parentes
+     * @param {Array} data - Liste des sous-catégories valides
+     * @param {String} categoryId - ID de la catégorie
      */
     const renderSubcategories = (data, categoryId) => {
+        //console.log(`🛠 Ajout des sous-catégories pour la catégorie ${categoryId}:`, data);
+
         const categoryElement = document.querySelector(`.js-categories-container input[value="${categoryId}"]`);
         if (!categoryElement) {
-            console.error(`Category with ID ${categoryId} not found.`);
+            console.warn(`⚠️ Catégorie ${categoryId} introuvable dans le DOM`);
             return;
         }
 
-        const parentDiv = categoryElement.closest('div');
+        const parentDiv = categoryElement.closest('.form-check');
         let subcategoryDiv = parentDiv.querySelector('.subcategory-list');
+
         if (!subcategoryDiv) {
             subcategoryDiv = document.createElement('div');
             subcategoryDiv.classList.add('subcategory-list');
             parentDiv.appendChild(subcategoryDiv);
         }
 
-        subcategoryDiv.innerHTML = ''; // Vide les anciennes sous-catégories
+        const validSubcategories = getVisibleSubcategories();
+        //console.log(`🔍 Sous-catégories visibles sur la page:`, validSubcategories);
 
-        data.forEach((subCategory) => {
+        //console.log(`📌 Sous-catégories AVANT filtrage :`, data);
+
+        const filteredData = data.filter(subCategory => validSubcategories.includes(subCategory.id));
+        //console.log(`📌 Sous-catégories APRÈS filtrage :`, filteredData);
+
+        subcategoryDiv.innerHTML = '';
+
+        if (filteredData.length === 0) {
+            console.warn(`⚠️ Aucune sous-catégorie à afficher pour la catégorie ${categoryId}.`);
+            return;
+        }
+
+        filteredData.forEach((subCategory) => {
+            //console.log(`➕ Ajout de la sous-catégorie ${subCategory.name}`);
+
             const subcategoryItem = document.createElement('div');
             subcategoryItem.classList.add('subcategory-item');
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.name = 'search_product[subCategories][]'; // Nom attendu par Symfony
+            checkbox.name = 'search_product[subCategories][]';
             checkbox.value = subCategory.id;
-            checkbox.id = `search_product_subCategories_${subCategory.id}`; // ID formaté attendu
-            checkbox.classList.add('form-check-input'); // Classe pour le style
-
-            // Cochez si la sous-catégorie est déjà cochée
-            if (document.querySelector(`.js-subcategories-container input[value="${subCategory.id}"]:checked`)) {
-                checkbox.checked = true;
-            }
+            checkbox.id = `search_product_subCategories_${subCategory.id}`;
+            checkbox.classList.add('form-check-input');
 
             const label = document.createElement('label');
             label.textContent = subCategory.name;
@@ -541,20 +305,22 @@ document.addEventListener('DOMContentLoaded', () => {
             subcategoryItem.appendChild(label);
             subcategoryDiv.appendChild(subcategoryItem);
         });
+
+        //console.log(`✅ Sous-catégories affichées pour la catégorie ${categoryId}`);
     };
 
+
+
     /**
-     * Met à jour les sous-catégories envoyées en fonction de l'état actuel des cases cochées.
+     * Met à jour les sous-catégories sélectionnées dans le formulaire
      */
     const updateSubcategories = () => {
         const subcategoriesForm = document.querySelector('.js-subcategories-container');
-        const checkedSubcategories = document.querySelectorAll('.subcategory-list input:checked');
+        if (!subcategoriesForm) return;
 
-        // Supprime les sous-catégories précédemment sélectionnées
         subcategoriesForm.innerHTML = '';
 
-        // Ajoute les sous-catégories actuellement cochées
-        checkedSubcategories.forEach((checkbox) => {
+        document.querySelectorAll('.subcategory-list input:checked').forEach((checkbox) => {
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.name = 'search_product[subCategories][]';
@@ -564,114 +330,156 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Récupère les sous-catégories depuis le serveur ou utilise le cache.
-     * @param {String} categoryId - ID de la catégorie.
-     */
-    const fetchAndDisplaySubcategories = async (categoryId) => {
-        if (subcategoryCache[categoryId]) {
-            renderSubcategories(subcategoryCache[categoryId], categoryId); // Utilise le cache
-            updateSubcategories(); // Met à jour les sous-catégories dans le formulaire
-            return;
-        }
-
-        try {
-            const response = await fetch('/get-subcategories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categories: [categoryId] }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch subcategories');
-            }
-
-            const data = await response.json();
-            subcategoryCache[categoryId] = data; // Met en cache les sous-catégories
-            renderSubcategories(data, categoryId);
-            updateSubcategories(); // Met à jour les sous-catégories dans le formulaire
-        } catch (error) {
-            console.error('Error fetching subcategories:', error);
-        }
-    };
-
-    /**
-     * Gère les changements sur les catégories.
-     * @param {Event} event - L'événement déclenché.
+     * Gère les changements de sélection des catégories
      */
     const handleCategoryChange = (event) => {
         const categoryId = event.target.value;
         if (event.target.checked) {
-            fetchAndDisplaySubcategories(categoryId); // Charge et affiche les sous-catégories
+            fetchAndDisplaySubcategories(categoryId);
         } else {
-            // Retire les sous-catégories si la catégorie est décochée
-            const parentDiv = event.target.closest('div');
-            const subcategoryDiv = parentDiv.querySelector('.subcategory-list');
-            if (subcategoryDiv) {
-                subcategoryDiv.remove();
-            }
-            updateSubcategories(); // Met à jour les sous-catégories dans le formulaire
+            event.target.closest('div').querySelector('.subcategory-list')?.remove();
+            updateSubcategories();
         }
     };
 
-    // Initialise les sous-catégories pour les catégories déjà cochées
+    // Initialisation : Vérifie quelles catégories sont déjà cochées
     categoriesCheckboxes.forEach((checkbox) => {
-        if (checkbox.checked) {
-            fetchAndDisplaySubcategories(checkbox.value);
-        }
+        if (checkbox.checked) fetchAndDisplaySubcategories(checkbox.value);
         checkbox.addEventListener('change', handleCategoryChange);
-    });
-
-    // Écoute les changements sur les sous-catégories
-    document.addEventListener('change', (event) => {
-        if (event.target.closest('.subcategory-list')) {
-            updateSubcategories(); // Met à jour les sous-catégories dans le formulaire
-        }
     });
 });
 
 
 
+
+
 document.addEventListener('DOMContentLoaded', () => {
+    /*** VARIABLES GLOBALES ***/
     const brandsCheckboxes = document.querySelectorAll('.productBrand input[type="checkbox"]');
-    const modelCache = {}; // Cache pour éviter les requêtes répétées
+    const modelCache = {}; // Cache pour éviter des requêtes inutiles
 
     /**
-     * Ajoute les modèles dynamiquement sous leurs marques parentes.
-     * @param {Array} data - Liste des modèles.
-     * @param {String} brandId - ID de la marque parente.
+     * Vérifie que les produits affichés contiennent bien `data-brandModel-id`
+     * et récupère uniquement les modèles des marques visibles
+     */
+    const getVisibleModels = () => {
+        const visibleProducts = document.querySelectorAll('.product-card'); // Vérifie bien ce sélecteur
+
+        if (visibleProducts.length === 0) {
+            console.warn(`⚠️ Aucun produit visible trouvé ! Vérifie que les produits existent dans le HTML.`);
+            return [];
+        }
+
+        const modelIds = new Set();
+
+        //console.log(`📢 Produits détectés sur la page:`, visibleProducts);
+
+        visibleProducts.forEach(product => {
+            const productId = product.getAttribute('data-id');
+            const modelId = product.getAttribute('data-brandModel-id');
+
+            if (modelId) {
+                modelIds.add(parseInt(modelId));
+                //console.log(`🔍 Produit ID=${productId} → Modèle=${modelId}`);
+            } else {
+                console.warn(`⚠️ Le produit ID=${productId} n'a pas de modèle.`);
+            }
+        });
+
+        //console.log(`✅ Modèles réellement utilisés par les produits visibles:`, Array.from(modelIds));
+        return Array.from(modelIds);
+    };
+
+    /**
+     * Récupère les modèles et affiche uniquement ceux liés aux marques visibles
+     * @param {String} brandId - ID de la marque
+     */
+    const fetchAndDisplayModels = async (brandId) => {
+        //console.log(`🔄 Récupération des modèles pour la marque ${brandId}`);
+
+        try {
+            const response = await fetch('/get-brandModel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productBrand: [brandId] }),
+            });
+
+            if (!response.ok) throw new Error('❌ Erreur lors de la récupération des modèles');
+
+            const data = await response.json();
+            //console.log(`✅ Modèles reçus pour la marque ${brandId}:`, data);
+
+            // Vérifie quels modèles sont réellement utilisés
+            const validModels = getVisibleModels();
+            if (validModels.length === 0) {
+                console.warn(`⚠️ Aucun modèle visible trouvé après filtrage.`);
+            }
+
+            const filteredData = data.filter(model => validModels.includes(model.id));
+
+            //console.log(`📌 Modèles après filtrage :`, filteredData);
+
+            renderModels(filteredData, brandId);
+            updateModels();
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération des modèles:', error);
+        }
+    };
+
+    /**
+     * Affiche dynamiquement les modèles sous leurs marques parentes
+     * @param {Array} data - Liste des modèles valides
+     * @param {String} brandId - ID de la marque
      */
     const renderModels = (data, brandId) => {
+        //console.log(`🛠 Ajout des modèles pour la marque ${brandId}:`, data);
+
         const brandElement = document.querySelector(`.productBrand input[value="${brandId}"]`);
         if (!brandElement) {
-            console.error(`Brand with ID ${brandId} not found.`);
+            console.warn(`⚠️ Marque ${brandId} introuvable dans le DOM`);
             return;
         }
 
-        const parentDiv = brandElement.closest('div');
+        const parentDiv = brandElement.closest('.form-check');
         let modelDiv = parentDiv.querySelector('.model-list');
+
         if (!modelDiv) {
+            console.warn(`⚠️ .model-list introuvable pour la marque ${brandId}, création...`);
             modelDiv = document.createElement('div');
             modelDiv.classList.add('model-list');
             parentDiv.appendChild(modelDiv);
         }
 
-        modelDiv.innerHTML = ''; // Vide les anciens modèles
+        // Vérifie quels modèles sont visibles avant filtrage
+        const validModels = getVisibleModels();
+        //console.log(`🔍 Modèles visibles sur la page:`, validModels);
 
-        data.forEach((model) => {
+        //console.log(`📌 Modèles AVANT filtrage :`, data);
+
+        const filteredData = data.filter(model => validModels.includes(model.id));
+        //console.log(`📌 Modèles APRÈS filtrage :`, filteredData);
+
+        // Effacer les modèles obsolètes
+        modelDiv.innerHTML = '';
+
+        if (filteredData.length === 0) {
+            console.warn(`⚠️ Aucun modèle à afficher pour la marque ${brandId}.`);
+            return;
+        }
+
+        // ✅ Ajouter uniquement les modèles valides
+        filteredData.forEach((model) => {
+            //console.log(`➕ Ajout du modèle ${model.name}`);
+
             const modelItem = document.createElement('div');
             modelItem.classList.add('model-item');
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.name = 'search_product[brandModel][]'; // Nom attendu par Symfony
+            checkbox.name = 'search_product[brandModel][]';
             checkbox.value = model.id;
-            checkbox.id = `search_product_brandModel_${model.id}`; // ID formaté attendu
-            checkbox.classList.add('form-check-input'); // Classe pour le style
-
-            // Cochez si le modèle est déjà sélectionné
-            if (document.querySelector(`.js-brandModel-container input[value="${model.id}"]:checked`)) {
-                checkbox.checked = true;
-            }
+            checkbox.id = `search_product_brandModel_${model.id}`;
+            checkbox.classList.add('form-check-input');
 
             const label = document.createElement('label');
             label.textContent = model.name;
@@ -682,20 +490,20 @@ document.addEventListener('DOMContentLoaded', () => {
             modelItem.appendChild(label);
             modelDiv.appendChild(modelItem);
         });
+
+        //console.log(`✅ Modèles affichés pour la marque ${brandId}`);
     };
 
     /**
-     * Met à jour les modèles envoyés en fonction de l'état actuel des cases cochées.
+     * Met à jour les modèles sélectionnés dans le formulaire
      */
     const updateModels = () => {
         const modelsForm = document.querySelector('.js-brandModel-container');
-        const checkedModels = document.querySelectorAll('.model-list input:checked');
+        if (!modelsForm) return;
 
-        // Supprime les modèles précédemment sélectionnés
         modelsForm.innerHTML = '';
 
-        // Ajoute les modèles actuellement cochés
-        checkedModels.forEach((checkbox) => {
+        document.querySelectorAll('.model-list input:checked').forEach((checkbox) => {
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.name = 'search_product[brandModel][]';
@@ -705,70 +513,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Récupère les modèles depuis le serveur ou utilise le cache.
-     * @param {String} brandId - ID de la marque.
-     */
-    const fetchAndDisplayModels = async (brandId) => {
-        if (modelCache[brandId]) {
-            renderModels(modelCache[brandId], brandId); // Utilise le cache
-            updateModels(); // Met à jour les modèles dans le formulaire
-            return;
-        }
-
-        try {
-            const response = await fetch('/get-brandModel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productBrand: [brandId] }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch models');
-            }
-
-            const data = await response.json();
-            modelCache[brandId] = data; // Met en cache les modèles
-            renderModels(data, brandId);
-            updateModels(); // Met à jour les modèles dans le formulaire
-        } catch (error) {
-            console.error('Error fetching models:', error);
-        }
-    };
-
-    /**
-     * Gère les changements sur les marques.
-     * @param {Event} event - L'événement déclenché.
+     * Gère les changements de sélection des marques
      */
     const handleBrandChange = (event) => {
         const brandId = event.target.value;
         if (event.target.checked) {
-            fetchAndDisplayModels(brandId); // Charge et affiche les modèles
+            fetchAndDisplayModels(brandId);
         } else {
-            // Retire les modèles si la marque est décochée
-            const parentDiv = event.target.closest('div');
-            const modelDiv = parentDiv.querySelector('.model-list');
-            if (modelDiv) {
-                modelDiv.remove();
-            }
-            updateModels(); // Met à jour les modèles dans le formulaire
+            event.target.closest('div').querySelector('.model-list')?.remove();
+            updateModels();
         }
     };
 
-    // Initialise les modèles pour les marques déjà cochées
+    // Initialisation : Vérifie quelles marques sont déjà cochées
     brandsCheckboxes.forEach((checkbox) => {
-        if (checkbox.checked) {
-            fetchAndDisplayModels(checkbox.value);
-        }
+        if (checkbox.checked) fetchAndDisplayModels(checkbox.value);
         checkbox.addEventListener('change', handleBrandChange);
     });
-
-    // Écoute les changements sur les modèles
-    document.addEventListener('change', (event) => {
-        if (event.target.closest('.model-list')) {
-            updateModels(); // Met à jour les modèles dans le formulaire
-        }
-    });
 });
+
 
 
 

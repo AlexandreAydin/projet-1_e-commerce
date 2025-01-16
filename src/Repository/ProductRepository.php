@@ -239,6 +239,7 @@ class ProductRepository extends ServiceEntityRepository
             $qb->andWhere('p.categorie IN (:categories)')
                ->setParameter('categories', $categories);
         }
+        
     
         // return $qb->getQuery()->orderBy('p.id', 'DESC')->getResult();
         return $qb
