@@ -28,58 +28,64 @@ class CategorieController extends AbstractController
         WishListService $wishListService,
         PaginatorInterface $paginator,
         Request $request
-    ): Response
-    {
+    ): Response {
         $category = $categorieRepository->findOneBy(['slug' => $slug]);
     
         if (!$category) {
             throw $this->createNotFoundException("La catégorie demandée n'existe pas.");
         }
     
+        // Récupérer uniquement les produits de la catégorie sélectionnée
         $query = $repoProduct->findByCategorySlug($slug);
     
+        // Paginer les résultats
         $paginatedItems = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
             12
         );
-
-        $isInWishlist = false;
-        $productId = $request->query->get('productId');
-        $product = null;
-
-
-        if ($productId) {
-            $product = $repoProduct->find($productId);
     
-            if (!$product) {
-                throw $this->createNotFoundException("Product not found.");
+        $isInWishlist = [];
+        $productRatings = [];
+        $subCategoriesForFilter = [];
+        $brandsForFilter = []; 
+    
+        foreach ($paginatedItems as $product) {
+            // Calculer la note moyenne
+            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+            
+            // Vérifier si le produit est dans la wishlist
+            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
+    
+            // Récupérer les sous-catégories des produits affichés
+            if ($product->getSubCategorie()) {
+                $subCat = $product->getSubCategorie();
+                
+                if (!array_key_exists($subCat->getId(), $subCategoriesForFilter)) {
+                    $subCategoriesForFilter[$subCat->getId()] = $subCat;
+                }
             }
     
-            $isInWishlist = $wishListService->isProductInWishlist($product->getId());
+            // Récupérer les marques des produits affichés
+            if ($product->getProductBrand()) {
+                $brand = $product->getProductBrand();
+                
+                if (!array_key_exists($brand->getId(), $brandsForFilter)) {
+                    $brandsForFilter[$brand->getId()] = $brand;
+                }
+            }
         }
-
-        $isInWishlist = []; // Create a new array to hold the wishlist status for each product.
-
-        $products = $repoProduct->findAllOrderedByIdDesc();
-
-        foreach ($products as $product) {
-            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-            $product->getVariants();
-        }
-
     
         return $this->render('pages/categorie/index.html.twig', [
             'category' => $category,
             'items' => $paginatedItems,
             'productRatings' => $productRatings,
             'isInWishlist' => $isInWishlist,
+            'subCategories' => $subCategoriesForFilter, // 🔥 On passe les sous-catégories
+            'brands' => $brandsForFilter, // 🔥 On passe les marques à Twig
         ]);
     }
-
-
-
+    
     #[Route('/categorie/{categorySlug}/{subCategorySlug}', name: 'app_sub_categorie')]
     public function subCategoryIndex(
         string $categorySlug,
@@ -156,6 +162,60 @@ class CategorieController extends AbstractController
     }
 
 
+    // #[Route('/marque/{slug}', name: 'app_marque')]
+    // public function Brandindex(
+    //     string $slug,
+    //     ProductBrandRepository $productBrandRepository,
+    //     ProductRepository $repoProduct,
+    //     RewiewsProductRepository $reviewsRepo,
+    //     WishListService $wishListService,
+    //     PaginatorInterface $paginator,
+    //     Request $request
+    // ): Response 
+    // {
+    //     $brand = $productBrandRepository->findOneBy(['slug' => $slug]);
+    
+    //     if (!$brand) {
+    //         throw $this->createNotFoundException("La marque demandée n'existe pas.");
+    //     }
+    
+    //     // Récupérer tous les modèles de la marque
+    //     $models = $brand->getBrandModels(); // Assurez-vous que la relation existe
+    
+    //     // Récupérer les catégories associées aux produits de cette marque
+    //     $categoriesForBrand = [];
+    //     $query = $repoProduct->findBy(['productBrand' => $brand]);
+    
+    //     foreach ($query as $product) {
+    //         if ($product->getCategorie() && !array_key_exists($product->getCategorie()->getId(), $categoriesForBrand)) {
+    //             $categoriesForBrand[$product->getCategorie()->getId()] = $product->getCategorie();
+    //         }
+    //     }
+    
+    //     $paginatedItems = $paginator->paginate(
+    //         $query,
+    //         $request->query->getInt('page', 1),
+    //         12
+    //     );
+    
+    //     $isInWishlist = [];
+    //     $productRatings = [];
+    
+    //     foreach ($paginatedItems as $product) {
+    //         $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+    //         $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
+    //     }
+    
+    //     return $this->render('pages/brand/index.html.twig', [
+    //         'brand' => $brand,
+    //         'items' => $paginatedItems,
+    //         'models' => $models,  // 🔥 Ajout des modèles
+    //         'categories' => $categoriesForBrand, // 🔥 Ajout des catégories
+    //         'productRatings' => $productRatings,
+    //         'isInWishlist' => $isInWishlist
+    //     ]);
+    // }
+
     #[Route('/marque/{slug}', name: 'app_marque')]
     public function Brandindex(
         string $slug,
@@ -173,8 +233,10 @@ class CategorieController extends AbstractController
             throw $this->createNotFoundException("La marque demandée n'existe pas.");
         }
 
-        $query = $repoProduct->findBy(['productBrand' => $brand]); // Assurez-vous que cette méthode existe ou ajustez selon votre implémentation
-
+        // 🔥 Récupérer les modèles associés aux produits (uniquement ceux qui ont des produits)
+        $query = $repoProduct->findByBrandSlug($slug);
+        
+        // Paginer les résultats
         $paginatedItems = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
@@ -182,34 +244,46 @@ class CategorieController extends AbstractController
         );
 
         $isInWishlist = [];
-        $productId = $request->query->get('productId');
-        $product = null;
+        $productRatings = [];
+        $brandsModelForFilter = [];
+        $categoriesForFilter = []; 
 
-        if ($productId) {
-            $product = $repoProduct->find($productId);
+        foreach ($paginatedItems as $product) {
+            // 🔥 Calculer la note moyenne
+            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
+            
+            // 🔥 Vérifier si le produit est dans la wishlist
+            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
 
-            if (!$product) {
-                throw $this->createNotFoundException("Product not found.");
+            // 🔥 Récupérer les modèles utilisés par les produits affichés
+            if ($product->getBrandModel()) {
+                $brandModel = $product->getBrandModel();
+                
+                if (!array_key_exists($brandModel->getId(), $brandsModelForFilter)) {
+                    $brandsModelForFilter[$brandModel->getId()] = $brandModel;
+                }
             }
 
-            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-        }
-
-        $products = $repoProduct->findAllOrderedByIdDesc(); // Assurez-vous que cette méthode existe ou créez-la
-
-        foreach ($products as $product) {
-            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-            $product->getVariants();
+            // 🔥 Récupérer les catégories utilisées par les produits affichés
+            if ($product->getCategorie()) {
+                $category = $product->getCategorie();
+                
+                if (!array_key_exists($category->getId(), $categoriesForFilter)) {
+                    $categoriesForFilter[$category->getId()] = $category;
+                }
+            }
         }
 
         return $this->render('pages/brand/index.html.twig', [
             'brand' => $brand,
             'items' => $paginatedItems,
+            'brandsModels' => $brandsModelForFilter, // 🔥 On passe uniquement les modèles utilisés
+            'categories' => $categoriesForFilter, // 🔥 On passe uniquement les catégories utilisées
             'productRatings' => $productRatings,
             'isInWishlist' => $isInWishlist
         ]);
     }
+
 
 
     #[Route('/marque/{brandSlug}/{modelSlug}', name: 'app_brand_model')]

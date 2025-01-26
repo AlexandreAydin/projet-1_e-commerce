@@ -21,16 +21,18 @@
                     </div>
                 {% endif %}
             </div>
-            {% set currentProductRating = productRatings[product.id] ?? 0 %}
+            {% set currentProductRating = relatedRatings[product.id] ?? 0 %}
             <div class="rating_wrap">
                 <div class="rating">
                     <div class="product_rate" style="width: {{ (currentProductRating * 20) | round(0, 'floor') }}%"></div>
                 </div>
                 <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
             </div>
-            <div class="pr_desc">
-                <p>{{product.description}}</p>
-            </div>
+            <div class="rating_wrap">
+        </div>
+
+
+
             <ul class='d-flex justify-content-between mt-4'>
             <!-- Icône à gauche pour ajouter au panier -->
                 <li class="add-to-cart style-none list-unstyled">

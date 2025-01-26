@@ -1,3 +1,16 @@
+
+.product-image-sticky {
+    position: sticky;
+    top: 90px;
+    height: auto;
+}
+
+.product-image-sticky img {
+    width: 100%;
+    object-fit: cover;
+}
+
+
 .comment_list .description p {
     color: black;
 }
@@ -43,7 +56,7 @@
 
 .fa-heart:hover {
     border: black;
-    color: red;
+    color: green;
     /* Optionnel : couleur au survol */
 }
 
@@ -51,3 +64,4 @@
 .add-to-wishlist.wishlist-active .fa-heart {
     color: red; /* Couleur pour les produits dans la wishlist */
 }
+

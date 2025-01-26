@@ -153,7 +153,65 @@ class HomeController extends AbstractController
         $form->handleRequest($request);
     
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->handleReviewForm($form, $newReview, $product, $reviewsRepo, $em);
+            $newReview->setUser($this->getUser())
+                    ->setProduct($product)
+                    ->setCreatedAt(new \DateTimeImmutable());
+
+            $existingReview = $reviewsRepo->findOneBy([
+                'user' => $this->getUser(),
+                'product' => $product
+            ]);
+        
+            $imageFiles = [
+                'rewiewImage' => $form->get('rewiewImage')->getData(),
+                'rewiewImages2' => $form->get('rewiewImages2')->getData(),
+                'rewiewImages3' => $form->get('rewiewImages3')->getData(),
+                'rewiewImages4' => $form->get('rewiewImages4')->getData(),
+                'rewiewImages5' => $form->get('rewiewImages5')->getData(),
+                'reviewVideo' => $form->get('reviewVideo')->getData(),
+            ];
+
+            foreach ($imageFiles as $property => $file) {
+                $setter = 'set' . ucfirst($property);
+                if ($file) {
+                    $newFilename = uniqid().'.'.$file->guessExtension();
+                    try {
+                        $file->move(
+                            $this->getParameter('images_directory'), // Chemin où stocker les fichiers
+                            $newFilename
+                        );
+                        if ($existingReview) {
+                            $existingReview->$setter($newFilename);
+                        } else {
+                            $newReview->$setter($newFilename);
+                        }
+                    } catch (FileException $e) {
+                        // Gérer l'erreur
+                    }
+                } else {
+                    // Si aucun fichier n'est soumis et qu'une image existe, la supprimer
+                    if ($existingReview) {
+                        $getter = 'get' . ucfirst($property);
+                        $currentImage = $existingReview->$getter();
+                        if ($currentImage) {
+                            $existingReview->$setter(null); // Supprimer l'image actuelle
+                            // Supprimez le fichier du serveur
+                            $filesystem = new Filesystem();
+                            $filesystem->remove($this->getParameter('images_directory').'/'.$currentImage);
+                        }
+                    }
+                }
+            }
+
+            if (!$existingReview) {
+                $em->persist($newReview);
+            } else {
+                $existingReview->setComment($newReview->getComment());
+                $existingReview->setNote($newReview->getNote());
+                $existingReview->setUpdatedAt(new \DateTimeImmutable());
+            }
+
+            $em->flush();
             return $this->redirectToRoute('app_single_product', ['slug' => $product->getSlug()]);
         }
     
@@ -198,6 +256,9 @@ class HomeController extends AbstractController
         $cart = $cartService->getFullCart(); // Obtenez le panier complet
 
         $isInWishlist = $wishListService->isProductInWishlist($product->getId());
+
+
+        
     
         // Rendu du template
         return $this->render('pages/home/single_product.html.twig', [

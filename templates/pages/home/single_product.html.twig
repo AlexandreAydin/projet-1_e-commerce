@@ -1,7 +1,7 @@
 
 {% extends 'base.html.twig' %}
 
-{% block title %}Ama noz poruduit{% endblock %}
+{% block title %}Yilmi poruduit{% endblock %}
 {% block stylesheets %}
     {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
     <link rel="stylesheet" href="{{ asset('assets/css/single_product.css') }}">
@@ -13,7 +13,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
-                    <div class="product-image">
+                    <div class="product-image product-image-sticky">
                         <div class="main_image_container position-relative">
                             <div class="mb-3" style="width: 100%; height: 600px">
                                 <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
@@ -133,17 +133,34 @@
     
                         <ul class="product-meta col-12 mt-4">
                             {% if product.categorie %}
-                                <li>Catégorie: <a href="#">{{ product.categorie.name }}</a></li>
+                                <li>Catégorie: 
+                                    <a href="{{ path('app_categorie', {'slug': product.categorie.slug}) }}">
+                                        {{ product.categorie.name }}
+                                    </a>
+                                </li>
                             {% endif %}
-                            {% if product.subCategorie %}
-                                <li>Sous Catégorie: <a href="#">{{ product.subCategorie.name }}</a>{% else %}</li>
+                            {% if product.subCategorie and product.categorie %}
+                                <li>Sous Catégorie: 
+                                    <a href="{{ path('app_sub_categorie', {'categorySlug': product.categorie.slug, 'subCategorySlug': product.subCategorie.slug}) }}">
+                                        {{ product.subCategorie.name }}
+                                    </a>
+                                </li>
                             {% endif %}
                             {% if product.productBrand %}
-                                <li>Marque: <a href="#">{{product.productBrand.name }}</a>{% else %}</li>
+                                <li>Marque: 
+                                    <a href="{{ path('app_marque', {'slug': product.productBrand.slug}) }}">
+                                        {{ product.productBrand.name }}
+                                    </a>
+                                </li>
                             {% endif %}
-                            {% if product.brandModel %}
-                                <li>Modéle: <a href="#">{{product.brandModel.name }}</a>{% else %}</li>
+                            {% if product.brandModel and product.productBrand %}
+                                <li>Modèle: 
+                                    <a href="{{ path('app_brand_model', {'brandSlug': product.productBrand.slug, 'modelSlug': product.brandModel.slug}) }}">
+                                        {{ product.brandModel.name }}
+                                    </a>
+                                </li>
                             {% endif %}
+
                             {# <li>Tags: {{ product.tags }}</li> #}
                         </ul>
                     </div>
@@ -312,7 +329,6 @@
                                         <h5>Ajoutez un commentaire</h5>
 
                                         {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
-
                                         <div class="form-group col-12">
                                             <div class="star_rating">
                                                 <span data-value="1"><i class="far fa-star"></i></span>
@@ -323,21 +339,9 @@
                                                 {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
                                             </div>
                                         </div>
-
                                         <div class="form-group col-12">
                                             {{ form_widget(form.comment) }}
                                         </div>
-
-                                        {# <div class="form-group p-4">
-                                            <h5>Ajouter des images</h5>
-                                                {{ form_widget(form.rewiewImage) }}
-                                                {{ form_widget(form.rewiewImages2) }}
-                                                {{ form_widget(form.rewiewImages3) }}
-                                                {{ form_widget(form.rewiewImages4) }}
-                                                {{ form_widget(form.rewiewImages5) }}
-                                            <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
-                                            {{ form_widget(form.reviewVideo) }}
-                                        </div> #}
                                         <div class="container">
                                             <div class="row">
                                                 <div class="col">

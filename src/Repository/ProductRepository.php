@@ -154,6 +154,16 @@ class ProductRepository extends ServiceEntityRepository
             ->getQuery();
     }
 
+
+    public function findByBrandSlug($slug)
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.productBrand', 'pb')
+            ->where('pb.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery();
+    }
+
    public function paginationQuery()
    {
        return $this->createQueryBuilder('a')

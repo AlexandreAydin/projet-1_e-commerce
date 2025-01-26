@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Yilmi Market - Catégories{% endblock %}
+{% block title %}Yilmi Market - Marque{% endblock %}
 
 {% block body %}
-    <h1>Catégorie: {{ brand.name }}</h1>
+    <h2 class="mt-4 mx-4">Marque: {{ brand.name }}</h2>
     <div class="products-list">
     {% block stylesheets %}
     {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
@@ -24,39 +24,40 @@
                         {% endfor %}
                     </div>
                 </div>
-                {# <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
-                    <div class="sidebar">
-                        {{ form_start(search) }}
-                            <div class="widget">
-                                <h5 class="widget_title">Rechercher</h5>
-                                <div class="scrollable-checkbox">
-                                    {{ form_row(search.string) }}
-                                </div>
-                            </div>
-                            <div class="widget">
-                                <h5 class="widget_title">Categories</h5>
-                                <div class="scrollable-checkbox">
-                                    {{ form_row(search.categories) }}
-                                </div>
-                            </div>
-                            <div class="widget">
-                                <h5 class="widget_title">Price</h5>
-                                <div class="form-row">
-                                    <div class="col-md-6">
-                                        {{ form_row(search.minPrice) }}
+                <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
+                    <div class="">
+                        <h4 class="widget_title">Modèles</h4>
+                        {% for brandsModel in brandsModels %}
+                            <div class="">
+                                <a href="{{ path('app_brand_model', { 'brandSlug': brand.slug, 'modelSlug': brandsModel.slug }) }}" class="">
+                                    <div class="mt-2 mx-4">
+                                        {{ brandsModel.name }}
                                     </div>
-                                    <div class="col-md-6">
-                                        {{ form_row(search.maxPrice) }}
-                                    </div>
-                                </div>
+                                </a>
                             </div>
-                            <button class="btn btn-border-fill btn-block mb-4">Rechercher</button>
-                        {{ form_end(search) }}
+                        {% else %}
+                            <p>Aucun modèle disponible.</p>
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <h4 class="widget_title">Catégorie</h4>
+                            <div class="scrollable-checkbox">
+                                {% for category in categories %}
+                                    <div class="">
+                                        <a href="{{ path('app_categorie', { 'slug': category.slug }) }}" class="">
+                                            <div class="mt-2 mx-4">
+                                                {{ category.name }}
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p>Aucune catégorie disponible.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
-                </div> #}
-            </div>
-        </div>
-    </div>
+                </div>
+
 
         {% endfor %}
     </div>

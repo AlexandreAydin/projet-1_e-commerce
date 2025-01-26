@@ -84,35 +84,6 @@ input[type="number"] {
             </div>
                 <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
                     <div class="sidebar">
-                        {# <form action="{{ path('app_shop') }}" method="get">
-                            {{ form_start(search) }}
-                                <div class="widget">
-                                    <h5 class="widget_title">Categories</h5>
-                                    <div class="scrollable-checkbox">
-                                        {{ form_row(search.categories) }}
-                                    </div>
-                                </div>
-                                <div class="widget">
-                                    <h5 class="widget_title">Categories</h5>
-                                    <div class="scrollable-checkbox">
-                                        {{ form_row(search.subCategories) }}
-                                    </div>
-                                </div>
-                                <div class="widget">
-                                    <h5 class="widget_title">Price</h5>
-                                    <div class="form-row">
-                                        <div class="col-md-6">
-                                            {{ form_row(search.minPrice) }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form_row(search.maxPrice) }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="query" value="{{ app.request.query.get('query') }}">
-                                <button class="btn btn-border-fill btn-block mb-4">Rechercher</button>
-                            {{ form_end(search) }}
-                        </form> #}
                         <form action="{{ path('app_shop') }}" method="get">
                             {{ form_start(search) }}
                              <input type="text" name="query" id="query-input" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}">
@@ -150,25 +121,14 @@ input[type="number"] {
             </div>
         </div>
     </div>
-
-
-
-{# Permet d'affiché uniqument sous categorie et model du produit qui existe avec js   #}
-{% for product in products %}
-    <div class="product-card" class="d-non"
-         data-id="{{ product.id }}" 
-         data-subcategory-id="{{ product.subCategorie ? product.subCategorie.id : '' }}" data-brandModel-id="{{ product.brandModel.id }}">
-    </div>
-{% endfor %}
-
-
-
-
-
+    {# Permet d'affiché uniqument sous categorie et model du produit qui existe avec js   #}
+    {% for product in products %}
+        <div class="product-card" class="d-non"
+            data-id="{{ product.id }}" 
+            data-subcategory-id="{{ product.subCategorie ? product.subCategorie.id : '' }}" data-brandModel-id="{{ product.brandModel.id }}">
+        </div>
+    {% endfor %}
 <script>
-//console.log('qzertyqsd')
-
-
 
 // affiches les produit uniqument pour 
 document.addEventListener('DOMContentLoaded', () => {
@@ -350,9 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
     /*** VARIABLES GLOBALES ***/
     const brandsCheckboxes = document.querySelectorAll('.productBrand input[type="checkbox"]');
@@ -531,10 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.addEventListener('change', handleBrandChange);
     });
 });
-
-
-
-
 
 
 </script>

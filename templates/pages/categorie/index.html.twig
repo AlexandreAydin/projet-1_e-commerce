@@ -3,7 +3,7 @@
 {% block title %}Yilmi Market - Catégories{% endblock %}
 
 {% block body %}
-    <h1>Catégorie: {{ category.name }}</h1>
+    <h2 class="mx-4 mt-4" >Catégorie: {{ category.name }}</h2>
     <div class="products-list">
     {% block stylesheets %}
     {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
@@ -11,7 +11,7 @@
     {% endblock %}
         {% for product in items %}
 
- <div class="">
+    <div class="">
         <div class="m-4">
             <div class="row flex-column flex-lg-row-reverse">
                 <div class="col-lg-10 order-2 order-lg-1 w-100">
@@ -24,36 +24,41 @@
                         {% endfor %}
                     </div>
                 </div>
-                {# <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
-                    <div class="sidebar">
-                        {{ form_start(search) }}
-                            <div class="widget">
-                                <h5 class="widget_title">Rechercher</h5>
-                                <div class="scrollable-checkbox">
-                                    {{ form_row(search.string) }}
-                                </div>
-                            </div>
-                            <div class="widget">
-                                <h5 class="widget_title">Categories</h5>
-                                <div class="scrollable-checkbox">
-                                    {{ form_row(search.categories) }}
-                                </div>
-                            </div>
-                            <div class="widget">
-                                <h5 class="widget_title">Price</h5>
-                                <div class="form-row">
-                                    <div class="col-md-6">
-                                        {{ form_row(search.minPrice) }}
+                <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
+                    <div class="">
+                         <h4 class="widget_title">Sous-Catégories</h4>
+                        {% for subCategory in subCategories %}
+                            <div class="">
+                                <a href="{{ path('app_sub_categorie', { 
+                                    'categorySlug': category.slug, 
+                                    'subCategorySlug': subCategory.slug 
+                                }) }}" class="">
+                                    <div class="mt-2 mx-4">
+                                    {{ subCategory.name }}
                                     </div>
-                                    <div class="col-md-6">
-                                        {{ form_row(search.maxPrice) }}
-                                    </div>
-                                </div>
+                                </a>
                             </div>
-                            <button class="btn btn-border-fill btn-block mb-4">Rechercher</button>
-                        {{ form_end(search) }}
+                        {% else %}
+                            <p>Aucune sous-catégorie disponible.</p>
+                        {% endfor %}
+                        <div class="mt-4">
+                            <h4 class="widget_title">Marques</h4>
+                            <div class="scrollable-checkbox">
+                                {% for brand in brands %}
+                                    <div class="">
+                                        <a href="{{ path('app_marque', { 'slug': brand.slug }) }}" class="form-check-label">
+                                            <div class="mt-2 mx-4">
+                                            {{ brand.name }}
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p>Aucune marque disponible.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
-                </div> #}
+                </div>
             </div>
         </div>
     </div>
