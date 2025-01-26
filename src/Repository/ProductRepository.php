@@ -465,12 +465,23 @@ class ProductRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p')
             ->leftJoin('p.variants', 'v')
             ->groupBy('p.id')
+            ->leftJoin('p.productBrand', 'pb')
+            ->leftJoin('p.brandModel', 'bm')
+            ->leftJoin('p.categorie', 'c')
+            ->leftJoin('p.subCategorie', 'sc')
             ->orderBy('p.name', 'ASC');
     
         if ($query) {
             $qb->andWhere($qb->expr()->orX(
                 'p.name LIKE :query',
-                'p.description LIKE :query'
+                'p.description LIKE :query',
+               ' p.description2 LIKE :query',
+               ' p.illustrationText1 LIKE :query',
+                'p.ean LIKE :query',
+               ' c.name LIKE :query',
+               ' sc.name LIKE :query',
+                'pb.name LIKE :query',
+                'bm.name LIKE :query'
             ))->setParameter('query', '%' . $query . '%');
         }
     

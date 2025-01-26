@@ -86,7 +86,20 @@ input[type="number"] {
                     <div class="sidebar">
                         <form action="{{ path('app_shop') }}" method="get">
                             {{ form_start(search) }}
-                             <input type="text" name="query" id="query-input" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}">
+                            <input type="hidden" name="query" id="query-input" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}">
+                           
+                            <div class=" position-relative w-100 mb-4">
+                                <input 
+                                    type="text" 
+                                    name="query" 
+                                    class="form-control rounded-pill" 
+                                    placeholder="Rechercher..." 
+                                    value="{{ app.request.query.get('query') }}" 
+                                    style="padding-left: 2rem; border: 0.5px solid gray; font-size: 0.8rem; height: 35px;" 
+                                    required>
+                                <i  class="fa-solid  fa-magnifying-glass position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                            </div>
+                          
                             <h4 class="widget_title">Filtrage</h4>
                             <h5 class="widget_title">Categories</h5>
                             <div class="scrollable-checkbox js-categories-container">
@@ -128,6 +141,11 @@ input[type="number"] {
             data-subcategory-id="{{ product.subCategorie ? product.subCategorie.id : '' }}" data-brandModel-id="{{ product.brandModel.id }}">
         </div>
     {% endfor %}
+
+
+
+
+
 <script>
 
 // affiches les produit uniqument pour 
