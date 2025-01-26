@@ -31,7 +31,7 @@ class HomeController extends AbstractController
 {
     
     #[Route('/', name: 'app_home')]
-    public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo, WishListService $wishListService): Response
+    public function index(ProductRepository $repoProduct, RewiewsProductRepository $reviewsRepo): Response
     {
         // Utiliser la méthode avec tri pour récupérer les produits par ID décroissant
         $products = $repoProduct->findAllOrderedByIdDesc();
@@ -62,7 +62,7 @@ class HomeController extends AbstractController
         
         $averageRating = (count($reviews) > 0) ? $totalRating / count($reviews) : 0;
 
-        $isInWishlist = $wishListService->isProductInWishlist($product->getId());
+        // $isInWishlist = $wishListService->isProductInWishlist($product->getId());
 
         return $this->render('pages/home/index.html.twig', [
             'controller_name' => 'HomeController',
@@ -73,7 +73,7 @@ class HomeController extends AbstractController
             'productSpecialOffer'=> $productSpecialOffer,
             'averageRating' => $averageRating,
             'productRatings' => $productRatings,
-            'isInWishlist' => $isInWishlist,
+            // 'isInWishlist' => $isInWishlist,
         ]);
     }
 
@@ -255,7 +255,7 @@ class HomeController extends AbstractController
        
         $cart = $cartService->getFullCart(); // Obtenez le panier complet
 
-        $isInWishlist = $wishListService->isProductInWishlist($product->getId());
+        // // $isInWishlist = $wishListService->isProductInWishlist($product->getId());
 
 
         
@@ -276,7 +276,7 @@ class HomeController extends AbstractController
             'sizes' => $sizes,
             'colors' => $colors,
             'relatedRatings' => $relatedRatings,
-            'isInWishlist' => $isInWishlist,
+            // 'isInWishlist' => // $isInWishlist,
         ]);
     }
 
@@ -399,10 +399,10 @@ class HomeController extends AbstractController
     
     //     // Compilation des informations supplémentaires pour chaque produit
     //     $productRatings = [];
-    //     $isInWishlist = [];
+    //     // $isInWishlist = [];
     //     foreach ($products as $product) {
     //         $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-    //         $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
+    //         // $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
     //     }
     
     //     // Rendu de la vue avec toutes les données nécessaires
@@ -410,7 +410,7 @@ class HomeController extends AbstractController
     //         'products' => $products,
     //         'search' => $form->createView(),
     //         'productRatings' => $productRatings,
-    //         'isInWishlist' => $isInWishlist,
+    //         // 'isInWishlist' => // $isInWishlist,
     //     ]);
     // }
     
@@ -474,10 +474,10 @@ class HomeController extends AbstractController
         }
 
         $productRatings = [];
-        $isInWishlist = [];
+        // $isInWishlist = [];
         foreach ($products as $product) {
             $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-            $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
+            // $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
         }
 
         $categoriesForFilter = [];
@@ -599,7 +599,7 @@ class HomeController extends AbstractController
                 }
             }
         }
-//         dump($subCategoriesForFilter);
+// dump($subCategoriesForFilter);
 // die();
 
         $form = $formFactory->create(SearchProductType::class, $search, [
@@ -616,7 +616,7 @@ class HomeController extends AbstractController
             'products' => $products,
             'search' => $form->createView(),
             'productRatings' => $productRatings,
-             'isInWishlist' => $isInWishlist,
+             // 'isInWishlist' => // $isInWishlist,
         ]);
     }
      

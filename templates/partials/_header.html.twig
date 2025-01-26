@@ -168,18 +168,18 @@
                     </li>
 
                     {% endif %}	
-                    <li>
+                    {# <li>
                         <a class="text-decoration-none" href="{{ path('app_wishList')}}">
                             <i class="icon-heart style-none"></i>
                         </a>
-                    </li>
+                    </li> #}
                     <li class="dropdown cart_dropdown">
                         <a class="nav-link cart_trigger" id="cart-btn" href="#" data-toggle="dropdown">
                             <i class="linearicons-cart"></i>
                             <span class="cart_count">
                             </span>
                         </a>
-                        {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' %}
+                        {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' and app.request.pathinfo != '/caisse/confirmer' %}
                         <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
                             <ul class="cart_list">
                             </ul>

@@ -18,11 +18,11 @@
                             <div class="mb-3" style="width: 100%; height: 600px">
                                 <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
                             </div>
-                            <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
+                            {# <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
                             href="{{ path('wishlist_toggle', {id: product.id}) }}" 
                             data-product-id="{{ product.id }}">
                                 <i class="fa fa-heart"></i>
-                            </a>        
+                            </a>         #}
                         </div>
 
                         <div id="thumbnails" class="row">
@@ -446,7 +446,7 @@
 
 <script>
 
-    //affiches directement les commentaire 
+
     document.addEventListener("DOMContentLoaded", function () {
         // Sélectionne l'élément contenant la note et ajoute un événement de clic
         document.querySelector(".rating_wrap").addEventListener("click", function (event) {
@@ -467,6 +467,8 @@
             }
         });
     });
+
+
 
 
 
