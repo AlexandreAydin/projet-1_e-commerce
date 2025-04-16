@@ -164,7 +164,7 @@ class PaypalCheckoutSessionController extends AbstractController
                                "<br><br/>Vous recevrez bientôt votre colis.<br/> Vous pouvez suivre le statut de votre commande dans votre espace personnel.";
     
                     // Envoi du mail
-                    $mailService->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
+                    $mailService->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Yilmi Market est bien validée.', $content);
                 }
             }
     

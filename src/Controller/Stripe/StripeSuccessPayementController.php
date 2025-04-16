@@ -50,7 +50,7 @@ class StripeSuccessPayementController extends AbstractController
                        "<br/><br/>Numéro de Commande: " . $order->getId() .
                        "<br/><br/>Référence de Commande: " . $order->getReference() .
                        "<br><br/>Vous recevrez bientôt votre colis.<br/> Vous pouvez suivre le statut de votre commande dans votre espace personnel.";
-            $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
+            $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Yilmi Market est bien validée.', $content);
         }
 
         $order->setIsPaid(true);

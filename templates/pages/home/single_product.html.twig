@@ -28,7 +28,7 @@
                 <div class="col-lg-6 col-md-6">
                     <div class="pr_detail">
                         <div class="product_description">
-                            <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
+                            <h4 class="product_title">{{ product.name }}</h4>
                             <div class="product_price d-flex variant-price" style=" margin-left: 0;">
                                 <span id="variant-price" class="price">-- €</span>
                                 <del id="old-price" style="display: none;">-- €</del>
@@ -51,7 +51,9 @@
                             <hr>
                             <div class="product_sort_info">
                                 <ul>
+                                    {% if product.isWarranty %}
                                     <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
+                                    {% endif %}
                                     <li><i class="linearicons-truck"></i>Livraison Rapide</li>
                                     <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
                                     {% if product.ean %}
@@ -114,38 +116,52 @@
                             </div> 
                             <hr>
                             <div>
-                                <ul class="product-meta col-12">
+                                <ul class="product-meta col-12 text-dark">
                                     {% if product.categorie %}
-                                        <li class="text-dark"><span> Catégorie: </span>
+                                        <li class="text-dark"><strong>Catégorie: </strong>
                                             <a href="{{ path('app_categorie', {'slug': product.categorie.slug}) }}">
                                                 {{ product.categorie.name }}
                                             </a>
                                         </li>
                                     {% endif %}
                                     {% if product.subCategorie and product.categorie %}
-                                        <li class="text-dark">Sous Catégorie: 
+                                        <li class="text-dark"><strong>Sous Catégorie: </strong>
                                             <a href="{{ path('app_sub_categorie', {'categorySlug': product.categorie.slug, 'subCategorySlug': product.subCategorie.slug}) }}">
                                                 {{ product.subCategorie.name }}
                                             </a>
                                         </li>
                                     {% endif %}
                                     {% if product.productBrand %}
-                                        <li class="text-dark">Marque: 
+                                        <li class="text-dark"><strong>Marque: </strong>
                                             <a href="{{ path('app_marque', {'slug': product.productBrand.slug}) }}">
                                                 {{ product.productBrand.name }}
                                             </a>
                                         </li>
                                     {% endif %}
                                     {% if product.brandModel and product.productBrand %}
-                                        <li class="text-dark">Modèle: 
+                                        <li class="text-dark"><strong>Modèle: </strong>
                                             <a href="{{ path('app_brand_model', {'brandSlug': product.productBrand.slug, 'modelSlug': product.brandModel.slug}) }}">
                                                 {{ product.brandModel.name }}
                                             </a>
                                         </li>
                                     {% endif %}
-
-                                    {# <li>Tags: {{ product.tags }}</li> #}
-                                </ul>  
+                                    {% if product.moreInformations and product.moreInformations %}
+                                    <li class="toggle-more-li">
+                                        <span class="toggle-more text-dark" style="cursor: pointer; text-decoration: underline;">
+                                            <i class="fas fa-chevron-down"></i> Voir plus
+                                        </span>
+                                    </li>
+                                    <div class="more-info-content" style="display: none;">
+                                        {{ product.moreInformations | raw }}
+                                        <li class="toggle-less-li">
+                                            <span class="toggle-less text-dark" style="cursor: pointer; text-decoration: underline;">
+                                                <i class="fas fa-chevron-up"></i> Voir moins
+                                            </span>
+                                        </li>
+                                    </div>
+                                    {% endif %}
+                                </ul>
+                            </div>
                             </div> 
                             <hr>
                             <div class='mt-4 text-dark'>
@@ -158,10 +174,9 @@
             </div>
             <br><br>
             {% if product.illustrationText1 %}
+
                 <div class="row nav nav-tabs">
-                </div>
-                <div class="row nav nav-tabs">
-                    <div class="large_divider clearfix mt-4">
+                    <div class="mx-4 mt-4">
                         {{ product.illustrationText1 | raw }}
                     </div>
                 </div>
@@ -181,7 +196,6 @@
                             <div class="tab-pane fade show active" id="Description" role="tabpanel" aria-labelledby="Description-tab">
                                 <p>{{ product.description2  | raw }}</p>
                             </div>
-
                             <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
                                 <div class="comments">
                                   
@@ -434,6 +448,27 @@
 
 
     <script>
+
+        {# Voir + et voir moins start  #}
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleMore = document.querySelector('.toggle-more');
+            const toggleLess = document.querySelector('.toggle-less');
+            const moreInfoContent = document.querySelector('.more-info-content');
+
+            if (toggleMore && toggleLess && moreInfoContent) {
+                toggleMore.addEventListener('click', () => {
+                    moreInfoContent.style.display = 'block';
+                    toggleMore.parentElement.style.display = 'none';
+                });
+
+                toggleLess.addEventListener('click', () => {
+                    moreInfoContent.style.display = 'none';
+                    toggleMore.parentElement.style.display = 'block';
+                });
+            }
+        });
+
+        {# Voir + et voir moins end  #}
 
 
         document.addEventListener("DOMContentLoaded", function () {
@@ -728,66 +763,153 @@
             const variants = {{ variants|json_encode()|raw }};
             
             function updateImages(selectedColor) {
-                // Trouver la variante correspondant à la couleur sélectionnée
-                const selectedVariant = variants.find(variant => variant.color === selectedColor);
+    // Trouver la variante correspondant à la couleur sélectionnée
+    const selectedVariant = variants.find(variant => variant.color === selectedColor);
 
-                if (selectedVariant && selectedVariant.images.length > 0) {
-                    // Mettre à jour l'image principale
-                    const firstImage = selectedVariant.images[0].imageName;
-                    mainImage.src = `/images/products/${firstImage}`;
-                    console.log('Main image URL:', mainImage.src); // Débogage
+    if (selectedVariant && selectedVariant.images.length > 0) {
+        // Mettre à jour l'image principale
+        const firstImage = selectedVariant.images[0].imageName;
+        mainImage.src = `/images/products/${firstImage}`;
+        console.log('Main image URL:', mainImage.src);
 
-                    // Vider les miniatures précédentes
-                    thumbnailsContainer.innerHTML = '';
+        // Vider les miniatures précédentes
+        thumbnailsContainer.innerHTML = '';
 
-                    // Générer les miniatures
-                    selectedVariant.images.forEach(image => {
-                        const thumbnail = document.createElement('div');
-                        thumbnail.classList.add('col-4', 'col-md-3', 'col-lg-2', 'mb-3', 'mx-2');
+        // Séparer les images et les vidéos
+        const images = selectedVariant.images.filter(img => !/\.(mp4|webm)$/i.test(img.imageName));
+        const videos = selectedVariant.images.filter(img => /\.(mp4|webm)$/i.test(img.imageName));
+        console.log('Images:', images);
+        console.log('Videos:', videos);
 
-                        // Vérifier si c'est une vidéo (par extension)
-                        const isVideo = /\.(mp4|webm)$/i.test(image.imageName);
-                        
-                        if (isVideo) {
-                            // Définir la source de la vignette
-                            let thumbnailSrc;
-                            if (image.thumbnailName) {
-                                thumbnailSrc = `/images/products/${image.thumbnailName}`;
-                            } else {
-                                // Supposer une image avec le même nom que la vidéo mais en .jpg
-                                thumbnailSrc = `/images/products/${image.imageName.replace(/\.(mp4|webm)$/i, '.jpg')}`;
-                            }
+        // Générer les miniatures pour les 5 premières images
+        images.slice(0, 5).forEach((image, index) => {
+            const thumbnail = document.createElement('div');
+            thumbnail.classList.add('mb-3', 'mx-2');
 
-                            thumbnail.innerHTML = `
-                                <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative; background-color: #000;">
-                                    <a href="/images/products/${image.imageName}" data-fancybox="product-images" data-type="video" title="Vidéo">
-                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-                                            <svg width="30" height="30" viewBox="0 0 24 24" fill="white" style="opacity: 0.8;">
-                                                <polygon points="5,3 19,12 5,21" />
-                                            </svg>
-                                        </div>
-                                    </a>
-                                </div>
-                            `;
-                        } else {
-                            console.log('Image thumbnail URL:', `/images/products/${image.imageName}`); // Débogage
-                            thumbnail.innerHTML = `
-                                <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                                    <a href="/images/products/${image.imageName}" data-fancybox="product-images" title="Miniature">
-                                        <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" data-large-src="/images/products/${image.imageName}" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                </div>
-                            `;
-                        }
-
-                        thumbnailsContainer.appendChild(thumbnail);
-                    });
-                } else {
-                    // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
-                    mainImage.src = `/images/products/default.jpg`;
-                    thumbnailsContainer.innerHTML = ''; // Vider les miniatures
-                }
+            // Pour la 5ème miniature, si d'autres images existent, afficher l'indicateur "+X"
+            if (index === 4 && images.length > 5) {
+                const remainingImages = images.length - 5;
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 60px; height: 60px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" data-fancybox-index="${index}" title="Miniature" data-large-src="/images/products/${image.imageName}">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; font-size: 16px; text-shadow: 0 0 5px rgba(0,0,0,0.5); z-index: 10;">
+                                +${remainingImages}
+                            </div>
+                        </a>
+                    </div>
+                `;
+            } else {
+                thumbnail.innerHTML = `
+                    <div class="thumbnail_img_box" style="width: 60px; height: 60px; position: relative;">
+                        <a href="/images/products/${image.imageName}" data-fancybox="product-images" data-fancybox-index="${index}" title="Miniature" data-large-src="/images/products/${image.imageName}">
+                            <img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                `;
             }
+
+            // Log de débogage pour chaque miniature
+            const thumbnailLink = thumbnail.querySelector('a');
+            console.log(`Thumbnail ${index + 1}:`, {
+                href: thumbnailLink.href,
+                dataFancybox: thumbnailLink.getAttribute('data-fancybox'),
+                dataFancyboxIndex: thumbnailLink.getAttribute('data-fancybox-index'),
+                dataLargeSrc: thumbnailLink.getAttribute('data-large-src'),
+                title: thumbnailLink.getAttribute('title')
+            });
+
+            thumbnailsContainer.appendChild(thumbnail);
+        });
+
+        // Création du conteneur Fancybox pour les images supplémentaires (à partir de la 6ᵉ)
+        if (images.length > 5) {
+            // Supprimer d'éventuels conteneurs Fancybox existants
+            const existingFancyboxContainer = thumbnailsContainer.querySelector('.fancybox-container');
+            if (existingFancyboxContainer) {
+                existingFancyboxContainer.remove();
+            }
+            const fancyboxContainer = document.createElement('div');
+            fancyboxContainer.classList.add('fancybox-container');
+            fancyboxContainer.style.display = 'none'; // Conteneur caché pour Fancybox
+
+            // Ajouter les liens pour les images à partir de la 6ᵉ
+            images.slice(5).forEach((image, index) => {
+                const link = document.createElement('a');
+                // L'indice global est index + 5 (car les 5 premières sont déjà affichées)
+                link.href = `/images/products/${image.imageName}`;
+                link.setAttribute('data-fancybox', 'product-images');
+                link.setAttribute('data-fancybox-index', (index + 5).toString());
+                link.setAttribute('title', 'Miniature');
+                const img = document.createElement('img');
+                img.src = `/images/products/${image.imageName}`;
+                img.alt = 'Miniature';
+                link.appendChild(img);
+                fancyboxContainer.appendChild(link);
+
+                console.log(`Fancybox link for additional image ${index + 6}:`, {
+                    href: link.href,
+                    dataFancybox: link.getAttribute('data-fancybox'),
+                    dataFancyboxIndex: link.getAttribute('data-fancybox-index'),
+                    title: link.getAttribute('title')
+                });
+            });
+            // Ajouter le conteneur Fancybox avant d'ajouter la miniature vidéo
+            thumbnailsContainer.appendChild(fancyboxContainer);
+        }
+
+        // Ajout de la miniature vidéo (si une vidéo existe)
+        if (videos.length > 0) {
+            const video = videos[0]; // Prendre la première vidéo
+            const thumbnail = document.createElement('div');
+            thumbnail.classList.add('mb-3', 'mx-2');
+
+            // Définir la source de la miniature de la vidéo
+            let thumbnailSrc;
+            if (video.thumbnailName) {
+                thumbnailSrc = `/images/products/${video.thumbnailName}`;
+            } else {
+                thumbnailSrc = `/images/products/${video.imageName.replace(/\.(mp4|webm)$/i, '.jpg')}`;
+            }
+
+            thumbnail.innerHTML = `
+                <div class="thumbnail_img_box" style="width: 60px; height: 60px; position: relative; background-color: #000;">
+                    <a href="/images/products/${video.imageName}" data-fancybox="product-images" data-fancybox-index="${images.length}" data-type="video" title="Vidéo" data-large-src="${thumbnailSrc}">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="white" style="opacity: 0.8;">
+                                <polygon points="5,3 19,12 5,21" />
+                            </svg>
+                        </div>
+                    </a>
+                </div>
+            `;
+            const videoLink = thumbnail.querySelector('a');
+            console.log('Video thumbnail:', {
+                href: videoLink.href,
+                dataFancybox: videoLink.getAttribute('data-fancybox'),
+                dataFancyboxIndex: videoLink.getAttribute('data-fancybox-index'),
+                dataType: videoLink.getAttribute('data-type'),
+                dataLargeSrc: videoLink.getAttribute('data-large-src'),
+                title: videoLink.getAttribute('title')
+            });
+
+            thumbnailsContainer.appendChild(thumbnail);
+        }
+
+        // Réinitialisation de Fancybox pour intégrer tous les nouveaux éléments
+        if (typeof Fancybox !== 'undefined') {
+            Fancybox.bind('[data-fancybox="product-images"]', {
+                groupAll: true,
+                startIndex: 0 // Ce paramètre sera remplacé selon data-fancybox-index lors de l'ouverture
+            });
+        }
+    } else {
+        // Aucune image trouvée pour la couleur sélectionnée, afficher l'image par défaut
+        mainImage.src = `/images/products/default.jpg`;
+        thumbnailsContainer.innerHTML = '';
+    }
+}
+
 
             // Mettre à jour les images quand la couleur change
             colorSelect.addEventListener('change', function() {
@@ -980,7 +1102,7 @@
             }
         }); #}
 
-    {# TODO: quand input est au max-stock n'affiches plus icon + #}
+        {# TODO: quand input est au max-stock n'affiches plus icon + #}
 
         {# document.addEventListener('DOMContentLoaded', function () {
             const sizeSelect = document.getElementById('size'); // Sélection de la taille

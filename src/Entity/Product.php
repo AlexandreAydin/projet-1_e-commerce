@@ -42,6 +42,9 @@ class Product
     private ?bool $isBestSeller = null;
 
     #[ORM\Column(nullable: false)]
+    private ?bool $isWarranty = null;
+
+    #[ORM\Column(nullable: false)]
     private ?bool $isNewArrival = null;
 
     #[ORM\Column(nullable: false)]
@@ -197,6 +200,18 @@ class Product
     public function setIsBestSeller(?bool $isBestSeller): self
     {
         $this->isBestSeller = $isBestSeller;
+
+        return $this;
+    }
+    
+    public function isIsWarranty(): ?bool
+    {
+        return $this->isWarranty;
+    }
+
+    public function setIsWarranty(?bool $isWarranty): self
+    {
+        $this->isWarranty = $isWarranty;
 
         return $this;
     }

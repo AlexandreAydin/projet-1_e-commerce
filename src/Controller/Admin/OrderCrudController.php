@@ -141,7 +141,7 @@ class OrderCrudController extends AbstractCrudController
         $this->sendDeliveryMail($order, $product, $this->router, $this->mail);
         // $content = "Bonjour " . $order->getUser()->getFirstname() . ",<br/><br/>";
         // $content .= "Nous sommes ravis de vous informer que votre colis a été livré.<br/><br/>";
-        // $this->mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
+        // $this->mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Yilmi Market est bien validée.', $content);
     
         $this->addFlash('notice', "<span style='color:orange;'><strong>La commande ".$order->getReference()." est bien <u>était livré</u>.</strong></span>");
     
@@ -160,9 +160,9 @@ class OrderCrudController extends AbstractCrudController
         $content .= "Nous apprécions énormément votre confiance en choisissant de magasiner chez nous. Votre avis compte beaucoup pour nous. Si vous le souhaitez, vous pouvez laisser un commentaire sur le produit que vous avez acheté en cliquant sur le lien suivant : <a href='" . $url . "'>donner votre avis</a>.<br/><br/>";
         $content .= "Merci encore pour votre achat. Nous espérons vous revoir bientôt !<br/><br/>";
         $content .= "Cordialement,<br/>";
-        $content .= "L'équipe Anamoz";
+        $content .= "L'équipe Yilmi Market";
     
-        $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre colis Anamoz a été livré', $content);
+        $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre colis Yilmi Market a été livré', $content);
     }
     
 

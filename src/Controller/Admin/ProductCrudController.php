@@ -45,6 +45,9 @@ class ProductCrudController extends AbstractCrudController
             TextEditorField::new('description')
                 ->setFormType(CKEditorType::class)
                 ->hideOnIndex(),
+            TextEditorField::new('moreInformations',"plus d'information")
+                ->setFormType(CKEditorType::class)
+                ->hideOnIndex(),    
             CollectionField::new('variants')
                 ->setEntryType(ProductVariantType::class) // Utilisez ProductVariantType
                 ->setFormTypeOptions([
@@ -57,6 +60,7 @@ class ProductCrudController extends AbstractCrudController
             MoneyField::new('price')->setCurrency('EUR'),
             IntegerField::new('off','reduction en %'),
             IntegerField::new('quantity')  ->hideOnIndex(),
+            BooleanField::new('isWarranty'),
             BooleanField::new('isBestSeller'),
             BooleanField::new('isNewArrival'),
             BooleanField::new('isFeatured'),
