@@ -1,11 +1,11 @@
 
 .product-image-sticky {
     position: sticky;
-    top: 90px;
+    top: 100px;
     height: auto;
 }
 
-.product-image-sticky img {
+.product-image-sticky #thumbnails {
     width: 100%;
     object-fit: cover;
 }
