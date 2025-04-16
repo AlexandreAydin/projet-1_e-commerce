@@ -65,10 +65,41 @@ class OrderServices{
 
             $sizes = $this->convertToArray($variant->getSizes());
             $selectedSize = $cartProduct->getSelectedSize();
+            
+            // Remplacer le bloc existant par :
+        // Normalize sizes and selected size
+        $sizes = array_map('strtoupper', $this->convertToArray($variant->getSizes()));
+        $selectedSize = strtoupper(trim($cartProduct->getSelectedSize()));
 
-            if (!$selectedSize || !in_array($selectedSize, $sizes)) {
-                throw new \Exception("La taille sélectionnée '{$selectedSize}' n'est pas valide pour la variante ID {$variant->getId()}.");
+        // Cas spécial pour produits sans variante de taille
+        if (empty($sizes)) {
+            if ($selectedSize !== 'UNI' && $selectedSize !== 'UNIQUE') {
+                throw new \Exception("Aucune taille requise mais sélection détectée : $selectedSize");
             }
+            $selectedSize = 'UNIQUE';
+        } 
+        else {
+            $normalizedSizes = array_map(function($size) {
+                $normalized = str_replace(['TAILLE ', ' '], '', strtoupper($size));
+                return $normalized === 'UNI' ? 'UNIQUE' : $normalized;
+            }, $sizes);
+
+            $normalizedSelected = str_replace(['TAILLE ', ' '], '', $selectedSize);
+            $normalizedSelected = $normalizedSelected === 'UNI' ? 'UNIQUE' : $normalizedSelected;
+
+            if (!in_array($normalizedSelected, $normalizedSizes)) {
+                throw new \Exception(sprintf(
+                    "Taille '%s' invalide pour %s. Tailles valides : %s",
+                    $selectedSize,
+                    $variant->getProduct()->getName(),
+                    implode(', ', $sizes)
+                ));
+            }
+
+            $selectedSize = in_array('UNIQUE', $normalizedSizes) ? 'TAILLE UNIQUE' : $selectedSize;
+        }
+            
+            
 
             $orderDetails->setOrders($order)
                 ->setProductName($cartProduct->getProductName())

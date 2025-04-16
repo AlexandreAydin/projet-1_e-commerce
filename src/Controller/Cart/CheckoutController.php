@@ -60,38 +60,6 @@ class CheckoutController extends AbstractController
     
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     #[Route('/caisse/confirmer', name: 'app_checkout_confirm')]
     public function checkout_confirm(
         CartService $cartService,

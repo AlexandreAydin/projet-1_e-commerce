@@ -101,7 +101,10 @@ data-reference="{{reference}}">
                             <tbody>
                                 {% for element in cart.products %}
                                     <tr>
-                                        <td>{{ element.product.name }} <span class="product-qty">x {{ element.quantity }}</span></td>
+                                        <td>
+                                            {% set displayName = element.product.name|length > 50 ? element.product.name|slice(0, 40) ~ '...' : element.product.name %}
+                                            {{ displayName }} <span class="product-qty"> x {{ element.quantity }}</span>
+                                        </td>
                                         <td>
                                             {% set originalPrice = element.variant['price'] %}
                                             {% set discount = (element.variant['offVariant'] is defined and element.variant['offVariant'] > 0) ? (element.variant['offVariant'] / 100) : 0 %}
