@@ -1,4 +1,62 @@
-<header  class="header_wrap fixed-top header_with_topbar container">
+<style>
+  .cart_box {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100%;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 100000000000;
+    padding: 20px;
+  }
+
+  .cart_box.active {
+    transform: translateX(0);
+  }
+
+  .cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1001;
+  }
+
+  .cart-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .close-cart {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #333;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  /* Bloquer le défilement de la page lorsque l'overlay est actif */
+  body.no-scroll {
+    overflow: hidden;
+  }
+
+  @media (max-width: 576px) {
+    .cart_box {
+      width: 100%;
+    }
+  }
+</style>
+
+<header  class="header_wrap fixed-top">
     <div  class="bottom_header dark_skin main_menu_uppercase">
         <div  class="container">
             <nav  class="navbar navbar-expand-lg">
@@ -173,55 +231,81 @@
                             <i class="icon-heart style-none"></i>
                         </a>
                     </li> #}
-                    <li class="dropdown cart_dropdown">
-                        <a class="nav-link cart_trigger" id="cart-btn" href="#" data-toggle="dropdown">
-                            <i class="linearicons-cart"></i>
-                            <span class="cart_count">
-                            </span>
-                        </a>
-                        {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' and app.request.pathinfo != '/caisse/confirmer' %}
-                        <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
-                            <ul class="cart_list">
-                            </ul>
-                                <div class="coupon_section mt-4 mx-4">
-                                    <input type="text" id="coupon_code_input" placeholder="Entrez votre code promo" required>
-                                    <a href="#" id="apply_coupon_button" class="coupon_code mt-2 btn btn-fill-out rounded-0">Appliquer</a>
-                                </div>
-                                <div class="cart_footer">
-                                    <p class="cart_total text-dark">
-                                        <strong>Sous Total HT:</strong> 
-                                        <span class="cart_price"> 
-                                            <span class="price_symbole"></span>
-                                        </span>
-                                        <span class="cart_price_value"></span>
-                                    </p>
-                                    <p class="cart_total text-dark">
-                                        <strong>TVA:</strong> 
-                                        <span class="cart_price"> 
-                                            <span class="price_symbole"></span>
-                                        </span>
-                                        <span class="cart_price_taxe"></span>
-                                    </p>
-                                    <p class="cart_total text-dark">
-                                        <strong>Total TTC:</strong> 
-                                        <span class="cart_price"> 
-                                            <span class="price_symbole"></span>
-                                        </span>
-                                        <span class="cart_price_ttc"></span>
-                                    </p>
-                                    <p class="cart_buttons">
-                                    
-                                        {# <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a> #}
-                                        <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
-                                    </p>
-                                </div>
+                    <li class="cart_dropdown">
+                    <a class="nav-link cart_trigger" id="cart-btn" href="#">
+                        <i class="linearicons-cart"></i>
+                        <span class="cart_count"></span>
+                    </a>
+                    {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' and app.request.pathinfo != '/caisse/confirmer' %}
+                    <div class="cart_box bg-light">
+                        <ul class="cart_list"></ul>
+                        <div class="coupon_section mt-4 mx-4">
+                        <input type="text" id="coupon_code_input" placeholder="Entrez votre code promo" required>
+                        <a href="#" id="apply_coupon_button" class="coupon_code mt-2 btn btn-fill-out rounded-0">Appliquer</a>
                         </div>
-                    </li> 
+                        <div class="cart_footer">
+                        <p class="cart_total text-dark">
+                            <strong>Sous Total HT:</strong> 
+                            <span class="cart_price"> 
+                            <span class="price_symbole"></span>
+                            </span>
+                            <span class="cart_price_value"></span>
+                        </p>
+                        <p class="cart_total text-dark">
+                            <strong>TVA:</strong> 
+                            <span class="cart_price"> 
+                            <span class="price_symbole"></span>
+                            </span>
+                            <span class="cart_price_taxe"></span>
+                        </p>
+                        <p class="cart_total text-dark">
+                            <strong>Total TTC:</strong> 
+                            <span class="cart_price"> 
+                            <span class="price_symbole"></span>
+                            </span>
+                            <span class="cart_price_ttc"></span>
+                        </p>
+                        <p class="cart_buttons">
+                            <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
+                        </p>
+                        </div>
+                    </div>
                     {% endif %}
+                    </li>
+
+                    <!-- Ajouter ceci à la fin de votre layout Twig, juste avant </body> -->
+                    <div class="cart-overlay"></div>            
                 </ul>
+                <div class="cart-overlay"></div>
                 </div>
             </nav>
         </div>
     </div>
 </header>
 
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const cartBtn = document.getElementById('cart-btn');
+    const cartBox = document.querySelector('.cart_box');
+    const cartOverlay = document.querySelector('.cart-overlay');
+    const closeCart = document.querySelector('.close-cart');
+
+    function toggleCart() {
+      cartBox.classList.toggle('active');
+      cartOverlay.classList.toggle('active');
+      // Bloquer ou restaurer le défilement
+      document.body.classList.toggle('no-scroll');
+    }
+
+    cartBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleCart();
+    });
+
+    if (closeCart) {
+      closeCart.addEventListener('click', toggleCart);
+    }
+
+    cartOverlay.addEventListener('click', toggleCart);
+  });
+</script>

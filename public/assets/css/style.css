@@ -1532,7 +1532,7 @@ button:focus {
 .cart_box .cart_list {
 	width: 100%;
 	padding: 0 !important;
-	max-height: 242px;
+	max-height: 245px;
 	overflow-y: auto;
 }
 .cart_list li {
