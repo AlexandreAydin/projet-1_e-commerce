@@ -40,7 +40,7 @@ class OrderDetails
     private ?ProductVariant $variant = null;
 
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
-private ?string $selectedSize = null;
+    private ?string $selectedSize = null;
 
 
 

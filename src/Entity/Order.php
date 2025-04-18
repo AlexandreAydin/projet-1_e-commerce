@@ -95,6 +95,10 @@ class Order
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?float $discountAmount = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $trackingNumber = null;
+
+
     public function __construct()
     {
         $this->orderDetails = new ArrayCollection();
@@ -416,6 +420,18 @@ class Order
     public function setDiscountAmount(?float $discountAmount): self
     {
         $this->discountAmount = $discountAmount;
+        return $this;
+    }
+
+
+    public function getTrackingNumber(): ?string
+    {
+        return $this->trackingNumber;
+    }
+
+    public function setTrackingNumber(?string $trackingNumber): self
+    {
+        $this->trackingNumber = $trackingNumber;
         return $this;
     }
 

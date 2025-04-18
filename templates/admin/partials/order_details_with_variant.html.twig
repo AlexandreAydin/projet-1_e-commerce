@@ -11,7 +11,12 @@
     <tbody>
         {% for detail in field.value %}
         <tr>
-            <td class='text-center '>{{ detail.productName }}</td>
+            <td class='text-center'>
+                {{ detail.productName|length > 50 
+                    ? detail.productName|slice(0, 50) ~ '...' 
+                    : detail.productName 
+                }}
+            </td>
             <td class='text-center text-danger'>{{ detail.quantity }}</td>
             <td class='text-center'>{{ detail.variant.color}}</td>
             <td class='text-center'>

@@ -36,9 +36,13 @@
                             <tr>
                                 
                                 <td class="product-thumbnail">{{ element.id }}</td>
-                                <td class="product-name" data-title="Product">
-                                    <a href="{{ path('app_single_product', { 'slug': element.variant.product.slug }) }}">{{ element.productName }}</a>
-
+                                <td class="product-name" data-title="Product" title="{{ element.productName }}">
+                                    <a href="{{ path('app_single_product', { 'slug': element.variant.product.slug }) }}">
+                                        {{ element.productName|length > 50 
+                                            ? element.productName|slice(0, 50) ~ '...' 
+                                            : element.productName 
+                                        }}
+                                    </a>
                                 </td>
                                 <td class="product-price" data-title="Price">
                                     {# {% if element.variant and element.variant.offVariant %} #}

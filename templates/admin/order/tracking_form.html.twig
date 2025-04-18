@@ -1,0 +1,16 @@
+{% extends '@EasyAdmin/layout.html.twig' %}
+
+{% block content %}
+    <div class="container">
+        <h1>Ajouter un numéro de suivi pour la commande {{ order.reference }}</h1>
+        
+        <div class="mt-4" style="max-width: 500px;">
+            {{ form_start(form) }}
+                {{ form_row(form.trackingNumber) }}
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Confirmer la livraison
+                </button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

@@ -2,25 +2,112 @@
 
 {% block title %}Invoice{% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/invoice.css') }}">
+{% endblock %}
+
 {% block body %}
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .container {
+        width: 90%;
+        margin: auto;
+    }
+
+    h1, h2, h3, strong {
+        color: #222;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    thead {
+        background-color: #f2f2f2;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .customer-info {
+        text-align: right;
+    }
+
+    .summary-table {
+        width: 50%;
+        margin-left: auto;
+        text-align: right;
+        border: 1px solid #ccc;
+        margin-top: 40px;
+    }
+
+    .summary-table td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+    }
+
+    .summary-table tr:last-child {
+        background-color: #f1f1f1;
+        font-weight: bold;
+    }
+
+    .info-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 40px;
+    }
+
+    .info-section div {
+        width: 48%;
+    }
+
+    .company-details {
+        font-weight: bold;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px solid #999;
+        margin: 20px 0;
+    }
+</style>
 <div class="container">
-
-    <div>
-  
-        <div style="margin-top:40px;"> 
-            Yilmi Market <br>
-            	38 RUE DE BERRI<br> 75008 PARIS<br> France <br>Siret : 93947750100018 <br> N° TVA Intracomm. : FR30 939 477 501
+    <div class="header">
+        <div class="company-info">
+            Yilmi Market<br>
+            38 RUE DE BERRI<br>
+            75008 PARIS<br>
+            France<br>
+            Siret: 93947750100018<br>
+            N° TVA Intracomm.: FR30 939 477 501
         </div>
-        <div style="text-align: right;">
-            {# <strong>Nom Complet:</strong> {{ order.fullName }} <br> #}
-            {{ order.billingAddress | replace({'[spr]':'<br>'})| raw }} <br>
+        <div class="customer-info">
+            {{ order.billingAddress | replace({'[spr]':'<br>'}) | raw }}
         </div>
-    </div> <br> <br><br> <br>
-    <strong>Date de la commande:</strong> {{ order.createdAt |date('d-m-Y') }} <br>
-    <strong>Référence de la commande:</strong> {{ order.reference }} <br>
-    <strong>Numéro de Factures:</strong> {{ order.createdAt |date('m-Y') }}-{{ order.id }} <br>
+    </div>
 
-    <table border="1" style="width:100%; margin-top: 20px;">
+    <div class="order-info">
+        <p><strong>Date de la commande:</strong> {{ order.createdAt | date('d-m-Y') }}</p>
+        <p><strong>Référence de la commande:</strong> {{ order.reference }}</p>
+        <p><strong>Numéro de Factures:</strong> {{ order.createdAt | date('m-Y') }}-{{ order.id }}</p>
+    </div>
+
+    <table>
         <thead>
             <tr>
                 <th>Référence</th>
@@ -33,77 +120,82 @@
         <tbody>
             {% for detail in order.orderDetails %}
             <tr>
-                <td> {{ detail.id }} </td>
-                <td>{{ detail.productName }}</td>
+                <td>{{ detail.id }}</td>
+                <td class='text-center'>
+                {{ detail.productName|length > 50 
+                    ? detail.productName|slice(0, 50) ~ '...' 
+                    : detail.productName 
+                }}
+            </td>
                 <td>{{ detail.quantity }}</td>
-                <td>{{ (  detail.variant.price / 1.2 * (1 - detail.variant.offVariant / 100) * detail.quantity) | round(2, 'common') | number_format(2, '.', ',')  }} €</td>
-                <td>{{ ( detail.variant.price * (1 - detail.variant.offVariant / 100) * detail.quantity) | round(2, 'common') | number_format(2, '.', ',') }} €</td>
+                <td>{{ (detail.variant.price / 1.2 * (1 - detail.variant.offVariant / 100) * detail.quantity) | round(2, 'common') | number_format(2, '.', ',') }} €</td>
+                <td>{{ (detail.variant.price * (1 - detail.variant.offVariant / 100) * detail.quantity) | round(2, 'common') | number_format(2, '.', ',') }} €</td>
             </tr>
             {% endfor %}
         </tbody>
-    </table><br> <br><br> <br>
-    <table style="margin-left:50%;width:50%; margin-top: 20px; text-align: right; border: 1px solid;padding:20px 0;">
+    </table>
+
+    <table class="summary-table">
         <tbody>
-    {% if order.coupon %}
-        <tr style="width:80%; border: 1px solid;">
-            <td style="width:80%;" class="cart_total_label">Prix HT (avant la réduction ):</td>
-            <td class="cart_total_amount">{{ (order.subTotalHT / 100) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label">Taxe (avant la réduction ):</td>
-            <td class="cart_total_amount">{{ (order.taxe / 100) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td>Total TTC(avant la réduction ) :</td>
-            <td>{{ (order.subTotalHT / 100 + order.taxe / 100 ) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <hr>
-        <tr>
-            <td>Code promo appliqué :</td>
-            <td class="product-subtotal">{{ order.coupon.code }}</td>
-        </tr>
-        <tr>
-            <td>Réduction appliquée :</td>
-            <td class="product-subtotal">{{ order.coupon.discountAmount | number_format(2, '.', ',') }}%</td>
-        </tr>
-
-        <tr>
-            <td style="width:80%;" class="cart_total_label">Commande Sous total (après réduction):</td>
-            <td class="cart_total_amount">{{ ((order.subTotalHT * (1 - order.coupon.discountAmount / 100)) / 100) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label">Taxe (après réduction):</td>
-            <td class="cart_total_amount">{{ ((order.taxe * (1 - order.coupon.discountAmount / 100)) / 100) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
-            <td class="cart_total_amount">{{ order.carrierPrice / 100 | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label"><strong>Total (après réduction):</strong></td>
-            <td class="cart_total_amount"><strong>{{ (((order.subTotalHT + order.taxe) * (1 - order.coupon.discountAmount / 100)) + order.carrierPrice) / 100 | number_format(2, '.', ',') }} €</strong></td>
-        </tr>
-    {% else %}
-        <tr style="width:80%; border: 1px solid;">
-            <td style="width:80%;" class="cart_total_label">Commande Sous total:</td>
-            <td class="cart_total_amount">{{ (order.subTotalHT / 100) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label">Taxe:</td>
-            <td class="cart_total_amount">{{ (order.taxe / 100) | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
-            <td class="cart_total_amount">{{ order.carrierPrice / 100 | number_format(2, '.', ',') }} €</td>
-        </tr>
-        <tr>
-            <td class="cart_total_label"><strong>Total:</strong></td>
-            <td class="cart_total_amount"><strong>{{ (order.subTotalHT / 100 + order.taxe / 100 + order.carrierPrice / 100) | number_format(2, '.', ',') }} €</strong></td>
-        </tr>
-    {% endif %}
-</tbody>
-
+            {% if order.coupon %}
+                <tr>
+                    <td class="cart_total_label">Prix HT (avant la réduction):</td>
+                    <td class="cart_total_amount">{{ (order.subTotalHT / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Taxe (avant la réduction):</td>
+                    <td class="cart_total_amount">{{ (order.taxe / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Total TTC (avant la réduction):</td>
+                    <td class="cart_total_amount">{{ (order.subTotalHT / 100 + order.taxe / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><hr></td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Code promo appliqué:</td>
+                    <td class="cart_total_amount">{{ order.coupon.code }}</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Réduction appliquée:</td>
+                    <td class="cart_total_amount">{{ order.coupon.discountAmount | number_format(2, '.', ',') }}%</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Commande Sous total (après réduction):</td>
+                    <td class="cart_total_amount">{{ ((order.subTotalHT * (1 - order.coupon.discountAmount / 100)) / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Taxe (après réduction):</td>
+                    <td class="cart_total_amount">{{ ((order.taxe * (1 - order.coupon.discountAmount / 100)) / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
+                    <td class="cart_total_amount">{{ order.carrierPrice / 100 | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="cart_total_label"><strong>Total (après réduction):</strong></td>
+                    <td class="cart_total_amount"><strong>{{ (((order.subTotalHT + order.taxe) * (1 - order.coupon.discountAmount / 100)) + order.carrierPrice) / 100 | number_format(2, '.', ',') }} €</strong></td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td class="cart_total_label">Commande Sous total:</td>
+                    <td class="cart_total_amount">{{ (order.subTotalHT / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Taxe:</td>
+                    <td class="cart_total_amount">{{ (order.taxe / 100) | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr>
+                    <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
+                    <td class="cart_total_amount">{{ order.carrierPrice / 100 | number_format(2, '.', ',') }} €</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="cart_total_label"><strong>Total:</strong></td>
+                    <td class="cart_total_amount"><strong>{{ (order.subTotalHT / 100 + order.taxe / 100 + order.carrierPrice / 100) | number_format(2, '.', ',') }} €</strong></td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </div>
-
 {% endblock %}

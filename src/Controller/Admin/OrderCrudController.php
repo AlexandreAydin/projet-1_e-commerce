@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Classe\Mail;
 use App\Entity\Order;
+use App\Entity\Product;
 use App\Repository\ProductRepository;
 use App\Service\PdfService;
 use DateTime;
@@ -23,6 +24,8 @@ use Symfony\Component\Routing\RouterInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 
 class OrderCrudController extends AbstractCrudController
 {
@@ -55,7 +58,8 @@ class OrderCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $updatePreparation = Action::new('updatePreparation', 'Préparation en cours', 'fas fa-box-open')->linkToCrudAction('updatePreparation');
-        $updateDelivery = Action::new('updateDelivery', 'Livraison en cours', 'fas fa-truck')->linkToCrudAction('updateDelivery');
+        $updateDelivery = Action::new('updateDelivery', 'Livraison en cours', 'fas fa-truck')
+        ->linkToCrudAction('updateDeliveryForm');
         $delivery= Action::new('delivery','Livrée','fas fa-check')->linkToCrudAction('delivery');
         $printInvoice = Action::new('printInvoice', 'Imprimer', 'fa fa-print')->linkToCrudAction('printInvoice');
 
@@ -109,61 +113,114 @@ class OrderCrudController extends AbstractCrudController
             ->generateUrl();
         return $this->redirect($url);
     }
+
+    // Ajoutez cette nouvelle méthode
+    private function sendShippingNotification(Order $order, $product, $router, $mail)
+    {
+        $trackingUrl = "https://suivi.transporteur.com/?tracking=" . $order->getTrackingNumber();
+        
+        $content = "Bonjour " . $order->getUser()->getFirstname() . ",<br/><br/>";
+        $content .= "Votre commande n°" . $order->getReference() . " est en cours de livraison !<br/><br/>";
+        $content .= "<strong>Numéro de suivi :</strong> " . $order->getTrackingNumber() . "<br/>";
+        $content .= "Suivez votre colis en temps réel : <a href='" . $trackingUrl . "'>Cliquez ici</a><br/><br/>";
+        $content .= "Détails de livraison :<br/>";
+        $content .= "- Transporteur : " . $order->getCarrierName() . "<br/>";
+        $content .= "- Adresse : " . $order->getDeliveryAddress() . "<br/><br/>";
+        $content .= "Nous restons à votre disposition pour toute question.<br/><br/>";
+        $content .= "Cordialement,<br/>";
+        $content .= "L'équipe Yilmi Market";
+
+        $mail->send(
+            $order->getUser()->getEmail(),
+            $order->getUser()->getFirstname(),
+            'Votre commande Yilmi Market est en route !',
+            $content
+        );
+    }
     
 
 
-    public function updateDelivery(AdminContext $context, EntityManagerInterface $entityManager)
+    public function updateDeliveryForm(AdminContext $context, Request $request, EntityManagerInterface $entityManager)
     {
         $order = $context->getEntity()->getInstance();
-        $order->setState(3);
-        $entityManager->flush();
-
-        $this->addFlash('notice', "<span style='color:orange;'><strong>La commande ".$order->getReference()." est bien <u>en cours de livraison</u>.</strong></span>");
-
-
-        $url = $this->adminUrlGenerator
-            ->setController(OrderCrudController::class)
-            ->setAction('index')
-            ->generateUrl();
-
-        return $this->redirect($url);
+        $productRepository = $this->entityManager->getRepository(Product::class);
+        $product = $productRepository->findOneBy(['name' => $order->getProductName()]);
+    
+        $form = $this->createFormBuilder()
+            ->add('trackingNumber', TextType::class, [
+                'label' => 'Numéro de suivi',
+                'required' => true
+            ])
+            ->getForm();
+    
+        $form->handleRequest($request);
+    
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $order->setTrackingNumber($data['trackingNumber']);
+            $order->setState(3);
+            $entityManager->flush();
+    
+            // Appel de la nouvelle méthode d'envoi
+            $this->sendShippingNotification($order, $product, $this->router, $this->mail);
+    
+            $this->addFlash('success', 'Le numéro de suivi a été enregistré et le client a été notifié.');
+            return $this->redirect($this->adminUrlGenerator->setController(OrderCrudController::class)->setAction('index')->generateUrl());
+        }
+    
+        return $this->render('admin/order/tracking_form.html.twig', [
+            'form' => $form->createView(),
+            'order' => $order,
+        ]);
     }
 
 
-    public function delivery(AdminContext $context,ProductRepository $productRepository, EntityManagerInterface $entityManager)
+    
+
+
+    public function delivery(AdminContext $context, ProductRepository $productRepository, EntityManagerInterface $entityManager)
     {
         $order = $context->getEntity()->getInstance();
         $order->setState(4);
         $entityManager->flush();
     
-        // Logique d'envoi de mail
         $product = $productRepository->findOneBy(['name' => $order->getProductName()]);
-        $this->sendDeliveryMail($order, $product, $this->router, $this->mail);
-        // $content = "Bonjour " . $order->getUser()->getFirstname() . ",<br/><br/>";
-        // $content .= "Nous sommes ravis de vous informer que votre colis a été livré.<br/><br/>";
-        // $this->mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Yilmi Market est bien validée.', $content);
+        
+        // Appel de la méthode renommée
+        $this->sendDeliveryConfirmation($order, $product, $this->router, $this->mail);
     
-        $this->addFlash('notice', "<span style='color:orange;'><strong>La commande ".$order->getReference()." est bien <u>était livré</u>.</strong></span>");
+        $this->addFlash('notice', "<span style='color:green;'><strong>La commande ".$order->getReference()." est marquée comme livrée.</strong></span>");
     
-        $url = $this->adminUrlGenerator
-        ->setController(OrderCrudController::class)
-        ->setAction('index')
-        ->generateUrl();
-        return $this->redirect($url);
+        return $this->redirect(
+            $this->adminUrlGenerator
+                ->setController(OrderCrudController::class)
+                ->setAction('index')
+                ->generateUrl()
+        );
     }
+    
 
-    private function sendDeliveryMail(Order $order, $product, $router, $mail) {
-        $url = $router->generate('app_single_product', ['slug' => $product->getSlug()]);
-        $content = "Bonjour " . $order->getUser()->getFirstname() . ",<br/><br/>";
-        $content .= "Nous sommes ravis de vous informer que votre colis a été livré.<br/><br/>";
-        $content .= "Nous espérons que vous êtes satisfait de votre achat. Si vous avez des questions ou des préoccupations concernant votre commande, n'hésitez pas à nous contacter.<br/><br/>";
-        $content .= "Nous apprécions énormément votre confiance en choisissant de magasiner chez nous. Votre avis compte beaucoup pour nous. Si vous le souhaitez, vous pouvez laisser un commentaire sur le produit que vous avez acheté en cliquant sur le lien suivant : <a href='" . $url . "'>donner votre avis</a>.<br/><br/>";
-        $content .= "Merci encore pour votre achat. Nous espérons vous revoir bientôt !<br/><br/>";
-        $content .= "Cordialement,<br/>";
-        $content .= "L'équipe Yilmi Market";
+    // Renommez et ajustez cette méthode
+private function sendDeliveryConfirmation(Order $order, $product, $router, $mail) 
+{
+    $url = $router->generate('app_single_product', ['slug' => $product->getSlug()]);
     
-        $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre colis Yilmi Market a été livré', $content);
-    }
+    $content = "Bonjour " . $order->getUser()->getFirstname() . ",<br/><br/>";
+    $content .= "Nous confirmons que votre commande n°" . $order->getReference() . " a bien été livrée !<br/><br/>";
+    $content .= "<strong>Date de livraison :</strong> " . (new DateTime())->format('d/m/Y') . "<br/><br/>";
+    $content .= "Merci d'avoir choisi Yilmi Market. Nous espérons que vous êtes satisfait de votre achat.<br/><br/>";
+    $content .= "Votre avis compte beaucoup pour nous <br/>";
+    $content .= "Laissez un commentaire sur le produit : <a href='" . $url . "'>Je donne mon avis</a><br/><br/>";
+    $content .= "À très bientôt,<br/>";
+    $content .= "L'équipe Yilmi Market";
+
+    $mail->send(
+        $order->getUser()->getEmail(),
+        $order->getUser()->getFirstname(),
+        'Votre commande Yilmi Market a été livrée avec succès !',
+        $content
+    );
+}
     
 
     public function configureCrud(Crud $crud): Crud
@@ -193,6 +250,9 @@ class OrderCrudController extends AbstractCrudController
             MoneyField::new('subTotalHT','Sous TotalHT')->setCurrency('EUR'),
             MoneyField::new('Taxe','TVA')->setCurrency('EUR'),
             MoneyField::new('subTotalTTC','sousTotalTTC')->setCurrency('EUR'),
+            TextField::new('trackingNumber', 'Numéro de suivi')
+                ->hideOnIndex()
+                ->setPermission('ROLE_ADMIN'),
             BooleanField::new('isPaid','Commande payer'),
             ChoiceField::new('state')->setChoices([
                 'Non payée' => 0,
