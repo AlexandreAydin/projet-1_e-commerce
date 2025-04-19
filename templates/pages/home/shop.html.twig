@@ -4,10 +4,6 @@
 
 {% block body %}
    <style>
-/* Catégories principales */
-{# .category-item {
-    margin-bottom: 15px;
-} #}
 
 /* Titres des catégories */
 .category-title {
@@ -71,17 +67,17 @@ input[type="number"] {
     <div class="">
         <div class="m-4">
             <div class="row flex-column flex-lg-row-reverse">
-                <div class="col-lg-10 order-2 order-lg-1 w-100">
-                <div class="row shop_container">
-                    {% if not products %}
-                        <p>Désolé, aucun produit ne correspond au résultat de votre recherche.</p>
-                    {% else %}
-                        {% for product in products %}
-                            {% include "partials/_product.html.twig" with {'product':product} %}
-                        {% endfor %}
-                    {% endif %}
+                <div class="col-lg-8 order-2 order-lg-1 w-100">
+                    <div class="row shop_container">
+                        {% if not products %}
+                            <p>Désolé, aucun produit ne correspond au résultat de votre recherche.</p>
+                        {% else %}
+                            {% for product in products %}
+                                {% include "partials/_product.html.twig" with {'product':product} %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
                 <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
                     <div class="sidebar">
                         <form action="{{ path('app_shop') }}" method="get">

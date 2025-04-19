@@ -1496,10 +1496,13 @@ button:focus {
 	transform: scale(1) !important;
 }
 .cart_list li {
+	border-top: 1px solid #3f3f3f;
+	margin-top: 10px;
 	border-bottom: 1px solid #3f3f3f;
 	padding: 15px;
 	width: 100%;
 }
+
 .item_remove {
 	float: right;
 	margin-left: 5px;
@@ -1515,6 +1518,7 @@ button:focus {
 .cart_list a {
 	font-size: 14px;
 	vertical-align: top;
+	margin-top: -47px;
 	padding: 0 !important;
 	text-transform: capitalize;
 	font-weight: 600;
@@ -1529,6 +1533,89 @@ button:focus {
 	float: right;
 	color: #F32B56;
 }
+.cart_box {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100%;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1050; /* Supérieur à l'overlay ET au header */
+    padding: 20px;
+    background: white; /* Fond obligatoire */
+  }
+
+
+  .cart_box.active {
+    transform: translateX(0);
+  }
+
+  .cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1040; /* Inférieur au panier */
+    pointer-events: none; /* Désactivé par défaut */
+  }
+
+  .cart-overlay.active {
+    opacity: 1;
+    pointer-events: auto; /* Activé quand visible */
+  }
+
+   .close-cart {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    position: absolute;
+    right: 15px;
+    z-index: 1; /* Relatif au panier */
+    padding: 8px;
+    line-height: 1;
+  }
+
+
+  /* Garantit la priorité du panier */
+  .cart_box,
+  .cart_box * {
+    pointer-events: auto !important;
+  }
+
+    .cart-overlay.active {
+        pointer-events: auto; /* Permet les clics sur l'overlay */
+    }
+
+  /* Bloquer le défilement de la page lorsque l'overlay est actif */
+  body.no-scroll {
+    overflow: hidden;
+  }
+
+   #close-cart {
+    z-index: 21474836 !important; /* Maximum possible */
+    pointer-events: auto !important;
+    transform: translateZ(100px);
+}
+
+  /* Assurer la clickabilité */
+  .close-cart i {
+    pointer-events: none; /* L'icône hérite du click du bouton */
+  }
+
+  @media (max-width: 576px) {
+    .cart_box {
+      width: 80%;
+    }
+  }
+
+
 .cart_box .cart_list {
 	width: 100%;
 	padding: 0 !important;
@@ -3580,6 +3667,7 @@ h6.blog_title {
 }
 .comment-area .comment_list {
     margin-bottom: 40px;
+	margin-left: -15px;
 }
 .comment-area {
 	padding-top: 10px;
@@ -5635,9 +5723,10 @@ footer .widget_title {
 .comment_img img {
 	border-radius: 100%;
 	max-width: 100px;
+	max-width: 50px;
 }
 .comment_block {
-	padding-left: 120px;
+	padding-left: 60px;
 }
 .customer_meta {
 	margin-bottom: 5px;
@@ -6368,6 +6457,9 @@ footer .widget_recent_post .post_img img {
 	border-bottom: 2px solid rgba(0,0,0,0);
 	text-align: center;
 	text-transform: uppercase;
+}
+.tab-style3 .nav-tabs .nav-item {
+    margin-bottom: -20px;
 }
 .tab-style3 .nav-tabs .nav-item a.active {
 	border-bottom-color: #E439A1;
@@ -7282,6 +7374,12 @@ blockquote p:last-child {
 			margin-left: auto;
 			margin-right: 10px;
 			margin-left: auto !important; /* Aligne à droite */
+		}
+
+
+		.comments .comment_list {
+			margin-bottom: 40px;
+			margin-left: -15px;
 		}
 	}
 

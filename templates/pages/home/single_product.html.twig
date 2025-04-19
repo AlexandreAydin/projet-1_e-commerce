@@ -164,9 +164,9 @@
                             </div>
                             </div> 
                             <hr>
-                            <div class='mt-4 text-dark'>
+                            <div class='mt-4 text-dark mx-2'>
                                 <h2>À propos de cet article</h2>
-                                <p class='mt-4 text-dark'>{{ product.description | raw }}</p>
+                                <p class='mt-4 text-dark mx-2'>{{ product.description | raw }}</p>
                             </div>
                         </div>
                     </div>
@@ -175,250 +175,254 @@
             <br><br>
             {% if product.illustrationText1 %}
 
-                <div class="row nav nav-tabs">
+                <div class=" nav nav-tabs">
                     <div class="mx-4 mt-4">
                         {{ product.illustrationText1 | raw }}
                     </div>
                 </div>
             {% endif %}
-            <div class="row">
+            <div class="">
                 <div class="col-12">
-                    <div class="tab-style3">
+                    <div class="container tab-style3" id="Reviews" role="" aria-labelledby="">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link active" id="Description-tab" data-toggle="tab" href="#Description" role="tab" aria-controls="Description" aria-selected="true">Description</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="Reviews-tab" data-toggle="tab" href="#Reviews" role="tab" aria-controls="Reviews" aria-selected="false">Commentaire ({{ reviewCount }})</a>
+                                <p class="text-dark text-uppercase">Description</p>
                             </li>
                         </ul>
                         <div class="tab-content shop_info_tab">
-                            <div class="tab-pane fade show active" id="Description" role="tabpanel" aria-labelledby="Description-tab">
+                            <div class="container" id="Description">
                                 <p>{{ product.description2  | raw }}</p>
-                            </div>
-                            <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
-                                <div class="comments">
-                                  
-                                    <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
-                                        <div class="a-row">
-                                            <h3>Commentaires client</h3>
-                                        </div>
-                                        <div class="rating_wrap mb-2">
-                                            <div class="rating">
-                                                <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
-                                            </div>
-                                                 <span class="average_rating">{{ averageRating | round(1, 'floor') }} sur 5</span>
-                                        </div>
-                                        
-                                        <!-- Display Histogram of Ratings -->
-                                        {% for review in reviews %}
-                                        {% set note = review.note %}
-                                            {# {% if note >= 1 and note <= 5 %}
-                                            
-                                            {% endif %} #}
-                                        {% endfor %}
-                                        <div class="a-fixed-left-grid a-spacing-none">
-                                            <div class="a-fixed-left-grid-inner">
-                                                <div class="a-fixed-left-grid-col a-col-left">
-                                                    <table id="histogramTable" class="a-normal a-align-center a-spacing-base">
-                                                        <tbody>
-                                                        <div class="a-row a-spacing-medium averageStarRatingNumerical mb-2">
-                                                            <span class="a-size-base a-color-secondary">{{ totalReviews }}&nbsp;évaluations globales et {{ reviewCount }} avis</span>
-                                                        </div>
-                                                        {% for star in [5, 4, 3, 2, 1] %}
-                                                        {% set percentage = totalReviews > 0 ? (starCounts[star]/totalReviews)*100 : 0 %}
-                                                        <tr class="a-histogram-row a-align-center">
-                                                            <td class="aok-nowrap a-nowrap">
-                                                                <a class="a-size-base a-link-normal">{{ star }} étoiles</a>
-                                                            </td>
-                                                            <td class="a-span10">
-                                                                <div class="a-meter" role="progressbar" aria-valuenow="{{ percentage }}">
-                                                                    <div class="a-meter-bar" style="width:{{ percentage }}%"></div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="a-text-right a-nowrap a-nowrap">
-                                                                <a class="a-size-base a-link-normal">{{ percentage | round(0, 'floor') }}%</a>
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <h5 class="product_tab_title">({{ reviewCount }}) Commentaire <span>{{product.name}}</span></h5>
-                                    <ul class="list_none comment_list mt-4">
-                                        {% for review in reviews %}
-                                            {% if review.comment %}
-                                                <li>
-                                                    <div class="comment_block">
-                                                        <div class="rating_wrap">
-                                                            <div class="rating">
-                                                                <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
-                                                            </div>
-                                                        </div>
-                                                        <p class="customer_meta">
-                                                            <span class="review_author">{{ review.user.username }}</span>
-                                                            <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
-                                                        </p>
-                                                        <hr>
-                                                        <div class="description">
-                                                            <p>{{ review.comment }}</p>
-                                                        </div>
-                                                        <hr>
-                                                        <div class="review_images mt-4">
-                                                            {% if review.rewiewImage %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImage) }}" alt="Image 1" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages2 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 2">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" alt="Image 2" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages3 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 3">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" alt="Image 3" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages4 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 4">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" alt="Image 4" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages5 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 5">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" alt="Image 5" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="review_video">
-                                                            {% if review.reviewVideo %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.reviewVideo) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Video" data-type="video">
-                                                                    <video id="video-{{ review.id }}" controls style="width: 300px; height: auto;">
-                                                                        <source src="{{ asset('uploads/images/' ~ review.reviewVideo) }}" type="video/mp4">
-                                                                        Your browser does not support the video tag.
-                                                                    </video>
-                                                                </a>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </ul>
-                                </div>                       
-                                <div class="review_form field_form">
-                                    {% set hasBoughtProduct = false %}
-                                    {% set hasReceivedProduct = false %}
-                                    
-                                    {% for order in orders %}
-                                        {% for orderDetail in order.orderDetails %}
-                                            {% if orderDetail.productName == product.name %}
-                                                {% set hasBoughtProduct = true %}
-                                                {% if order.state == 4 %}
-                                                    {% set hasReceivedProduct = true %}
-                                                {% endif %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endfor %}
-
-                                    {% if not hasBoughtProduct %}
-                                        Vous devez avoir acheté ce produit pour laisser un commentaire!
-                                    {% elseif not hasReceivedProduct %}
-                                        Vous devez recevoir le produit pour laisser un commentaire!
-                                    {% else %}
-                                        <h5>Ajoutez un commentaire</h5>
-
-                                        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
-                                        <div class="form-group col-12">
-                                            <div class="star_rating">
-                                                <span data-value="1"><i class="far fa-star"></i></span>
-                                                <span data-value="2"><i class="far fa-star"></i></span>
-                                                <span data-value="3"><i class="far fa-star"></i></span>
-                                                <span data-value="4"><i class="far fa-star"></i></span>
-                                                <span data-value="5"><i class="far fa-star"></i></span>
-                                                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
-                                            </div>
-                                        </div>
-                                        <div class="form-group col-12">
-                                            {{ form_widget(form.comment) }}
-                                        </div>
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <div class="panel-heading" role="tab" id="headingImages"> 
-                                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
-                                                            <div class="d-flex">
-                                                                <h5> Ajouter des images </h5>
-                                                                <i class="fa-solid fa-chevron-down m-1"></i>
-                                                            </div>
-                                                        </a>
-                                                    </div>
-                                                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
-                                                        <div class="panel-body">
-                                                            <div class="form-group">
-                                                                <div id="filter_article_numberOfPlaces">
-                                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
-                                                                        <div class="">
-                                                                            {{ form_widget(form.rewiewImage) }}
-                                                                            {{ form_widget(form.rewiewImages2) }}
-                                                                            {{ form_widget(form.rewiewImages3) }}
-                                                                            {{ form_widget(form.rewiewImages4) }}
-                                                                            {{ form_widget(form.rewiewImages5) }}
-                                                                        </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <hr>
-                                                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
-                                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
-                                                            <div class="d-flex">
-                                                                <h5> Ajouter une vidéo </h5>
-                                                                <i class="fa-solid fa-chevron-down m-1"></i>
-                                                            <hr>
-                                                            </div>
-                                                        </a>
-                                                    </div>
-
-                                                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
-                                                        <div class="panel-body">
-                                                            <div class="form-group">
-                                                                <div id="filter_article_numberOfPlaces">
-                                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
-                                                                        <div class="">
-                                                                            {{ form_widget(form.reviewVideo) }}
-                                                                        </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group col-12">
-                                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
-                                        </div>
-
-                                        {{ form_end(form) }}
-                                    {% endif %}
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="row">
+            <div class="container tab-style3" id="Reviews" role="" aria-labelledby="">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <p class="text-dark text-uppercase">Commentaire ({{ reviewCount }})</p>
+                    </li>
+                </ul>
+                <div class="comments">
+                    <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
+                        <div class="a-row">
+                            <h3>Commentaires client</h3>
+                        </div>
+                        <div class="rating_wrap mb-2">
+                            <div class="rating">
+                                <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
+                            </div>
+                                    <span class="average_rating">{{ averageRating | round(1, 'floor') }} sur 5</span>
+                        </div>
+                        
+                        <!-- Display Histogram of Ratings -->
+                        {% for review in reviews %}
+                        {% set note = review.note %}
+                            {# {% if note >= 1 and note <= 5 %}
+                            
+                            {% endif %} #}
+                        {% endfor %}
+                        <div class="a-fixed-left-grid a-spacing-none">
+                            <div class="a-fixed-left-grid-inner">
+                                <div class="a-fixed-left-grid-col a-col-left">
+                                    <table id="histogramTable" class="a-normal a-align-center a-spacing-base">
+                                        <tbody>
+                                        <div class="a-row a-spacing-medium averageStarRatingNumerical mb-2">
+                                            <span class="a-size-base a-color-secondary">{{ totalReviews }}&nbsp;évaluations globales et {{ reviewCount }} avis</span>
+                                        </div>
+                                        {% for star in [5, 4, 3, 2, 1] %}
+                                        {% set percentage = totalReviews > 0 ? (starCounts[star]/totalReviews)*100 : 0 %}
+                                        <tr class="a-histogram-row a-align-center">
+                                            <td class="aok-nowrap a-nowrap">
+                                                <a class="a-size-base a-link-normal">{{ star }} étoiles</a>
+                                            </td>
+                                            <td class="a-span10">
+                                                <div class="a-meter" role="progressbar" aria-valuenow="{{ percentage }}">
+                                                    <div class="a-meter-bar" style="width:{{ percentage }}%"></div>
+                                                </div>
+                                            </td>
+                                            <td class="a-text-right a-nowrap a-nowrap">
+                                                <a class="a-size-base a-link-normal">{{ percentage | round(0, 'floor') }}%</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h5 class="product_tab_title">({{ reviewCount }}) Commentaire <span>{{product.name}}</span></h5>
+                    <ul class="container list_none comment_list mt-4">
+                        {% for review in reviews %}
+                            {% if review.comment %}
+                                <li>
+                                    <div class="comment_img">
+                                        <img  src="{{ asset('assets/images/fa-user.png') }}"  alt="user2"/>
+                                    </div>
+                                    <div class="comment_block">
+                                        <div class="rating_wrap">
+                                            <div class="rating">
+                                                <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
+                                            </div>
+                                        </div>
+                                        <p class="customer_meta">
+                                            <span class="review_author">{{ review.user.firstname }}</span>
+                                            <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
+                                        </p>
+                                        <hr>
+                                        <div class="description">
+                                            <p>{{ review.comment }}</p>
+                                        </div>
+                                        <hr>
+                                        <div class="review_images mt-4">
+                                            {% if review.rewiewImage %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImage) }}" alt="Image 1" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages2 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 2">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" alt="Image 2" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages3 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 3">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" alt="Image 3" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages4 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 4">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" alt="Image 4" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages5 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 5">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" alt="Image 5" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                        <div class="review_video">
+                                            {% if review.reviewVideo %}
+                                                <a href="{{ asset('uploads/images/' ~ review.reviewVideo) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Video" data-type="video">
+                                                    <video id="video-{{ review.id }}" controls style="width: 300px; height: auto;">
+                                                        <source src="{{ asset('uploads/images/' ~ review.reviewVideo) }}" type="video/mp4">
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>                       
+                <div class="review_form field_form">
+                    {% set hasBoughtProduct = false %}
+                    {% set hasReceivedProduct = false %}
+                    
+                    {% for order in orders %}
+                        {% for orderDetail in order.orderDetails %}
+                            {% if orderDetail.productName == product.name %}
+                                {% set hasBoughtProduct = true %}
+                                {% if order.state == 4 %}
+                                    {% set hasReceivedProduct = true %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% if not hasBoughtProduct %}
+                        Vous devez avoir acheté ce produit pour laisser un commentaire!
+                    {% elseif not hasReceivedProduct %}
+                        Vous devez recevoir le produit pour laisser un commentaire!
+                    {% else %}
+                        <h5>Ajoutez un commentaire</h5>
+
+                        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+                        <div class="form-group col-12">
+                            <div class="star_rating">
+                                <span data-value="1"><i class="far fa-star"></i></span>
+                                <span data-value="2"><i class="far fa-star"></i></span>
+                                <span data-value="3"><i class="far fa-star"></i></span>
+                                <span data-value="4"><i class="far fa-star"></i></span>
+                                <span data-value="5"><i class="far fa-star"></i></span>
+                                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-group col-12">
+                            {{ form_widget(form.comment) }}
+                        </div>
+                        <div class="container">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="panel-heading" role="tab" id="headingImages"> 
+                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
+                                            <div class="d-flex">
+                                                <h5> Ajouter des images </h5>
+                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <div id="filter_article_numberOfPlaces">
+                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                        <div class="">
+                                                            {{ form_widget(form.rewiewImage) }}
+                                                            {{ form_widget(form.rewiewImages2) }}
+                                                            {{ form_widget(form.rewiewImages3) }}
+                                                            {{ form_widget(form.rewiewImages4) }}
+                                                            {{ form_widget(form.rewiewImages5) }}
+                                                        </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
+                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
+                                            <div class="d-flex">
+                                                <h5> Ajouter une vidéo </h5>
+                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                            <hr>
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <div id="filter_article_numberOfPlaces">
+                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                        <div class="">
+                                                            {{ form_widget(form.reviewVideo) }}
+                                                        </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group col-12">
+                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
+                        </div>
+
+                        {{ form_end(form) }}
+                    {% endif %}
+                </div>
+            </div>
+            {# <div class="row">
                 <div class="col-12">
                     <div class="small_divider"></div>
                     <div class="divider"></div>
                     <div class="medium_divider"></div>
                 </div>
-            </div>
+            </div> #}
             <div class="container">
                 <div class="col-12">
                     <div class="heading_s1">

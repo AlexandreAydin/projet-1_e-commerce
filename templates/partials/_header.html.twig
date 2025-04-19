@@ -1,61 +1,3 @@
-<style>
-  .cart_box {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 100%;
-    transform: translateX(100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 100000000000;
-    padding: 20px;
-  }
-
-  .cart_box.active {
-    transform: translateX(0);
-  }
-
-  .cart-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease-in-out;
-    z-index: 1001;
-  }
-
-  .cart-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .close-cart {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: #333;
-    cursor: pointer;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-  }
-
-  /* Bloquer le défilement de la page lorsque l'overlay est actif */
-  body.no-scroll {
-    overflow: hidden;
-  }
-
-  @media (max-width: 576px) {
-    .cart_box {
-      width: 100%;
-    }
-  }
-</style>
-
 <header  class="header_wrap fixed-top">
     <div  class="bottom_header dark_skin main_menu_uppercase">
         <div  class="container">
@@ -147,46 +89,6 @@
                     </ul>
                 </div> 
                 <ul class="navbar-nav attr-nav align-items-center two-icons">
-                    {# <li>
-                        <a href="javascript:void(0);" class="nav-link search_trigger">
-                            <i class="linearicons-magnifier"></i>
-                        </a>
-                        <div class="search_wrap">
-                            <span class="close-search"><i class="ion-ios-close-empty"></i></span>
-                            <form>
-                                <input type="text" placeholder="Search" class="form-control" id="search_input">
-                                <button type="submit" class="search_icon"><i class="ion-ios-search-strong"></i></button>
-                            </form>
-                        </div>
-                        <div class="search_overlay"></div>
-                    </li> #}
-                        {# <form action="{{ path('app_shop', {'query': searchQuery | default('') }) }}" method="get">
-                            <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ searchQuery | default('') }}" required>
-                            <button type="submit">Rechercher</button>
-                        </form> #}
-                        {# <form action="{{ path('app_shop', {'query': searchQuery | default('') }) }}" method="get">
-                            <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}" required>
-                            <button type="submit">Rechercher</button>
-                        </form> #}
-                        {# <form action="{{ path('app_shop') }}" method="get">
-                            <input type="text" name="query" placeholder="Rechercher des produits..." value="{{ app.request.query.get('query') }}" required>
-                            <button type="submit">Rechercher</button>
-                        </form> #}
-                        {# <form action="{{ path('app_shop') }}" method="get" class="d-flex justify-content-center">
-                            <div class="input-group" style="max-width: 300px;">
-                                <div class="position-relative w-100">
-                                    <input 
-                                        type="text" 
-                                        name="query" 
-                                        class="form-control rounded-pill" 
-                                        placeholder="Rechercher..." 
-                                        value="{{ app.request.query.get('query') }}" 
-                                        style="padding-left: 2rem; border: 0.5px solid gray; font-size: 0.8rem; height: 35px;" 
-                                        required>
-                                    <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
-                                </div>
-                            </div>
-                        </form> #}
                         {% if app.user %}
                         <li class="nav-item dropdown user-name app-user-icon2" style="">
                             <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
@@ -226,11 +128,6 @@
                     </li>
 
                     {% endif %}	
-                    {# <li>
-                        <a class="text-decoration-none" href="{{ path('app_wishList')}}">
-                            <i class="icon-heart style-none"></i>
-                        </a>
-                    </li> #}
                     <li class="cart_dropdown">
                     <a class="nav-link cart_trigger" id="cart-btn" href="#">
                         <i class="linearicons-cart"></i>
@@ -238,6 +135,12 @@
                     </a>
                     {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' and app.request.pathinfo != '/caisse/confirmer' %}
                     <div class="cart_box bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fs-4 fw-bold">Votre Panier</h2>
+                            <button class="btn text-secondary p-0">
+                            <i id="close-cart" class="ion-close fs-5"></i>
+                            </button>
+                        </div>
                         <ul class="cart_list"></ul>
                         <div class="coupon_section mt-4 mx-4">
                         <input type="text" id="coupon_code_input" placeholder="Entrez votre code promo" required>
@@ -288,7 +191,7 @@
     const cartBtn = document.getElementById('cart-btn');
     const cartBox = document.querySelector('.cart_box');
     const cartOverlay = document.querySelector('.cart-overlay');
-    const closeCart = document.querySelector('.close-cart');
+    const closeCart = document.querySelector('#close-cart');
 
     function toggleCart() {
       cartBox.classList.toggle('active');
