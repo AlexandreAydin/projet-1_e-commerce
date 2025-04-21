@@ -161,61 +161,6 @@ class CategorieController extends AbstractController
         ]);
     }
 
-
-    // #[Route('/marque/{slug}', name: 'app_marque')]
-    // public function Brandindex(
-    //     string $slug,
-    //     ProductBrandRepository $productBrandRepository,
-    //     ProductRepository $repoProduct,
-    //     RewiewsProductRepository $reviewsRepo,
-    //     WishListService $wishListService,
-    //     PaginatorInterface $paginator,
-    //     Request $request
-    // ): Response 
-    // {
-    //     $brand = $productBrandRepository->findOneBy(['slug' => $slug]);
-    
-    //     if (!$brand) {
-    //         throw $this->createNotFoundException("La marque demandée n'existe pas.");
-    //     }
-    
-    //     // Récupérer tous les modèles de la marque
-    //     $models = $brand->getBrandModels(); // Assurez-vous que la relation existe
-    
-    //     // Récupérer les catégories associées aux produits de cette marque
-    //     $categoriesForBrand = [];
-    //     $query = $repoProduct->findBy(['productBrand' => $brand]);
-    
-    //     foreach ($query as $product) {
-    //         if ($product->getCategorie() && !array_key_exists($product->getCategorie()->getId(), $categoriesForBrand)) {
-    //             $categoriesForBrand[$product->getCategorie()->getId()] = $product->getCategorie();
-    //         }
-    //     }
-    
-    //     $paginatedItems = $paginator->paginate(
-    //         $query,
-    //         $request->query->getInt('page', 1),
-    //         12
-    //     );
-    
-    //     $isInWishlist = [];
-    //     $productRatings = [];
-    
-    //     foreach ($paginatedItems as $product) {
-    //         $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-    //         $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-    //     }
-    
-    //     return $this->render('pages/brand/index.html.twig', [
-    //         'brand' => $brand,
-    //         'items' => $paginatedItems,
-    //         'models' => $models,  // 🔥 Ajout des modèles
-    //         'categories' => $categoriesForBrand, // 🔥 Ajout des catégories
-    //         'productRatings' => $productRatings,
-    //         'isInWishlist' => $isInWishlist
-    //     ]);
-    // }
-
     #[Route('/marque/{slug}', name: 'app_marque')]
     public function Brandindex(
         string $slug,
@@ -374,60 +319,6 @@ class CategorieController extends AbstractController
     
         return new JsonResponse($response);
     }
-    
-    
-
-
-
-    // #[Route('/get-subcategories', name: 'get_subcategories', methods: ['POST'])]
-    // public function getSubcategories(Request $request, SubCategorieRepository $subCategorieRepository): JsonResponse
-    // {
-    //     try {
-    //         // Décoder les données JSON envoyées par le frontend
-    //         $data = json_decode($request->getContent(), true);
-    
-    //         // Vérifier les données envoyées
-    //         if (!isset($data['categories']) || !is_array($data['categories'])) {
-    //             return new JsonResponse(['error' => 'Invalid input: categories is missing or invalid'], 400);
-    //         }
-    
-    //         $categoryIds = $data['categories'];
-    
-    //         // Récupérer les sous-catégories correspondantes
-    //         $subcategories = $subCategorieRepository->findSubcategoriesByCategoryIds($categoryIds);
-    
-    //         return new JsonResponse($subcategories); // Retourne les sous-catégories en JSON
-    //     } catch (\Exception $e) {
-    //         return new JsonResponse(['error' => $e->getMessage()], 500);
-    //     }
-    // }
-    
-    
-    
-    //   #[Route('/get-subcategories', name: 'get_subcategories', methods: ['POST'])]
-    // public function getSubcategories(Request $request, SubCategorieRepository $subCategorieRepository): JsonResponse
-    // {
-    //     try {
-    //         // Décoder les données JSON envoyées par le frontend
-    //         $data = json_decode($request->getContent(), true);
-    
-    //         // Vérifier les données envoyées
-    //         if (!isset($data['categories']) || !is_array($data['categories'])) {
-    //             return new JsonResponse(['error' => 'Invalid input: categories is missing or invalid'], 400);
-    //         }
-    
-    //         $categoryIds = $data['categories'];
-    
-    //         // Récupérer les sous-catégories correspondantes
-    //         $subcategories = $subCategorieRepository->findSubcategoriesByCategoryIds($categoryIds);
-    
-    //         return new JsonResponse($subcategories); // Retourne les sous-catégories en JSON
-    //     } catch (\Exception $e) {
-    //         return new JsonResponse(['error' => $e->getMessage()], 500);
-    //     }
-    // }
-
-    
     
     #[Route('/get-subcategories', name: 'get_subcategories', methods: ['POST'])]
     public function getSubcategories(Request $request, SubCategorieRepository $subCategorieRepository): JsonResponse

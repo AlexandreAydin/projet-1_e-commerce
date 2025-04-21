@@ -86,15 +86,6 @@ class RegistrationController extends AbstractController
         $entityManager->persist($user);
         $entityManager->flush();
 
-    
-        // // Utilisation de votre classe Mail
-        // $mail = new Mail();
-        // $to_email = $user->getEmail();
-        // $to_name = $user->getFirstName();
-        // $subject = 'Test d\'e-mail';
-        // $content = 'Ceci est un test d\'e-mail envoyé depuis Symfony';
-        // $mail->send($to_email, $to_name, $subject, $content);
-    
         $this->addFlash('success', 'Votre adresse e-mail a été vérifiée.');
     
         return $this->redirectToRoute('app_register');

@@ -305,59 +305,6 @@ class CartService
         return round($value, 2); // Utilise round pour gérer les valeurs exactes
     }
     
-    // public function getFullCart(): array
-    // {
-    //     $cart = $this->getCart();
-    //     $fullCart = [
-    //         'products' => [],
-    //         'data' => [],
-    //     ];
-    
-    //     foreach ($cart as $item) {
-    //         $variant = $this->repoProductVariant->find($item['variantId']);
-    //         if (!$variant) {
-    //             error_log("Variante introuvable pour ID: {$item['variantId']}");
-    //             continue;
-    //         }
-    
-    //         $product = $variant->getProduct();
-    //         $priceTTC = $variant->getPrice();
-    //         $discount = $variant->getOffVariant() / 100;
-    //         $priceAfterDiscountTTC = $priceTTC * (1 - $discount);
-    
-    //         error_log("Produit: {$product->getName()} - ID variante: {$variant->getId()} - Prix TTC: $priceTTC - Prix après remise: $priceAfterDiscountTTC");
-    
-    //         $fullCart['products'][] = [
-    //             'product' => [
-    //                 'id' => $product->getId(),
-    //                 'name' => $product->getName(),
-    //                 'slug' => $product->getSlug(),
-    //                 'images' => array_map(
-    //                     fn($img) => $img->getImageName(), 
-    //                     $variant->getVariantImages()->toArray()
-    //                 ),
-    //             ],
-    //             'variant' => [
-    //                 'id' => $variant->getId(),
-    //                 'price' => $variant->getPrice(),
-    //                 'offVariant' => $variant->getOffVariant(),
-    //                 'size' => $item['selectedSize'],
-    //                 'color' => $item['selectedColor'],
-    //             ],
-    //             'quantity' => $item['quantity'],
-    //         ];
-            
-    //     }
-    
-    //     $fullCart['data'] = [
-    //         'cart_count' => count($cart),
-    //         'subTotalHT' => $this->calculateSubTotalHT($fullCart),
-    //         'Taxe' => $this->calculateTax($fullCart),
-    //         'subTotalTTC' => $this->calculateSubTotalTTC($fullCart),
-    //     ];
-    
-    //     return $fullCart;
-    // }
 
     private function isCouponApplied(): bool
     {

@@ -32,13 +32,6 @@ class OrderDetailType extends AbstractType
             ->add('subTotalTTC', NumberType::class, [
                 'label' => 'Sous Total TTC'
             ])
-            // Si vous voulez ajouter un champ pour sélectionner la commande liée, vous pouvez le faire ici.
-            // Sinon, vous pouvez le supprimer de ce formulaire.
-            // ->add('orders', EntityType::class, [
-            //     'class' => Order::class,
-            //     'choice_label' => 'id', // ou tout autre champ que vous souhaitez afficher
-            //     'label' => 'Commande'
-            // ])
         ;
     }
 

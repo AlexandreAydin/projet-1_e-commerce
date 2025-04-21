@@ -4813,6 +4813,13 @@ footer .widget_title {
 .deal_content .product_info {
 	padding: 0;
 }
+
+.product .product_info {
+	min-height: 150px;
+	/* margin-top: -20px; */
+	padding-bottom: 5px;
+    padding-left: 10px;
+}
 .deal_wrap .countdown_style1 .countdown_box::before {
 	font-size: 24px;
 	font-weight: normal;
@@ -5335,9 +5342,6 @@ footer .widget_title {
 	text-align: center;
 	font-size: 20px;
 	margin: 4px;
-}
-.quantity .minus {
-    padding-left: 4px;
 }
 .quantity .qty {
 	float: left;

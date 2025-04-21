@@ -41,12 +41,6 @@ class CheckoutController extends AbstractController
 
         $addresses = $addressRepository->findByUser($user);
     
-        // if (!$user->getAddresses()->getValues()) {
-        //     $this->addFlash('checkout_message', "Merci d'ajouter votre adresse avant de continuer");
-        //     return $this->redirectToRoute("app_address_new");
-        // }
-
-    
         $form = $this->createForm(CheckoutType::class, null, [
             'user' => $user,
         ]);
@@ -95,9 +89,6 @@ class CheckoutController extends AbstractController
     
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid() || $session->get('checkout_data')) {
-            // Pour envoyer au checkout si l'utilisateur décide de modifier l'adresse au dernier moment
-            // on ajoute ||$this->session->get('checkout_data' pour renvoyer l'utilisateur au checkout
-            // faire le changement aussi sur l'adresse controller sur controller edit
             if ($session->get('checkout_data')) {
                 $data = $session->get('checkout_data');
             } else {

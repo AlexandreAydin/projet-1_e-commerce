@@ -347,79 +347,6 @@ class HomeController extends AbstractController
     
 
 
-
-
-
-
-    
-
-
-
-
-
-
-    
-
-
-    
-    // #[Route('/boutique', name: 'app_shop')]
-    // public function shop(
-    //     ProductRepository $repoProduct,
-    //     WishListService $wishListService,
-    //     RewiewsProductRepository $reviewsRepo,
-    //     FormFactoryInterface $formFactory,
-    //     Request $request
-    // ): Response {
-    //     // Création et gestion du formulaire de recherche avancée
-    //     $search = new SearchProduct();
-    //     $form = $formFactory->create(SearchProductType::class, $search, [
-    //         'method' => 'GET', // ou 'POST' selon votre cas
-    //     ]);
-    //     $form->handleRequest($request);
-    
-    //     // Récupération du terme de recherche depuis la requête
-    //     $query = $request->query->get('query', '');
-    
-    //     // Initialisation des produits
-    //     $products = [];
-    
-    //     // Vérifier si le formulaire a été soumis et est valide
-    //     if ($form->isSubmitted() && $form->isValid()) {
-    //         // dd($form->isSubmitted(), $form->isValid());exit();
-    //         $products = $repoProduct->findByFilters($search);
-    //     } else if (!empty($query)) {
-    //         // Si un terme de recherche est fourni, effectuer une recherche textuelle
-    //         $products = $repoProduct->findBySearchQuery($query);
-    //     } else {
-    //         // Sinon, charger tous les produits
-    //         $products = $repoProduct->findAll();
-    //     }
-
-    //     // dd($products);exit();
-    
-    //     // Compilation des informations supplémentaires pour chaque produit
-    //     $productRatings = [];
-    //     // $isInWishlist = [];
-    //     foreach ($products as $product) {
-    //         $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-    //         // $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-    //     }
-    
-    //     // Rendu de la vue avec toutes les données nécessaires
-    //     return $this->render('pages/home/shop.html.twig', [
-    //         'products' => $products,
-    //         'search' => $form->createView(),
-    //         'productRatings' => $productRatings,
-    //         // 'isInWishlist' => // $isInWishlist,
-    //     ]);
-    // }
-    
-
-
-
-
-
-
     #[Route('/boutique', name: 'app_shop')]
     public function shop(
         WishListService $wishListService,
@@ -452,11 +379,7 @@ class HomeController extends AbstractController
             // Sinon, charger tous les produits
             $products = $repoProduct->findAll();
         }
-
-        // Affichage d'un message si aucun produit ne correspond aux critères
-        // if (empty($products)) {
-        //     $this->addFlash('error', 'Désolé, aucun produit ne correspond au résultat de votre recherche.');
-        // }
+        
         if (empty($products)) {
             $this->addFlash('error', 'Aucun produit trouvé. Voici des suggestions basées sur vos critères.');
             $cleanedQuery = strtolower(str_replace(' ', '', $query));

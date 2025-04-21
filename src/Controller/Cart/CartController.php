@@ -152,44 +152,6 @@ class CartController extends AbstractController
         return $this->json($cart);
     }
 
-    // #[Route('/cart/apply-coupon', name: 'apply_coupon', methods: ['POST'])]
-    // public function applyCoupon(Request $request, SessionInterface $session, CouponRepository $couponRepository, CartService $cartService): JsonResponse
-    // {
-    //     $data = json_decode($request->getContent(), true);
-    //     $couponCode = $data['coupon_code'] ?? null;
-    
-    //     if (!$couponCode) {
-    //         return new JsonResponse(['success' => false, 'message' => 'Aucun code coupon fourni.'], 400);
-    //     }
-    
-    //     // Recherche du coupon
-    //     $coupon = $couponRepository->findOneBy(['code' => $couponCode]);
-    
-    //     if (!$coupon || !$coupon->isActive() || ($coupon->getExpirationDate() && $coupon->getExpirationDate() < new \DateTime())) {
-    //         return new JsonResponse(['success' => false, 'message' => 'Le code coupon est invalide ou expiré.'], 400);
-    //     }
-    
-    //     // Enregistrer la réduction dans la session
-    //     $discountPercentage = $coupon->getDiscountAmount();
-    //     $session->set('applied_coupon', [
-    //         'code' => $coupon->getCode(),
-    //         'discountPercentage' => $discountPercentage,
-    //     ]);
-    
-    //     // Récupérer le panier mis à jour
-    //     $cart = $cartService->getFullCart();
-    
-    //     return new JsonResponse([
-    //         'success' => true,
-    //         'message' => 'Le coupon a été appliqué avec succès.',
-    //         'discountPercentage' => $discountPercentage,
-    //         'cart' => $cart,
-    //     ]);
-    // }
-
-
-
-
 
     #[Route('/cart/apply-coupon', name: 'apply_coupon', methods: ['POST'])]
     public function applyCoupon(

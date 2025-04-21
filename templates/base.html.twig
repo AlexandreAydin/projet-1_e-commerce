@@ -44,7 +44,11 @@
         {% endblock %}
 
         {% block body %}{% endblock %}
+        {% block footer %}
+            {% include "partials/_footer.html.twig" %}
+        {% endblock %}
         {% block scriptStripe %}{% endblock %}
+        
             
         {% block javascripts %}
         <!-- Bootstrap JS -->

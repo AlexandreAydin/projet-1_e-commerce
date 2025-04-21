@@ -15,7 +15,7 @@
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
                     <div class="product-image product-image-sticky">
                         <div class="main_image_container position-relative">
-                            <div class="mb-4" style="width: 70%;">
+                            <div class="mb-4">
                                 <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
                             </div>
                         </div>
@@ -45,10 +45,7 @@
                             </a>
                             <br>
                             <br>
-                            <br>
-                            <br>
-                            <br>
-                            <hr>
+                            <hr style="margin-top:40px">
                             <div class="product_sort_info">
                                 <ul>
                                     {% if product.isWarranty %}
@@ -261,15 +258,19 @@
                                         <img  src="{{ asset('assets/images/fa-user.png') }}"  alt="user2"/>
                                     </div>
                                     <div class="comment_block">
-                                        <div class="rating_wrap">
-                                            <div class="rating">
-                                                <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
+                                        <div class="customer_meta">
+                                            <div>
+                                                <span class="review_author">{{ review.user.firstname }}</span>
+                                            </div>
+                                             <div class="rating_wrap">
+                                                <div class="rating">
+                                                    <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
                                             </div>
                                         </div>
-                                        <p class="customer_meta">
-                                            <span class="review_author">{{ review.user.firstname }}</span>
-                                            <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
-                                        </p>
                                         <hr>
                                         <div class="description">
                                             <p>{{ review.comment }}</p>
@@ -318,7 +319,7 @@
                         {% endfor %}
                     </ul>
                 </div>                       
-                <div class="review_form field_form">
+                <div class="container review_form field_form">
                     {% set hasBoughtProduct = false %}
                     {% set hasReceivedProduct = false %}
                     
@@ -423,7 +424,7 @@
                     <div class="medium_divider"></div>
                 </div>
             </div> #}
-            <div class="container">
+            <div class="container mt-4">
                 <div class="col-12">
                     <div class="heading_s1">
                         <h3>Produits apparentés</h3>
@@ -1029,169 +1030,6 @@
 
             return matchingVariant;
         }
-
-
-
-        // Lors du changement de taille ou de couleur
-        {# document.querySelector('.btn-addtocart').addEventListener('click', async (event) => {
-            event.preventDefault();
-
-            const size = document.querySelector('select[name="size"]').value;
-            const color = document.querySelector('select[name="color"]').value;
-            const variant = getVariantBySizeAndColor(size, color);
-
-            if (!variant) {
-                console.error('Aucune variante trouvée pour cette combinaison.');
-                return;
-            }
-
-            console.log(`Envoi au serveur : Variant ID = ${variant.id}, Taille = ${size}, Couleur = ${color}`);
-
-            const url = `/panier/${variant.id}/ajouter/1?size=${size}&color=${color}`;
-
-            try {
-                const response = await fetch(url, { method: 'POST' });
-                const data = await response.json();
-                console.log('Réponse du serveur :', data);
-            } catch (error) {
-                console.error('Erreur lors de l\'ajout au panier :', error.message);
-            }
-        }); #}
-
-
-
-
-
-
-
-
-        {# document.addEventListener('DOMContentLoaded', function () {
-            const colorSelect = document.getElementById('color');
-            const variantIdInput = document.getElementById('variant-id');
-            const addToCartButton = document.querySelector('.btn-addtocart');
-
-            // Tableau des variantes (injecté depuis Twig)
-            const variants = {{ product.variants|json_encode()|raw }};
-
-            // Fonction pour trouver l'ID de la variante par couleur
-            function getVariantIdByColor(selectedColor) {
-                const matchingVariant = variants.find(variant => variant.color === selectedColor);
-                return matchingVariant ? matchingVariant.id : null;
-            }
-
-            // Mettre à jour l'ID de la variante lorsque la couleur change
-            colorSelect.addEventListener('change', function () {
-                const selectedColor = this.value;
-                const variantId = getVariantIdByColor(selectedColor);
-
-                if (variantId) {
-                    // Mettre à jour le champ masqué
-                    variantIdInput.value = variantId;
-
-                    // Mettre à jour l'attribut data-variant-id du bouton
-                    addToCartButton.setAttribute('data-variant-id', variantId);
-
-                    console.log(`Couleur sélectionnée : ${selectedColor}, ID de la variante : ${variantId}`);
-                } else {
-                    console.error('Aucune variante trouvée pour la couleur sélectionnée.');
-                }
-            });
-
-            // Initialiser avec la première couleur sélectionnée
-            if (colorSelect.value) {
-                const initialVariantId = getVariantIdByColor(colorSelect.value);
-                if (initialVariantId) {
-                    variantIdInput.value = initialVariantId;
-                    addToCartButton.setAttribute('data-variant-id', initialVariantId);
-                    console.log(`Initialisation : Couleur = ${colorSelect.value}, ID de la variante = ${initialVariantId}`);
-                }
-            }
-        }); #}
-
-        {# TODO: quand input est au max-stock n'affiches plus icon + #}
-
-        {# document.addEventListener('DOMContentLoaded', function () {
-            const sizeSelect = document.getElementById('size'); // Sélection de la taille
-            const colorSelect = document.getElementById('color'); // Sélection de la couleur (si applicable)
-            const quantityInput = document.getElementById('quantity'); // Input de la quantité
-            const incrementButton = document.querySelector('.plus'); // Bouton "+"
-            let maxStock = 0; // Stock maximum
-
-            // Fonction pour récupérer le stock via l'API
-            async function fetchStock(size, variantId) {
-                try {
-                    //console.log(`Requête vers l'API : /api/get-stock?size=${size}&variantId=${variantId}`);
-                    const response = await fetch(`/api/get-stock?size=${size}&variantId=${variantId}`);
-                    const data = await response.json();
-                    //console.log('Réponse de l\'API :', data);
-
-                    if (data.stock !== undefined) {
-                        //console.log(`Stock récupéré : ${data.stock}`);
-                        return parseInt(data.stock, 10);
-                    } else {
-                        //console.error('Erreur lors de la récupération du stock:', data.error);
-                        return 0;
-                    }
-                } catch (error) {
-                    //console.error('Erreur réseau lors de la récupération du stock:', error);
-                    return 0;
-                }
-            }
-
-            // Mettre à jour le stock
-            async function updateStock() {
-                const selectedOption = sizeSelect.options[sizeSelect.selectedIndex]; // Option sélectionnée
-                const selectedSize = selectedOption.value;
-                const variantId = selectedOption.getAttribute('data-variant-id'); // ID de la variante
-                //console.log(`Taille sélectionnée : ${selectedSize}`);
-                //console.log(`ID de la variante : ${variantId}`);
-
-                if (!selectedSize || !variantId) {
-                    console.warn('Taille ou variante non sélectionnée.');
-                    return;
-                }
-
-                maxStock = await fetchStock(selectedSize, variantId); // Récupérer le stock depuis l'API
-                //console.log(`Stock maximum mis à jour : ${maxStock}`);
-                resetQuantity(); // Réinitialiser la quantité à 1
-                updateIncrementButton(); // Vérifier le bouton "+"
-            }
-
-            // Réinitialiser la quantité à 1
-            function resetQuantity() {
-                quantityInput.value = 1;
-                //console.log('Quantité réinitialisée à 1');
-            }
-
-            // Masquer le bouton "+" si la quantité atteint le stock maximum
-            function updateIncrementButton() {
-                const quantity = parseInt(quantityInput.value, 10) || 1;
-                //console.log(`Quantité actuelle : ${quantity}, Stock maximum : ${maxStock}`);
-
-                // Masquer le bouton "+" si la quantité atteint le stock maximum
-                incrementButton.style.display = quantity >= maxStock ? 'none' : 'inline-block';
-            }
-
-            // Gestion des changements de taille
-            sizeSelect.addEventListener('change', updateStock);
-
-            // Gestion des changements de couleur (si applicable)
-            if (colorSelect) {
-                colorSelect.addEventListener('change', () => {
-                    //console.log('Couleur modifiée');
-                    resetQuantity(); // Réinitialiser la quantité à 1 lors du changement de couleur
-                    updateIncrementButton(); // Vérifier le bouton "+"
-                });
-            }
-
-            // Initialisation
-            updateStock();
-        }); #}
-
-
-
-
-
 
         document.addEventListener('DOMContentLoaded', function () {
             const sizeSelect = document.getElementById('size');

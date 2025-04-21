@@ -82,10 +82,6 @@ class SearchProductType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            // Si vous avez un data_class pour ce formulaire, par ex. :
-            // 'data_class' => SearchProduct::class,
-    
-            // On définit par défaut les deux options personnalisées :
             'filtered_categories' => [],
             'filtered_subCategories'=> [],
             'filtered_brands'     => [],

@@ -72,16 +72,6 @@ class WishListService
     }
     
 
-    // public function removeToWishList($id)
-    // {
-    //     $wishList = $this->getWishList();
-
-    //     if (isset($wishList[$id])) {
-    //         unset($wishList[$id]);
-    //         $this->updateWishList($wishList);
-    //     }
-    // }
-
     public function removeToWishList($id)
 {
     $user = $this->security->getUser();

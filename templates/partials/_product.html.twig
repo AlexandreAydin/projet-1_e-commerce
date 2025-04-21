@@ -17,13 +17,6 @@
                         <img src="{{ asset('images/products/' ~ firstImage.imageName) }}" alt="{{ product.name }}" width="100%" object-fit="cover" height="300" />
                     {% endif %}
                 </a>
-                <!-- Nouveau cœur en haut à droite -->
-                {# <a class="add-to-wishlist {{ isInWishlist ? 'wishlist-active' : '' }}" 
-                href="{{ path('wishlist_toggle', {id: product.id}) }}" 
-                data-product-id="{{ product.id }}"
-                onclick="event.stopPropagation();">
-                    <i class="fa fa-heart"></i>
-                </a> #}
             </div>
         </div>
         <div class="product_info">

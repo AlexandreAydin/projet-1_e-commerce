@@ -43,18 +43,10 @@
             <ul class="d-flex justify-content-between mt-2">
                 <li class="add-to-cart style-none list-unstyled">
                     {% if product.quantity > 0 %}
-                        {# <a href="{{ path ('app_add_to_cart', {'id': product.id}) }}">
-                            <i class="icon-basket-loaded"></i>
-                        </a> #}
                     {% else %}
                         <span style="font-size: 12px;">Non disponible</span>
                     {% endif %}
                 </li>
-                {# <li class="add-to-wishlist list-unstyled">
-                    <a href="{{ path('app_add_to_wishList', {'id': product.id}) }}">
-                        <i class="icon-heart"></i>
-                    </a>
-                </li> #}
             </ul>
         </div>
     </div>

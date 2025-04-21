@@ -15,22 +15,14 @@
     color: black;
 }
 
-/* .panel-heading h5:hover  {
-    color: #E439A1;
-} */
-
-
-.variant-product, .variant-price {
-    margin-top: 50px;
-}
 
 .variant-price {
     margin-left: 40px;
 }
 
 
-.cart_extra{
-    margin-top: 60px;
+.cart_extra {
+    margin-top: 20px;
 }
 
 .cart-product-quantity{
@@ -54,20 +46,10 @@
     text-decoration: none; /* Supprime le soulignement */
 }
 
-/* .fa-heart:hover {
-    border: black;
-    color: red;
-    /* Optionnel : couleur au survol 
-} */
-
 
 .add-to-wishlist.wishlist-active .fa-heart {
     color: red; /* Couleur pour les produits dans la wishlist */
 }
-
-
-
-
 
 
 
