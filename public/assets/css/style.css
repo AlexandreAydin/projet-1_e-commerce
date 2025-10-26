@@ -1498,7 +1498,7 @@ button:focus {
 .cart_list li {
 	border-top: 1px solid #3f3f3f;
 	margin-top: 10px;
-	border-bottom: 1px solid #3f3f3f;
+	/* border-bottom: 1px solid #3f3f3f; */
 	padding: 15px;
 	width: 100%;
 }
@@ -1619,7 +1619,7 @@ button:focus {
 .cart_box .cart_list {
 	width: 100%;
 	padding: 0 !important;
-	max-height: 245px;
+	max-height: 345px;
 	overflow-y: auto;
 }
 .cart_list li {
@@ -5312,7 +5312,7 @@ footer .widget_title {
 }
 .pr_detail .rating_wrap {
     float: right;
-	margin-top: 7px;
+	margin-top: -13px;
 }
 .pr_detail .product_price {
     float: left;
@@ -5320,6 +5320,7 @@ footer .widget_title {
 .pr_detail .price {
     vertical-align: middle;
     font-size: 26px;
+	margin-top: 30px;
 }
 .cart-product-quantity {
 	margin: 7px 10px 7px 0;
@@ -7378,6 +7379,10 @@ blockquote p:last-child {
 			margin-left: auto;
 			margin-right: 10px;
 			margin-left: auto !important; /* Aligne à droite */
+		}
+
+		.hr-price{
+			display: none;
 		}
 
 

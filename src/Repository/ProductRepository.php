@@ -263,64 +263,194 @@ class ProductRepository extends ServiceEntityRepository
 
     public function findProductsBySimilar(string $query): array
     {
-        $entityManager = $this->getEntityManager();
-        $conn = $entityManager->getConnection();
-    
-        // Prepare the search term for LIKE conditions and Levenshtein comparisons
-        $likeQuery = '%' . $query . '%';
-        $cleanedQuery = strtolower(str_replace(' ', '', $query));
-    
-        // Construct the SQL query using dynamic parameters correctly
+        $em   = $this->getEntityManager();
+        $conn = $em->getConnection();
+
+        // --- Normalisation PHP (pour scoring / corrections) ---
+        $normalize = static function (?string $s): string {
+            $s = (string)$s;
+            $s = mb_strtolower($s);
+            if (class_exists(\Transliterator::class)) {
+                if ($tr = \Transliterator::create('Any-Latin; Latin-ASCII')) {
+                    $s = $tr->transliterate($s);
+                }
+            }
+            // garder uniquement [a-z0-9]
+            return preg_replace('/[^a-z0-9]+/u', '', $s) ?? '';
+        };
+
+        // --- Corrections "contient" (substr) sur la version normalisée ---
+        // clé = faute fréquente (normalisée), valeur = remplacement (normalisé)
+        $typoSubstrings = [
+            'palstation'  => 'playstation',
+            'plaistation' => 'playstation',
+            'plastation'  => 'playstation',
+            'playstion'   => 'playstation',
+            'playstaton'  => 'playstation',
+            'oralb'       => 'oralb',     // on corrige plus loin vers "oral b" pour l'affichage
+        ];
+
+        $qNorm = $normalize($query);              // ex: "plastation 5" -> "plastation5"
+        $orig  = $query;
+
+        foreach ($typoSubstrings as $needle => $replacement) {
+            if (strpos($qNorm, $needle) !== false) {
+                // remplace DANS qNorm
+                $qNorm = str_replace($needle, $replacement, $qNorm);
+            }
+        }
+
+        // Ajustement d'affichage : si on a "oralb" normalisé, proposer "oral b" côté brut
+        if ($qNorm === 'oralb') {
+            $query = 'oral b';
+        } else {
+            // si 'playstation' se trouve dans qNorm et il y a un chiffre à la fin, on injecte un espace pour l'affichage
+            if (preg_match('/^(playstation)(\d+)$/', $qNorm, $m)) {
+                $query = $m[1] . ' ' . $m[2]; // "playstation 5"
+            }
+        }
+
+        // Motifs SQL
+        $likeRaw  = '%'.mb_strtolower($query).'%'; // ex: "%playstation 5%"
+        $likeNorm = '%'.$qNorm.'%';                // ex: "%playstation5%"
+
+        // Ancres gauche/droite (filet) : robustes aux fautes d'1 caractère
+        $len   = mb_strlen($qNorm);
+        $left  = $len >= 4 ? mb_substr($qNorm, 0, 4) : $qNorm;                 // ex "play"
+        $right = $len >= 4 ? mb_substr($qNorm, max(0, $len - 4)) : $qNorm;     // ex "tion5"
+        $useAnchors = ($len >= 6 && $left !== '' && $right !== '');
+
+        // Helper compact (MySQL 8+)
+        $compact = static function (string $col): string {
+            return "REGEXP_REPLACE(LOWER(COALESCE($col,'')),'[^a-z0-9]','')";
+        };
+
+        // --- 1) Pool de candidats ---
         $sql = "
-            SELECT DISTINCT p.*, 
-                LEVENSHTEIN(LOWER(p.name), :cleanedQuery) AS levenshtein_distance,
-                LEVENSHTEIN(LOWER(pb.name), :cleanedQuery) AS brand_levenshtein_distance,
-                LEVENSHTEIN(LOWER(bm.name), :cleanedQuery) AS model_levenshtein_distance,
-                LEVENSHTEIN(LOWER(c.name), :cleanedQuery) AS category_levenshtein_distance,
-                LEVENSHTEIN(LOWER(sc.name), :cleanedQuery) AS subcategory_levenshtein_distance,
-                LEVENSHTEIN(LOWER(p.description), :cleanedQuery) AS description_levenshtein_distance
-                FROM product p
-                    LEFT JOIN product_brand pb ON p.product_brand_id = pb.id
-                    LEFT JOIN brand_model bm ON p.brand_model_id = bm.id
-                    LEFT JOIN categorie c ON p.categorie_id = c.id
-                    LEFT JOIN sub_categorie sc ON p.sub_categorie_id = sc.id
-                WHERE 
-                    LEVENSHTEIN(LOWER(p.name), :cleanedQuery) <= :thresholdQuery
-                    OR LEVENSHTEIN(LOWER(pb.name), :cleanedQuery) <= :threshold
-                    OR LEVENSHTEIN(LOWER(bm.name), :cleanedQuery) <= :threshold
-                    OR LEVENSHTEIN(LOWER(c.name), :cleanedQuery) <= :threshold
-                    OR LEVENSHTEIN(LOWER(sc.name), :cleanedQuery) <= :threshold
-                    OR LEVENSHTEIN(LOWER(p.description), :cleanedQuery) <= :threshold
-                    OR LOWER(p.name) LIKE :likeQuery
-                    OR LOWER(pb.name) LIKE :likeQuery
-                    OR LOWER(bm.name) LIKE :likeQuery
-                    OR LOWER(c.name) LIKE :likeQuery
-                    OR LOWER(sc.name) LIKE :likeQuery
-                    OR LOWER(p.description) LIKE :likeQuery
-                    OR LOWER(p.description2) LIKE :likeQuery
-                    OR LOWER(p.illustration_text1) LIKE :likeQuery
-                ORDER BY levenshtein_distance DESC, brand_levenshtein_distance DESC, model_levenshtein_distance DESC,
-                    category_levenshtein_distance DESC, subcategory_levenshtein_distance DESC,description_levenshtein_distance DESC;
+            SELECT
+                p.id, p.name, p.description, p.description2, p.illustration_text1,
+                pb.name AS brand_name, bm.name AS model_name, c.name AS category_name, sc.name AS subcategory_name
+            FROM product p
+            LEFT JOIN product_brand pb ON p.product_brand_id = pb.id
+            LEFT JOIN brand_model bm   ON p.brand_model_id   = bm.id
+            LEFT JOIN categorie c      ON p.categorie_id     = c.id
+            LEFT JOIN sub_categorie sc ON p.sub_categorie_id = sc.id
+            WHERE
+                -- LIKE brut
+                LOWER(COALESCE(p.name,''))               LIKE :likeRaw
+            OR LOWER(COALESCE(pb.name,''))              LIKE :likeRaw
+            OR LOWER(COALESCE(bm.name,''))              LIKE :likeRaw
+            OR LOWER(COALESCE(c.name,''))               LIKE :likeRaw
+            OR LOWER(COALESCE(sc.name,''))              LIKE :likeRaw
+            OR LOWER(COALESCE(p.description,''))        LIKE :likeRaw
+            OR LOWER(COALESCE(p.description2,''))       LIKE :likeRaw
+            OR LOWER(COALESCE(p.illustration_text1,'')) LIKE :likeRaw
+
+            -- LIKE compact (supprime tout sauf [a-z0-9])
+            OR {$compact('p.name')}               LIKE :likeNorm
+            OR {$compact('pb.name')}              LIKE :likeNorm
+            OR {$compact('bm.name')}              LIKE :likeNorm
+            OR {$compact('c.name')}               LIKE :likeNorm
+            OR {$compact('sc.name')}              LIKE :likeNorm
+            OR {$compact('p.description')}        LIKE :likeNorm
+            OR {$compact('p.description2')}       LIKE :likeNorm
+            OR {$compact('p.illustration_text1')} LIKE :likeNorm
+
+            -- Filet d'ancres : %left% ET %right% dans la version compactée
+            ".($useAnchors ? "
+            OR (
+                {$compact('p.name')}               LIKE :left AND {$compact('p.name')}               LIKE :right
+            ) OR (
+                {$compact('pb.name')}              LIKE :left AND {$compact('pb.name')}              LIKE :right
+            ) OR (
+                {$compact('bm.name')}              LIKE :left AND {$compact('bm.name')}              LIKE :right
+            ) OR (
+                {$compact('c.name')}               LIKE :left AND {$compact('c.name')}               LIKE :right
+            ) OR (
+                {$compact('sc.name')}              LIKE :left AND {$compact('sc.name')}              LIKE :right
+            ) OR (
+                {$compact('p.description')}        LIKE :left AND {$compact('p.description')}        LIKE :right
+            ) OR (
+                {$compact('p.description2')}       LIKE :left AND {$compact('p.description2')}       LIKE :right
+            ) OR (
+                {$compact('p.illustration_text1')} LIKE :left AND {$compact('p.illustration_text1')} LIKE :right
+            )
+            " : "")."
+            LIMIT 500
         ";
 
-    
-
-    
         $stmt = $conn->prepare($sql);
-        $stmt->bindValue('cleanedQuery', $cleanedQuery);
-        $stmt->bindValue('likeQuery', $likeQuery);
-        $stmt->bindValue('threshold', 3);  // Adjust this threshold based on your needs
-        $stmt->bindValue('thresholdQuery', 5);  // Adjust this threshold based on your needs
-        
-        $result = $stmt->executeQuery();
-    
-        $results = [];
-        while ($row = $result->fetchAssociative()) {
-            $results[] = $row;
+        $stmt->bindValue('likeRaw',  $likeRaw);
+        $stmt->bindValue('likeNorm', $likeNorm);
+        if ($useAnchors) {
+            $stmt->bindValue('left',  '%'.$left.'%');
+            $stmt->bindValue('right', '%'.$right.'%');
         }
-    
-        return $results;
+        $rows = $stmt->executeQuery()->fetchAllAssociative();
+
+        if (!$rows) {
+            return [];
+        }
+
+        // --- 2) Scoring Levenshtein (même normalisation que qNorm) ---
+        $levShort = 3; // marque/modèle/catégorie
+        $levLong  = 5; // nom/description
+        $scored   = [];
+
+        foreach ($rows as $r) {
+            $fields = [
+                'name'        => $r['name'] ?? '',
+                'brand'       => $r['brand_name'] ?? '',
+                'model'       => $r['model_name'] ?? '',
+                'category'    => $r['category_name'] ?? '',
+                'subcategory' => $r['subcategory_name'] ?? '',
+                'desc'        => $r['description'] ?? '',
+            ];
+            $norm = array_map($normalize, $fields);
+
+            $d = [];
+            foreach ($norm as $k => $v) {
+                $d[$k] = $v !== '' ? levenshtein($qNorm, $v) : 9999;
+            }
+
+            $keep =
+                $d['name']        <= $levLong ||
+                $d['desc']        <= $levLong ||
+                $d['brand']       <= $levShort ||
+                $d['model']       <= $levShort ||
+                $d['category']    <= $levShort ||
+                $d['subcategory'] <= $levShort;
+
+            if ($keep) {
+                $score = min(
+                    $d['name'],
+                    $d['desc'] + 1,
+                    $d['brand'] + 1,
+                    $d['model'] + 1,
+                    $d['category'] + 2,
+                    $d['subcategory'] + 2
+                );
+                $scored[] = ['product' => $r, 'score' => $score];
+            }
+        }
+
+        if (!$scored) {
+            return $rows; // fallback UX
+        }
+
+        usort($scored, fn($a, $b) => $a['score'] <=> $b['score']);
+        return array_map(fn($s) => $s['product'], $scored);
     }
+
+
+
+
+
+
+
+
+
+
     
     
     

@@ -347,201 +347,155 @@ class HomeController extends AbstractController
     
 
 
-    #[Route('/boutique', name: 'app_shop')]
-    public function shop(
-        WishListService $wishListService,
-        RewiewsProductRepository $reviewsRepo,
-        FormFactoryInterface $formFactory,
-        EntityManagerInterface $em,
-        Request $request,
-        ProductRepository $repoProduct): Response {
-        // Création et gestion du formulaire de recherche avancée
-        $search = new SearchProduct();
-        $form = $this->createForm(SearchProductType::class, $search, [
-            'method' => 'GET', // Utilisez GET pour permettre aux utilisateurs de partager des URLs de recherche
-        ]);
-        $form->handleRequest($request);
+#[Route('/boutique', name: 'app_shop', methods: ['GET'])]
+public function shop(
+    WishListService $wishListService,
+    RewiewsProductRepository $reviewsRepo,
+    FormFactoryInterface $formFactory,
+    EntityManagerInterface $em,
+    Request $request,
+    ProductRepository $repoProduct
+): Response {
+    // --- 1) Lire le terme de recherche (query OU q) ---
+    $rawQuery = (string) $request->query->get('query', '');
+    if ($rawQuery === '') {
+        $rawQuery = (string) $request->query->get('q', '');
+    }
 
-        // Récupération du terme de recherche depuis la requête
-        $query = $request->query->get('query', '');
-
-        // Initialisation des produits
-        $products = [];
-
-        // Vérifier si le formulaire a été soumis et est valide
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Filtrer les produits selon les critères spécifiés
-            $products = $repoProduct->findByFilters($search, $query);
-        } else if (!empty($query)) {
-            // Si un terme de recherche est fourni, effectuer une recherche textuelle
-            $products = $repoProduct->findBySearchQuery($query);
-        } else {
-            // Sinon, charger tous les produits
-            $products = $repoProduct->findAll();
+    // --- 2) Correcteur métier + normalisation légère ---
+    $normalize = static function (string $s): string {
+        $s = mb_strtolower($s);
+        if (class_exists(\Transliterator::class)) {
+            if ($tr = \Transliterator::create('Any-Latin; Latin-ASCII')) {
+                $s = $tr->transliterate($s);
+            }
         }
-        
-        if (empty($products)) {
-            $this->addFlash('error', 'Aucun produit trouvé. Voici des suggestions basées sur vos critères.');
-            $cleanedQuery = strtolower(str_replace(' ', '', $query));
-            $products = $repoProduct->findProductsBySimilar($cleanedQuery);
+        return preg_replace('/[^a-z0-9]+/u', '', $s) ?? '';
+    };
 
-        
-            if (empty($products)) {
-                $this->addFlash('error', 'Aucune suggestion trouvée.');
+    // Remplacements "substring" sur la version normalisée (couvre plastation5 -> playstation5)
+    $applyTypoCorrections = static function (string $q) use ($normalize): string {
+        $qNorm = $normalize($q);
+        $map = [
+            'palstation'  => 'playstation',
+            'plaistation' => 'playstation',
+            'plastation'  => 'playstation',
+            'playstion'   => 'playstation',
+            'playstaton'  => 'playstation',
+        ];
+        foreach ($map as $needle => $replacement) {
+            if (strpos($qNorm, $needle) !== false) {
+                $qNorm = str_replace($needle, $replacement, $qNorm);
+            }
+        }
+        // si playstation + chiffre collés → ajoute un espace pour l'affichage/LIKE brut
+        if (preg_match('/^(playstation)(\d+)$/', $qNorm, $m)) {
+            return $m[1] . ' ' . $m[2]; // "playstation 5"
+        }
+        // cas oralb → "oral b" pour l'affichage/LIKE brut (le repo gère aussi la version compactée)
+        if ($qNorm === 'oralb') {
+            return 'oral b';
+        }
+        return $q; // sinon on garde tel quel
+    };
+
+    $query = $rawQuery !== '' ? $applyTypoCorrections($rawQuery) : '';
+
+    // --- 3) Construire le formulaire une première fois (sans filtres dynamiques) ---
+    $search = new SearchProduct();
+    $form = $this->createForm(SearchProductType::class, $search, ['method' => 'GET']);
+    $form->handleRequest($request);
+
+    // --- 4) Récupération des produits (1er passage) ---
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Filtres avancés si soumis (on transmet la requête corrigée)
+        $products = $repoProduct->findByFilters($search, $query);
+    } elseif ($query !== '') {
+        // Recherche textuelle si terme présent (requête corrigée)
+        $products = $repoProduct->findBySearchQuery($query);
+    } else {
+        // Pas de recherche → derniers produits
+        $products = $repoProduct->findBy([], ['id' => 'DESC']);
+    }
+
+    // --- 5) Fallback "similar" si rien trouvé et qu'on a une requête ---
+    if (empty($products) && $query !== '') {
+        $this->addFlash('error', 'Aucun produit trouvé. Voici des suggestions basées sur votre recherche.');
+        // IMPORTANT : passer la chaîne corrigée "humaine" (ex: "playstation 5", "oral b")
+        $suggestions = $repoProduct->findProductsBySimilar($query);
+
+        if (!empty($suggestions)) {
+            // Si le repo renvoie des arrays (id, ...) -> recharger les entités
+            if (is_array($suggestions[0] ?? null) && array_key_exists('id', $suggestions[0])) {
+                $products = array_values(array_filter(array_map(
+                    fn($row) => $repoProduct->find($row['id'] ?? null),
+                    $suggestions
+                )));
             } else {
-                // Si vous avez besoin de convertir les tableaux en objets Product :
-                $products = array_map(function ($productData) use ($repoProduct) {
-                    return $repoProduct->find($productData['id']); // Recharger les entités par leur ID
-                }, $products);
+                $products = $suggestions; // déjà des entités
             }
-        }
-
-        $productRatings = [];
-        // $isInWishlist = [];
-        foreach ($products as $product) {
-            $productRatings[$product->getId()] = $reviewsRepo->getAverageRatingForProduct($product);
-            // $isInWishlist[$product->getId()] = $wishListService->isProductInWishlist($product->getId());
-        }
-
-        $categoriesForFilter = [];
-    $subCategoriesForFilter = [];
-    $brandsForFilter = [];
-    $brandsModelForFilter = [];
-
-    // On parcourt tous les produits retournés
-    foreach ($products as $product) {
-        // 🔹 Récupérer la catégorie
-        if ($product->getCategorie()) {
-            $categoriesForFilter[$product->getCategorie()->getId()] = $product->getCategorie();
-        }
-
-        // 🔹 Récupérer la sous-catégorie
-        if ($product->getSubCategorie()) {
-            $subCat = $product->getSubCategorie();
-
-            // ✅ Forcer Doctrine à charger la sous-catégorie avant de l'ajouter
-            if ($em->contains($subCat)) {
-                $em->refresh($subCat);
-            }
-
-            if (!array_key_exists($subCat->getId(), $subCategoriesForFilter)) {
-                $subCategoriesForFilter[$subCat->getId()] = $subCat;
-            }
-        }
-
-        // 🔹 Récupérer la marque
-        if ($product->getProductBrand()) {
-            $brand = $product->getProductBrand();
-            if (!array_key_exists($brand->getId(), $brandsForFilter)) {
-                $brandsForFilter[$brand->getId()] = $brand;
-            }
-        }
-
-        // 🔹 Récupérer le modèle de la marque
-        if ($product->getBrandModel()) {
-            $brandModel = $product->getBrandModel();
-
-            // ✅ Forcer Doctrine à charger le modèle avant de l'ajouter
-            if ($em->contains($brandModel)) {
-                $em->refresh($brandModel);
-            }
-
-            if (!array_key_exists($brandModel->getId(), $brandsModelForFilter)) {
-                $brandsModelForFilter[$brandModel->getId()] = $brandModel;
-            }
-        }
-    }
-
-        // dump($subCategoriesForFilter);
-        // die();
-
-
-        $form = $formFactory->create(SearchProductType::class, $search, [
-            'method'                 => 'GET',
-            'filtered_categories'    => $categoriesForFilter,
-            'filtered_subCategories' => $subCategoriesForFilter,
-            'filtered_brands'        => $brandsForFilter,
-            'filtered_brandsModel'   => $brandsModelForFilter,
-        ]);
-
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Filtrer les produits selon les critères spécifiés
-            $products = $repoProduct->findByFilters($search, $query);
-        } else if (!empty($query)) {
-            // Si un terme de recherche est fourni, effectuer une recherche textuelle
-            $products = $repoProduct->findBySearchQuery($query);
         } else {
-            // Sinon, charger tous les produits
-            $products = $repoProduct->findBy([], ['id' => 'DESC']);
-
+            $this->addFlash('error', 'Aucune suggestion trouvée.');
         }
-
-        $categoriesForFilter = [];
-        $subCategoriesForFilter = [];
-        $brandsForFilter     = [];
-        $brandsModelForFilter = [];
-    
-        // On parcourt tous les produits retournés
-        foreach ($products as $product) {
-            // Récupérer la catégorie
-            if ($product->getCategorie()) {
-                $cat = $product->getCategorie();
-                // Stocker par ID pour éviter doublons
-                $categoriesForFilter[$cat->getId()] = $cat;
-            }
-
-            if ($product->getSubCategorie()) {
-                $subCat = $product->getSubCategorie();
-        
-                // ✅ Forcer Doctrine à charger la sous-catégorie avant de l'ajouter
-                if ($em->contains($subCat)) {
-                    $em->refresh($subCat);
-                }
-        
-                if (!array_key_exists($subCat->getId(), $subCategoriesForFilter)) {
-                    $subCategoriesForFilter[$subCat->getId()] = $subCat;
-                }
-            }
-
-            // Récupérer la marque
-            if ($product->getProductBrand()) {
-                $brandsForFilter[$product->getProductBrand()->getId()] = $product->getProductBrand();
-            }
-
-            if ($product->getBrandModel()) {
-                $brandsModel = $product->getBrandModel();
-        
-                // ✅ Forcer Doctrine à charger la sous-catégorie avant de l'ajouter
-                if ($em->contains($brandsModel)) {
-                    $em->refresh($brandsModel);
-                }
-        
-                if (!array_key_exists($brandsModel->getId(), $brandsModelForFilter)) {
-                    $brandsModelForFilter[$brandsModel->getId()] = $brandsModel;
-                }
-            }
-        }
-// dump($subCategoriesForFilter);
-// die();
-
-        $form = $formFactory->create(SearchProductType::class, $search, [
-            'method'             => 'GET',
-            'filtered_categories'=> $categoriesForFilter,
-            'filtered_subCategories' => $subCategoriesForFilter,
-            'filtered_brands'    => $brandsForFilter,
-            'filtered_brandsModel'    => $brandsModelForFilter,
-        ]);
-
-        
-        // Rendu de la vue avec toutes les données nécessaires
-        return $this->render('pages/home/shop.html.twig', [
-            'products' => $products,
-            'search' => $form->createView(),
-            'productRatings' => $productRatings,
-             // 'isInWishlist' => // $isInWishlist,
-        ]);
     }
+
+    // --- 6) Construire les listes pour filtres dynamiques à partir des produits courants ---
+    $categoriesForFilter    = [];
+    $subCategoriesForFilter = [];
+    $brandsForFilter        = [];
+    $brandsModelForFilter   = [];
+
+    foreach ($products as $product) {
+        if (!$product) { continue; }
+
+        if ($cat = $product->getCategorie()) {
+            $categoriesForFilter[$cat->getId()] = $cat;
+        }
+        if ($sub = $product->getSubCategorie()) {
+            if ($em->contains($sub)) { $em->refresh($sub); }
+            $subCategoriesForFilter[$sub->getId()] = $sub;
+        }
+        if ($brand = $product->getProductBrand()) {
+            $brandsForFilter[$brand->getId()] = $brand;
+        }
+        if ($model = $product->getBrandModel()) {
+            if ($em->contains($model)) { $em->refresh($model); }
+            $brandsModelForFilter[$model->getId()] = $model;
+        }
+    }
+
+    // --- 7) Recréer le formulaire avec options dynamiques, puis ré-appliquer les filtres si soumis ---
+    $form = $formFactory->create(SearchProductType::class, $search, [
+        'method'                 => 'GET',
+        'filtered_categories'    => $categoriesForFilter,
+        'filtered_subCategories' => $subCategoriesForFilter,
+        'filtered_brands'        => $brandsForFilter,
+        'filtered_brandsModel'   => $brandsModelForFilter,
+    ]);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        // On réapplique les filtres sur la base de la même requête corrigée
+        $products = $repoProduct->findByFilters($search, $query);
+    }
+
+    // --- 8) Notes / avis (sur la liste finale) ---
+    $productRatings = [];
+    foreach ($products as $p) {
+        if ($p) {
+            $productRatings[$p->getId()] = $reviewsRepo->getAverageRatingForProduct($p);
+        }
+    }
+
+    // --- 9) Rendu ---
+    return $this->render('pages/home/shop.html.twig', [
+        'products'       => $products,
+        'search'         => $form->createView(),
+        'productRatings' => $productRatings,
+        // 'isInWishlist' => ...
+    ]);
+}
+
      
     
 
