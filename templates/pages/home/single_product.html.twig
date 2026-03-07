@@ -62,7 +62,7 @@
                             {% set displayed_colors = [] %}
                         
                             <!-- Sélection de la couleur -->
-                            <div class="d-flex variant-product">
+                            {# <div class="d-flex variant-product">
                                 <!-- Sélection de la couleur -->
                                 <div class="form-group">
                                     <label for="color">Couleur :</label>
@@ -88,29 +88,87 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                            </div> #}
+
+                            {# === COULEUR === #}
+                        <!-- Sélection de la couleur -->
+                        <div class="d-flex variant-product">
+
+                            {# === BLOC COULEUR === #}
+                            {% set has_real_color = false %}
+                            {% for variant in product.variants %}
+                                {% if variant.color|trim|upper != 'COULEUR INDISPONIBLE' %}
+                                    {% set has_real_color = true %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <div class="form-group" id="color-group" {% if not has_real_color %}style="display: none;"{% endif %}>
+                                <label for="color">Couleur :</label>
+                                <select name="color" id="color" class="form-control">
+                                    {% set displayed_colors = [] %}
+                                    {% for variant in product.variants %}
+                                        {% if variant.color not in displayed_colors and variant.color|trim|upper != 'COULEUR INDISPONIBLE' %}
+                                            <option value="{{ variant.color }}">{{ variant.color }}</option>
+                                            {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
                             </div>
 
-                            <div class="cart_extra col-12  ">
-                                    <div id="stockMessage" class="stock-message" style="display: none;"> Ce produit est indisponible pour le moment.</div>
-                                    <div class="cart-product-quantity mb-4">
-                                        <div class="quantity">
-                                            <input type="button" value="-" class="minus">
-                                            <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
-                                            <input type="button" value="+" class="plus">
-                                        </div>
-                                    </div>
+                            {# === BLOC TAILLE === #}
+                            {% set has_real_size = false %}
+                            {% for variant in product.variants %}
+                                {% for size in variant.sizes %}
+                                    {% if size.size|trim|upper != 'TAILLE INDISPONIBLE' %}
+                                        {% set has_real_size = true %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
 
-                                    {# TODO: Implement product quantity selection #}
-                                    <div class="cart_btn mb-4">
-                                            <a href="#" 
-                                                class="btn btn-fill-out btn-addtocart" 
-                                                data-variant-id="{{ variant.id }}" 
-                                                type="button">
-                                                    <i class="icon-basket-loaded" data-variant-id="1"></i> Ajouter au panier
-                                                </a>
-                                        <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
-                                    </div>
-                            </div> 
+                            <div class="form-group mx-4" id="size-group" {% if not has_real_size %}style="display: none;"{% endif %}>
+                                <label for="size">Taille :</label>
+                                <select name="size" id="size" class="form-control">
+                                    {% for variant in product.variants %}
+                                        {% for size in variant.sizes %}
+                                            {% if size.size|trim|upper != 'TAILLE INDISPONIBLE' %}
+                                                <option value="{{ size.size }}"
+                                                        data-variant-id="{{ variant.id }}"
+                                                        data-stock="{{ size.stock }}"
+                                                        data-color="{{ variant.color }}">
+                                                    {{ size.size }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                        </div>
+                        <div class="cart_extra col-12">
+                            <!-- Message de stock indisponible (visible par défaut) -->
+                            <div id="stockMessage" class="stock-message" style="display: block;">
+                                Ce produit est indisponible pour le moment.
+                            </div>
+                            
+                            <!-- Quantité et boutons (cachés par défaut) -->
+                            <div class="cart-product-quantity mb-4" style="display: none;">
+                                <div class="quantity">
+                                    <input type="button" value="-" class="minus">
+                                    <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
+                                    <input type="button" value="+" class="plus">
+                                </div>
+                            </div>
+
+                            <div class="cart_btn mb-4" style="display: none;">
+                                <a href="#" 
+                                    class="btn btn-fill-out btn-addtocart" 
+                                    data-variant-id="{{ variant.id }}" 
+                                    type="button">
+                                    <i class="icon-basket-loaded" data-variant-id="1"></i> Ajouter au panier
+                                </a>
+                                <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
+                            </div>
+                        </div>
                             <hr>
                             <div>
                                 <ul class="product-meta col-12 text-dark">
@@ -1103,6 +1161,293 @@
             updateStock(); // Initialiser au chargement
         });
 
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect = document.getElementById('color');
+            const sizeSelect = document.getElementById('size');
+            const colorGroup = document.getElementById('color-group');
+            const sizeGroup = document.getElementById('size-group');
+            const priceDisplay = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+
+            const variants = {{ variants|json_encode()|raw }};
+
+            // --- Vérifie si un sélecteur est visible ---
+            const isColorVisible = colorGroup && getComputedStyle(colorGroup).display !== 'none';
+            const isSizeVisible = sizeGroup && getComputedStyle(sizeGroup).display !== 'none';
+
+            // --- Trouve la variante active ---
+            function getActiveVariant() {
+                let selectedColor = isColorVisible && colorSelect?.value ? colorSelect.value : null;
+                let selectedSize = isSizeVisible && sizeSelect?.value ? sizeSelect.value : null;
+
+                // Si pas de couleur visible → on prend la première variante
+                if (!selectedColor && variants.length > 0) {
+                    selectedColor = variants[0].color;
+                }
+
+                return variants.find(variant => {
+                    const matchesColor = !selectedColor || variant.color === selectedColor;
+                    const sizeArray = Array.isArray(variant.sizes)
+                        ? variant.sizes.map(s => typeof s === 'object' ? s.size : s)
+                        : [];
+                    const matchesSize = !selectedSize || sizeArray.includes(selectedSize);
+                    return matchesColor && matchesSize;
+                });
+            }
+
+            // --- Met à jour le prix ---
+            function updatePrice() {
+                const variant = getActiveVariant();
+
+                if (variant) {
+                    const finalPrice = variant.price - (variant.price * (variant.offVariant || 0) / 100);
+
+                    priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+                    if (variant.offVariant > 0) {
+                        oldPriceDisplay.textContent = `${variant.price.toFixed(2)} €`;
+                        oldPriceDisplay.style.display = 'inline';
+                        discountDisplay.textContent = `${variant.offVariant}% réduction`;
+                        discountDisplay.style.display = 'block';
+                    } else {
+                        oldPriceDisplay.style.display = 'none';
+                        discountDisplay.style.display = 'none';
+                    }
+                } else {
+                    priceDisplay.textContent = 'Prix indisponible';
+                    oldPriceDisplay.style.display = 'none';
+                    discountDisplay.style.display = 'none';
+                }
+            }
+
+            // --- Met à jour les images (même logique) ---
+            function updateImages() {
+                const variant = getActiveVariant();
+                const mainImage = document.getElementById('main_product_img');
+                const thumbnailsContainer = document.getElementById('thumbnails');
+
+                if (variant && variant.images?.length > 0) {
+                    const firstImg = variant.images[0];
+                    mainImage.src = `/images/products/${firstImg.imageName || firstImg}`;
+
+                    // ... ton code existant pour thumbnails ...
+                    // (tu peux réutiliser ta fonction updateImages en passant `variant`)
+                } else {
+                    mainImage.src = '/images/products/default.jpg';
+                    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
+                }
+            }
+
+            // --- Écouteurs ---
+            if (colorSelect) colorSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+            if (sizeSelect) sizeSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+
+            // --- Init ---
+            updatePrice();
+            updateImages();
+        });
+
+
+        // Au cas où le HTML est généré dynamiquement
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorOptions = document.querySelectorAll('#color option');
+            const sizeOptions = document.querySelectorAll('#size option');
+
+            // Masquer couleur si toutes = COULEUR INDISPONIBLE
+            if (colorOptions.length > 0 && Array.from(colorOptions).every(opt => 
+                opt.value.trim().toUpperCase() === 'COULEUR INDISPONIBLE'
+            )) {
+                document.getElementById('color-group')?.style.setProperty('display', 'none', 'important');
+            }
+
+            // Masquer taille si toutes = TAILLE INDISPONIBLE
+            if (sizeOptions.length > 0 && Array.from(sizeOptions).every(opt => 
+                opt.value.trim().toUpperCase() === 'TAILLE INDISPONIBLE'
+            )) {
+                document.getElementById('size-group')?.style.setProperty('display', 'none', 'important');
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect = document.getElementById('color');
+            const sizeSelect = document.getElementById('size');
+            const colorGroup = document.getElementById('color-group');
+            const sizeGroup = document.getElementById('size-group');
+            const mainImage = document.getElementById('main_product_img');
+            const thumbnailsContainer = document.getElementById('thumbnails');
+
+            const priceDisplay = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+
+            const variants = {{ variants|json_encode()|raw }};
+
+            // --- Utilitaire : visibilité ---
+            function isVisible(el) {
+                return el && window.getComputedStyle(el).display !== 'none';
+            }
+
+            // --- Trouve la variante active (même si sélecteurs cachés) ---
+            function getActiveVariant() {
+                const colorVisible = isVisible(colorGroup);
+                const sizeVisible = isVisible(sizeGroup);
+
+                let selectedColor = colorVisible && colorSelect?.value ? colorSelect.value : null;
+                let selectedSize = sizeVisible && sizeSelect?.value ? sizeSelect.value : null;
+
+                // Si pas de couleur sélectionnée ou visible → on prend la première variante
+                if (!selectedColor && variants.length > 0) {
+                    return variants[0];
+                }
+
+                return variants.find(v => {
+                    const matchesColor = !selectedColor || v.color === selectedColor;
+                    const sizeArray = Array.isArray(v.sizes)
+                        ? v.sizes.map(s => typeof s === 'object' ? s.size : s)
+                        : [];
+                    const matchesSize = !selectedSize || sizeArray.includes(selectedSize);
+                    return matchesColor && matchesSize;
+                });
+            }
+
+            // --- Mise à jour du prix ---
+            function updatePrice() {
+                const variant = getActiveVariant();
+                if (variant) {
+                    const finalPrice = variant.price - (variant.price * (variant.offVariant || 0) / 100);
+                    priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+
+                    if (variant.offVariant > 0) {
+                        oldPriceDisplay.textContent = `${variant.price.toFixed(2)} €`;
+                        oldPriceDisplay.style.display = 'inline';
+                        discountDisplay.textContent = `${variant.offVariant}% réduction`;
+                        discountDisplay.style.display = 'block';
+                    } else {
+                        oldPriceDisplay.style.display = 'none';
+                        discountDisplay.style.display = 'none';
+                    }
+                } else {
+                    priceDisplay.textContent = 'Prix indisponible';
+                    oldPriceDisplay.style.display = 'none';
+                    discountDisplay.style.display = 'none';
+                }
+            }
+
+            // --- Mise à jour des images ---
+            function updateImages() {
+                const variant = getActiveVariant();
+                if (!variant || !variant.images || variant.images.length === 0) {
+                    mainImage.src = '/images/products/default.jpg';
+                    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
+                    return;
+                }
+
+                const firstImage = variant.images[0];
+                const imageName = firstImage.imageName || firstImage;
+
+                // Image principale
+                mainImage.src = `/images/products/${imageName}`;
+
+                // Vider les miniatures
+                thumbnailsContainer.innerHTML = '';
+
+                // Séparer images et vidéos
+                const images = variant.images.filter(img => {
+                    const name = (img.imageName || img).toLowerCase();
+                    return !/\.(mp4|webm)$/.test(name);
+                });
+                const videos = variant.images.filter(img => {
+                    const name = (img.imageName || img).toLowerCase();
+                    return /\.(mp4|webm)$/.test(name);
+                });
+
+                // Générer les miniatures (max 5 images)
+                images.slice(0, 5).forEach((img, index) => {
+                    const name = img.imageName || img;
+                    const thumbnail = document.createElement('div');
+                    thumbnail.classList.add('mb-3', 'mx-2');
+
+                    if (index === 4 && images.length > 5) {
+                        const remaining = images.length - 5;
+                        thumbnail.innerHTML = `
+                            <div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;">
+                                <a href="/images/products/${name}" data-fancybox="product-images" data-fancybox-index="${index}" data-large-src="/images/products/${name}">
+                                    <img src="/images/products/${name}" class="thumbnail img-fluid" style="width:100%;height:100%;object-fit:cover;opacity:0.6;">
+                                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-weight:bold;font-size:16px;text-shadow:0 0 5px rgba(0,0,0,0.5);z-index:10;">
+                                        +${remaining}
+                                    </div>
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        thumbnail.innerHTML = `
+                            <div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;">
+                                <a href="/images/products/${name}" data-fancybox="product-images" data-fancybox-index="${index}" data-large-src="/images/products/${name}">
+                                    <img src="/images/products/${name}" class="thumbnail img-fluid" style="width:100%;height:100%;object-fit:cover;">
+                                </a>
+                            </div>
+                        `;
+                    }
+                    thumbnailsContainer.appendChild(thumbnail);
+                });
+
+                // Conteneur Fancybox pour images > 5
+                if (images.length > 5) {
+                    const fancyboxContainer = document.createElement('div');
+                    fancyboxContainer.style.display = 'none';
+                    fancyboxContainer.classList.add('fancybox-container');
+
+                    images.slice(5).forEach((img, i) => {
+                        const name = img.imageName || img;
+                        const link = document.createElement('a');
+                        link.href = `/images/products/${name}`;
+                        link.setAttribute('data-fancybox', 'product-images');
+                        link.setAttribute('data-fancybox-index', (i + 5).toString());
+                        const imgEl = document.createElement('img');
+                        imgEl.src = `/images/products/${name}`;
+                        link.appendChild(imgEl);
+                        fancyboxContainer.appendChild(link);
+                    });
+                    thumbnailsContainer.appendChild(fancyboxContainer);
+                }
+
+                // Vidéo
+                if (videos.length > 0) {
+                    const video = videos[0];
+                    const videoName = video.imageName || video;
+                    const thumbName = video.thumbnailName || videoName.replace(/\.(mp4|webm)$/i, '.jpg');
+                    const thumbnail = document.createElement('div');
+                    thumbnail.classList.add('mb-3', 'mx-2');
+                    thumbnail.innerHTML = `
+                        <div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;background:#000;">
+                            <a href="/images/products/${videoName}" data-fancybox="product-images" data-fancybox-index="${images.length}" data-type="video" data-large-src="/images/products/${thumbName}">
+                                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                    thumbnailsContainer.appendChild(thumbnail);
+                }
+
+                // Réinitialiser Fancybox
+                if (typeof Fancybox !== 'undefined') {
+                    Fancybox.bind('[data-fancybox="product-images"]', { groupAll: true });
+                }
+            }
+
+            // --- Écouteurs ---
+            if (colorSelect) colorSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+            if (sizeSelect) sizeSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+
+            // --- Init au chargement ---
+            updatePrice();
+            updateImages();
+        });
 
 
     </script>

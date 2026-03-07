@@ -1615,7 +1615,6 @@ button:focus {
     }
   }
 
-
 .cart_box .cart_list {
 	width: 100%;
 	padding: 0 !important;
@@ -4998,6 +4997,7 @@ footer .widget_title {
 .product_price del {
 	font-size: 14px;
 	margin-right: 5px;
+	margin-top: 2rem;
 	margin-left: 3px;
 }
 .product-price del {
@@ -5007,6 +5007,7 @@ footer .widget_title {
 .on_sale {
 	display: inline-block;
 	color: #388e3c;
+	margin-top: 2rem;
 	font-size: 14px;
 }
 .product_price {

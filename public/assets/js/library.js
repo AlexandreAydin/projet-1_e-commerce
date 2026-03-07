@@ -325,19 +325,20 @@ export const updateHeaderCart = (cart) => {
                 : product.name;
 
             // HTML pour chaque produit
+            // <a href="/mon-panier/${variant.id}/tout-supprimer" 
+            //             class="item_remove" 
+            //             data-variant-id="${variant.id}" 
+            //             data-size="${variant.size}" 
+            //             data-color="${variant.color}">
+            //                 <i class="ion-close"></i>
+            //         </a>
             const content = `
                 <li data-variant-key="${uniqueKey}">
                     <a href="/produit/${product.slug}" class="product-thumbnail">
                         <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
                         ${displayName} (${variant.size || 'Default'}, ${variant.color || 'Default'})
                     </a>
-                    <a href="/mon-panier/${variant.id}/tout-supprimer" 
-                        class="item_remove" 
-                        data-variant-id="${variant.id}" 
-                        data-size="${variant.size}" 
-                        data-color="${variant.color}">
-                            <i class="ion-close"></i>
-                    </a>
+                    
         
                    <div class="cart-product-quantity mb-4">
                         <div class="quantity">

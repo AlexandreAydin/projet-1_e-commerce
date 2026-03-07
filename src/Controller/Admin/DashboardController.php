@@ -62,6 +62,7 @@ class DashboardController extends AbstractDashboardController
             MenuItem::linkToCrud('Addresse de l\'utilisateur', 'fas fa-map', Address::class),
             MenuItem::linkToCrud('Contact', 'fas fa-user', Contact::class),
         ]);
+        yield MenuItem::linkToUrl('📊 Analytics', 'fas fa-chart-line', '/admin/stats');
         yield MenuItem::subMenu('Commande, Factures et panier', 'fas fa-shopping-bag')->setSubItems([
             MenuItem::linkToCrud('Payment methods', 'fas fa-landmark', PaymentMethod::class),
             MenuItem::linkToCrud('Commandes et Factures', 'fas fa-shopping-bag', Order::class),
