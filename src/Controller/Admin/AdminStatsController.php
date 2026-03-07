@@ -233,4 +233,4 @@ class AdminStatsController extends AbstractController
             default => $date->format('d/m'),
         };
     }
-}
+} 
