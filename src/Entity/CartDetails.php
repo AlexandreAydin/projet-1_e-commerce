@@ -44,7 +44,7 @@ class CartDetails
 
     // #[ORM\Column(length: 255)]
     // private ?string $productId = null;
-    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $selectedSize = null;
 
     public function getId(): ?int

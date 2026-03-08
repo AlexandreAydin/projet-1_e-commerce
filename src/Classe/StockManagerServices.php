@@ -17,35 +17,41 @@ class StockManagerServices
         $this->repoProduct = $repoProduct;
     }
 
+    private function isVirtualSize(string $size): bool
+    {
+        $upper = strtoupper(trim($size));
+        return in_array($upper, ['INDISPONIBLE', 'UNIQUE', 'UNI', 'TAILLE UNIQUE', 'DEFAULT']);
+    }
+
     public function deStock(Order $order)
     {
-        // Récupérer les détails de la commande
         $orderDetails = $order->getOrderDetails()->getValues();
 
         foreach ($orderDetails as $details) {
-            $variant = $details->getVariant(); // Récupérer la variante associée
-            $selectedSize = strtoupper(trim($details->getSelectedSize())); // Normaliser la taille sélectionnée
+            $variant = $details->getVariant();
+            $selectedSize = strtoupper(trim($details->getSelectedSize() ?? ''));
 
             if (!$variant) {
                 throw new \Exception("Variante non trouvée pour le produit " . $details->getProductName());
             }
 
-            // Normaliser la taille sélectionnée : convertir TAILLE UNI en TAILLE UNIQUE
-            $normalizedSelected = str_replace(['TAILLE ', ' '], '', $selectedSize);
-            $normalizedSelected = $normalizedSelected === 'UNI' ? 'UNIQUE' : $normalizedSelected;
+            // Taille virtuelle (INDISPONIBLE, UNIQUE...) → pas de stock à décrémenter
+            if ($this->isVirtualSize($selectedSize)) {
+                continue;
+            }
 
-            // Récupérer les tailles disponibles
             $sizes = $variant->getSizes();
 
-            // Cas spécial : produit sans tailles (stock global)
             if ($sizes->isEmpty()) {
-                $currentStock = $variant->getStock(); // Supposons un champ stock dans ProductVariant
+                $currentStock = $variant->getStock();
                 if ($currentStock === null || $currentStock < $details->getQuantity()) {
                     throw new \Exception("Stock insuffisant ou non défini pour la variante ID {$variant->getId()}");
                 }
                 $variant->setStock($currentStock - $details->getQuantity());
             } else {
-                // Trouver le stock associé à la taille normalisée
+                $normalizedSelected = str_replace(['TAILLE ', ' '], '', $selectedSize);
+                $normalizedSelected = $normalizedSelected === 'UNI' ? 'UNIQUE' : $normalizedSelected;
+
                 $sizeStock = $sizes->filter(function ($sizeStock) use ($normalizedSelected) {
                     $size = str_replace(['TAILLE ', ' '], '', strtoupper($sizeStock->getSize()));
                     $size = $size === 'UNI' ? 'UNIQUE' : $size;
@@ -53,23 +59,29 @@ class StockManagerServices
                 })->first();
 
                 if (!$sizeStock) {
+                    // Correspondance partielle anti-troncature
+                    $sizeStock = $sizes->filter(function ($sizeStock) use ($normalizedSelected) {
+                        $size = str_replace(['TAILLE ', ' '], '', strtoupper($sizeStock->getSize()));
+                        return str_starts_with($size, $normalizedSelected);
+                    })->first();
+                }
+
+                if (!$sizeStock) {
                     throw new \Exception("Stock non trouvé pour la taille '{$selectedSize}' de la variante ID {$variant->getId()}.");
                 }
 
-                // Réduire le stock pour cette taille
                 $newStock = $sizeStock->getStock() - $details->getQuantity();
 
                 if ($newStock < 0) {
                     throw new \Exception("Stock insuffisant pour la taille '{$selectedSize}' de la variante ID {$variant->getId()}.");
                 }
 
-                $sizeStock->setStock($newStock); // Mettre à jour le stock
+                $sizeStock->setStock($newStock);
             }
 
             $this->manager->persist($variant);
         }
 
-        // Sauvegarder les modifications
         $this->manager->flush();
     }
 }

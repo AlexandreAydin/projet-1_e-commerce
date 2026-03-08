@@ -336,7 +336,7 @@ export const updateHeaderCart = (cart) => {
                 <li data-variant-key="${uniqueKey}">
                     <a href="/produit/${product.slug}" class="product-thumbnail">
                         <img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;">
-                        ${displayName} (${variant.size || 'Default'}, ${variant.color || 'Default'})
+                        ${displayName}${buildVariantLabel(variant.size, variant.color)}
                     </a>
                     
         
@@ -749,3 +749,11 @@ const updateCartTotalsWithCoupon = (discountAmount) => {
 
     console.log(`Totaux mis à jour : TTC = ${newTotalTTC}, Taxes = ${newTax}, HT = ${newHT}`);
 };
+
+function buildVariantLabel(size, color) {
+    const s = (size  && !size.toUpperCase().includes('INDISPONIBLE'))  ? size  : null;
+    const c = (color && !color.toUpperCase().includes('INDISPONIBLE')) ? color : null;
+    if (!s && !c) return '';
+    if (s && c)   return ` (${s}, ${c})`;
+    return ` (${s || c})`;
+}

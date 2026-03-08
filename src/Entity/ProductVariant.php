@@ -23,11 +23,15 @@ class ProductVariant
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $color = null;
 
+    // ── NOUVEAU : code couleur hexadécimal (ex: #FF0000) ──────────────────
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $colorHex = null;
+
+    #[ORM\Column(length: 30, nullable: true)]
+    private ?string $ean = null;
+
     #[ORM\OneToMany(mappedBy: 'productVariant', targetEntity: SizeStock::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $sizes;
-
-    // #[ORM\Column]
-    // private ?int $stock = null;
 
     #[ORM\Column]
     private ?float $price = null;
@@ -80,6 +84,30 @@ class ProductVariant
         return $this;
     }
 
+    // ── NOUVEAU ───────────────────────────────────────────────────────────
+    public function getColorHex(): ?string
+    {
+        return $this->colorHex;
+    }
+
+    public function setColorHex(?string $colorHex): static
+    {
+        $this->colorHex = $colorHex;
+
+        return $this;
+    }
+
+    public function getEan(): ?string
+    {
+        return $this->ean;
+    }
+
+    public function setEan(?string $ean): static
+    {
+        $this->ean = $ean;
+
+        return $this;
+    }
 
     public function getSizesValues(): array
     {
@@ -88,9 +116,7 @@ class ProductVariant
         })->toArray();
     }
     
-
-    // Getter et setter pour sizes
-  /**
+    /**
      * @return Collection<int, SizeStock>
      */
     public function getSizes(): Collection
@@ -102,7 +128,7 @@ class ProductVariant
     {
         if (!$this->sizes->contains($sizeStock)) {
             $this->sizes->add($sizeStock);
-            $sizeStock->setProductVariant($this); // Set the inverse relationship
+            $sizeStock->setProductVariant($this);
         }
 
         return $this;
@@ -112,7 +138,7 @@ class ProductVariant
     {
         if ($this->sizes->removeElement($sizeStock)) {
             if ($sizeStock->getProductVariant() === $this) {
-                $sizeStock->setProductVariant(null); // Remove the inverse relationship
+                $sizeStock->setProductVariant(null);
             }
         }
 
@@ -127,7 +153,7 @@ class ProductVariant
             }
         }
 
-        return null; // Retourne null si la taille n'est pas trouvée
+        return null;
     }
 
     public function getSizeStockDetails(): array
@@ -139,20 +165,6 @@ class ProductVariant
             ];
         })->toArray();
     }
-
-    
-
-    // public function getStock(): ?int
-    // {
-    //     return $this->stock;
-    // }
-
-    // public function setStock(int $stock): static
-    // {
-    //     $this->stock = $stock;
-
-    //     return $this;
-    // }
 
     public function getPrice(): ?float
     {
@@ -225,7 +237,6 @@ class ProductVariant
     public function removeCart(Cart $cart): self
     {
         if ($this->cart->removeElement($cart)) {
-            // set the owning side to null (unless already changed)
             if ($cart->getProduct() === $this) {
                 $cart->setProduct(null);
             }
@@ -233,7 +244,6 @@ class ProductVariant
 
         return $this;
     }
-
 
     /**
      * @return Collection<int, CartDetails>
@@ -256,7 +266,6 @@ class ProductVariant
     public function removeCartDetail(CartDetails $cartDetail): self
     {
         if ($this->cartDetails->removeElement($cartDetail)) {
-            // set the owning side to null (unless already changed)
             if ($cartDetail->getProduct() === $this) {
                 $cartDetail->setProduct(null);
             }

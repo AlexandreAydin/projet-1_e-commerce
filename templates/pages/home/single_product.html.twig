@@ -15,12 +15,46 @@
                     <div class="product-image product-image-sticky">
                         <div class="main_image_container position-relative">
                             <div class="mb-4">
-                                <img id="main_product_img" src="{{ asset('images/products/default.jpg') }}" alt="Image principale" style="height: 100%; width: 100%; object-fit: cover;" />
+                                {# Image initiale rendue côté serveur — zéro délai #}
+                                {% set first_img = null %}
+                                {% for v in product.variants %}
+                                    {% if first_img is null and v.variantImages|length > 0 %}
+                                        {% set first_img = v.variantImages|first %}
+                                    {% endif %}
+                                {% endfor %}
+                                <img id="main_product_img"
+                                     src="{{ first_img ? asset('images/products/' ~ first_img.imageName) : asset('images/products/default.jpg') }}"
+                                     alt="Image principale"
+                                     style="height: 100%; width: 100%; object-fit: cover;" />
                             </div>
                         </div>
 
                         <div id="thumbnails" class="row">
-                            <!-- Les miniatures seront générées dynamiquement avec JS -->
+                            {# Miniatures initiales rendues côté serveur #}
+                            {% if first_img is not null %}
+                                {% set first_variant = null %}
+                                {% for v in product.variants %}
+                                    {% if first_variant is null and v.variantImages|length > 0 %}
+                                        {% set first_variant = v %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if first_variant %}
+                                    {% set imgs = first_variant.variantImages|filter(i => not (i.imageName matches '/\.(mp4|webm)$/i')) %}
+                                    {% for image in imgs|slice(0, 5) %}
+                                        <div class="mb-3 mx-2">
+                                            <div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;">
+                                                <a href="/images/products/{{ image.imageName }}"
+                                                   data-fancybox="product-images"
+                                                   data-large-src="/images/products/{{ image.imageName }}">
+                                                    <img src="/images/products/{{ image.imageName }}"
+                                                         class="thumbnail img-fluid"
+                                                         style="width:100%;height:100%;object-fit:cover;">
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -28,11 +62,17 @@
                     <div class="pr_detail">
                         <div class="product_description">
                             <h4 class="product_title">{{ product.name }}</h4>
+                            {% set first_variant = product.variants|first %}
+                            {% if first_variant %}
+                                {% set init_price = first_variant.price %}
+                                {% set init_off   = first_variant.offVariant ?? 0 %}
+                                {% set init_final = init_price - (init_price * init_off / 100) %}
+                            {% endif %}
                             <div class="product_price d-flex variant-price" style=" margin-left: 0;">
-                                <span id="variant-price" class="price">-- €</span>
-                                <del id="old-price" style="display: none;">-- €</del>
-                                <div id="variant-off" class="on_sale" style="display: none;">
-                                <span>--% réduction</span>
+                                <span id="variant-price" class="price">{{ first_variant ? init_final|number_format(2, '.', '') ~ ' €' : '-- €' }}</span>
+                                <del id="old-price" style="display: {{ (first_variant and init_off > 0) ? 'inline' : 'none' }};">{{ first_variant ? init_price|number_format(2, '.', '') ~ ' €' : '-- €' }}</del>
+                                <div id="variant-off" class="on_sale" style="display: {{ (first_variant and init_off > 0) ? 'block' : 'none' }};">
+                                <span>{{ (first_variant and init_off > 0) ? init_off ~ '% réduction' : '--% réduction' }}</span>
                             </div>
                         </div> 
                         <hr class="hr-price">
@@ -45,18 +85,39 @@
                             <br>
                             <br>
                             <hr>
+
+                            {# ── SEUL CHANGEMENT : badges modernes + EAN dynamique ── #}
                             <div class="product_sort_info">
-                                <ul>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
                                     {% if product.isWarranty %}
-                                    <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
+                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#f0faf4;border:1px solid #b7dfc8;color:#2d7a4f;font-size:13px;font-weight:600;">
+                                        <i class="linearicons-shield-check"></i> Garantie
+                                    </span>
                                     {% endif %}
-                                    <li><i class="linearicons-truck"></i>Livraison Rapide</li>
-                                    <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
-                                    {% if product.ean %}
-                                    <li><i class="linearicons-barcode"></i> EAN / CodeBar: {{product.ean}}</li>
+                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#f0f6ff;border:1px solid #b3cdf0;color:#2a5cb8;font-size:13px;font-weight:600;">
+                                        <i class="linearicons-truck"></i> Livraison Rapide
+                                    </span>
+                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#fffbf0;border:1px solid #f0dcb3;color:#a0700a;font-size:13px;font-weight:600;">
+                                        <i class="linearicons-bag-dollar"></i> Paiement sécurisé
+                                    </span>
+                                </div>
+                                {# EAN initial : première variante avec un EAN #}
+                                {% set init_ean = '' %}
+                                {% for v in product.variants %}
+                                    {% if init_ean == '' and v.ean %}
+                                        {% set init_ean = v.ean %}
                                     {% endif %}
-                                </ul>
+                                {% endfor %}
+                                <div id="ean-block" style="display:{{ init_ean ? 'flex' : 'none' }};align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#fafafa;border:1px solid #e8e8e8;width:fit-content;">
+                                    <i class="linearicons-barcode" style="color:#555;font-size:16px;"></i>
+                                    <div style="line-height:1.3;">
+                                        <span style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;display:block;">EAN / Code-barres</span>
+                                        <span id="ean-value" style="font-size:14px;font-weight:700;color:#333;letter-spacing:1px;font-family:monospace;">{{ init_ean }}</span>
+                                    </div>
+                                </div>
                             </div>
+                            {# ── FIN CHANGEMENT ── #}
+
                             {% set displayed_sizes = [] %}
                             {% set displayed_colors = [] %}
                         
@@ -91,79 +152,204 @@
 
                             {# === COULEUR === #}
                         <!-- Sélection de la couleur -->
-                        <div class="d-flex variant-product">
+                        <div class="d-flex flex-column variant-product">
 
                             {# === BLOC COULEUR === #}
                             {% set has_real_color = false %}
                             {% for variant in product.variants %}
-                                {% if variant.color|trim|upper != 'COULEUR INDISPONIBLE' %}
+                                {% if 'INDISPONIBLE' not in variant.color|trim|upper %}
                                     {% set has_real_color = true %}
                                 {% endif %}
                             {% endfor %}
 
                             <div class="form-group" id="color-group" {% if not has_real_color %}style="display: none;"{% endif %}>
-                                <label for="color">Couleur :</label>
-                                <select name="color" id="color" class="form-control">
+                                <label class="d-block mb-2">
+                                    Couleur : <strong id="selected-color-name">
+                                        {% set first_color_shown = false %}
+                                        {% for variant in product.variants %}
+                                            {% if not first_color_shown and 'INDISPONIBLE' not in variant.color|trim|upper %}
+                                                {{ variant.color }}
+                                                {% set first_color_shown = true %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </strong>
+                                </label>
+
+                                {# Select caché — toutes les couleurs incluses (même INDISPONIBLE) pour que le thème puisse lire la valeur #}
+                                <select name="color" id="color" class="form-control" style="display:none;">
                                     {% set displayed_colors = [] %}
                                     {% for variant in product.variants %}
-                                        {% if variant.color not in displayed_colors and variant.color|trim|upper != 'COULEUR INDISPONIBLE' %}
+                                        {% if variant.color not in displayed_colors %}
                                             <option value="{{ variant.color }}">{{ variant.color }}</option>
                                             {% set displayed_colors = displayed_colors|merge([variant.color]) %}
                                         {% endif %}
                                     {% endfor %}
                                 </select>
+
+                                {# Swatches modernes #}
+                                <div class="color-swatches d-flex flex-wrap gap-2">
+                                    {% set displayed_colors = [] %}
+                                    {% set is_first = true %}
+                                    {% for variant in product.variants %}
+                                        {% if variant.color not in displayed_colors and 'INDISPONIBLE' not in variant.color|trim|upper %}
+                                            <div class="color-swatch-item text-center" style="cursor:pointer; width:52px;">
+                                                <div class="color-swatch-circle {% if is_first %}active{% endif %}"
+                                                     data-color="{{ variant.color }}"
+                                                     style="
+                                                        width: 40px;
+                                                        height: 40px;
+                                                        border-radius: 50%;
+                                                        background-color: {{ variant.colorHex ?? variant.color }};
+                                                        margin: 0 auto 4px;
+                                                        border: 2px solid {% if is_first %}#C8A96E{% else %}#ddd{% endif %};
+                                                        box-shadow: {% if is_first %}0 0 0 2px #fff, 0 0 0 4px #C8A96E{% else %}none{% endif %};
+                                                        transition: all .2s;
+                                                     ">
+                                                </div>
+                                                <span style="font-size:10px; color:#555; display:block; line-height:1.2; word-break:break-word;">
+                                                    {{ variant.color }}
+                                                </span>
+                                            </div>
+                                            {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                            {% set is_first = false %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
 
                             {# === BLOC TAILLE === #}
                             {% set has_real_size = false %}
                             {% for variant in product.variants %}
                                 {% for size in variant.sizes %}
-                                    {% if size.size|trim|upper != 'TAILLE INDISPONIBLE' %}
+                                    {% if 'INDISPONIBLE' not in size.size|trim|upper %}
                                         {% set has_real_size = true %}
                                     {% endif %}
                                 {% endfor %}
                             {% endfor %}
 
-                            <div class="form-group mx-4" id="size-group" {% if not has_real_size %}style="display: none;"{% endif %}>
-                                <label for="size">Taille :</label>
-                                <select name="size" id="size" class="form-control">
+                            <div class="form-group mt-3" id="size-group" {% if not has_real_size %}style="display: none;"{% endif %}>
+                                <label class="d-block mb-2">
+                                    Taille : <strong id="selected-size-name">
+                                        {% set first_size_shown = false %}
+                                        {% for variant in product.variants %}
+                                            {% for size in variant.sizes %}
+                                                {% if not first_size_shown and 'INDISPONIBLE' not in size.size|trim|upper %}
+                                                    {{ size.size }}
+                                                    {% set first_size_shown = true %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </strong>
+                                </label>
+
+                                {# Select caché — toutes les tailles incluses (même INDISPONIBLE) pour que le stock soit lisible #}
+                                <select name="size" id="size" class="form-control" style="display:none;">
                                     {% for variant in product.variants %}
                                         {% for size in variant.sizes %}
-                                            {% if size.size|trim|upper != 'TAILLE INDISPONIBLE' %}
-                                                <option value="{{ size.size }}"
-                                                        data-variant-id="{{ variant.id }}"
-                                                        data-stock="{{ size.stock }}"
-                                                        data-color="{{ variant.color }}">
-                                                    {{ size.size }}
-                                                </option>
-                                            {% endif %}
+                                            <option value="{{ size.size }}"
+                                                    data-variant-id="{{ variant.id }}"
+                                                    data-stock="{{ size.stock }}"
+                                                    data-color="{{ variant.color }}">
+                                                {{ size.size }}
+                                            </option>
                                         {% endfor %}
                                     {% endfor %}
                                 </select>
+
+                                {# Pills modernes — seules les tailles de la première couleur active sont visibles au chargement #}
+                                {% set init_color = '' %}
+                                {% for v in product.variants %}
+                                    {% if init_color == '' and 'INDISPONIBLE' not in v.color|trim|upper %}
+                                        {% set init_color = v.color %}
+                                    {% endif %}
+                                {% endfor %}
+                                {# Si toutes les couleurs sont INDISPONIBLE, prendre la première quand même #}
+                                {% if init_color == '' and product.variants|length > 0 %}
+                                    {% set init_color = product.variants|first.color %}
+                                {% endif %}
+                                <div class="size-pills d-flex flex-wrap gap-2" id="size-pills-container">
+                                    {% set displayed_sizes = [] %}
+                                    {% set is_first_size = true %}
+                                    {% for variant in product.variants %}
+                                        {% for size in variant.sizes %}
+                                            {% if 'INDISPONIBLE' not in size.size|trim|upper and size.size not in displayed_sizes %}
+                                                {# Visible uniquement si cette pill correspond à la couleur initiale #}
+                                                {% set pill_visible = (variant.color == init_color) %}
+                                                {% set pill_active  = (is_first_size and pill_visible) %}
+                                                <button type="button"
+                                                        class="size-pill {% if pill_active %}active{% endif %}"
+                                                        data-size="{{ size.size }}"
+                                                        data-color="{{ variant.color }}"
+                                                        {% if size.stock == 0 %}data-out-of-stock="1"{% endif %}
+                                                        style="
+                                                            display: {% if pill_visible %}inline-flex{% else %}none{% endif %};
+                                                            align-items: center;
+                                                            justify-content: center;
+                                                            min-width: 44px;
+                                                            height: 36px;
+                                                            padding: 0 12px;
+                                                            border-radius: 6px;
+                                                            border: 2px solid {% if pill_active %}#C8A96E{% else %}#ddd{% endif %};
+                                                            background: {% if pill_active %}#C8A96E{% else %}#fff{% endif %};
+                                                            color: {% if pill_active %}#fff{% else %}#333{% endif %};
+                                                            font-size: 13px;
+                                                            font-weight: 600;
+                                                            cursor: {% if size.stock == 0 %}not-allowed{% else %}pointer{% endif %};
+                                                            opacity: {% if size.stock == 0 %}0.4{% else %}1{% endif %};
+                                                            transition: all .2s;
+                                                            position: relative;
+                                                        ">
+                                                    {{ size.size }}
+                                                    {% if size.stock == 0 %}
+                                                        <span style="position:absolute;top:50%;left:0;width:100%;height:1px;background:#999;transform:rotate(-15deg);"></span>
+                                                    {% endif %}
+                                                </button>
+                                                {% if pill_visible %}
+                                                    {% set displayed_sizes = displayed_sizes|merge([size.size]) %}
+                                                    {% set is_first_size = false %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
                             </div>
 
                         </div>
+                        {# Stock initial calculé côté serveur — zéro flash #}
+                        {% set init_stock = 0 %}
+                        {% set init_variant_id = '' %}
+                        {% for v in product.variants %}
+                            {% for s in v.sizes %}
+                                {% if init_stock == 0 and s.stock > 0 %}
+                                    {% set init_stock = s.stock %}
+                                    {% set init_variant_id = v.id %}
+                                {% endif %}
+                            {% endfor %}
+                            {# Si pas de tailles du tout, prendre le premier variant_id uniquement #}
+                            {% if init_variant_id == '' %}
+                                {% set init_variant_id = v.id %}
+                            {% endif %}
+                        {% endfor %}
                         <div class="cart_extra col-12">
-                            {# CORRECTION 1 : display:none par défaut → le JS l'affiche instantanément si stock > 0 #}
-                            <div id="stockMessage" class="stock-message" style="display: none;">
+                            <div id="stockMessage" class="stock-message" style="display: {{ init_stock > 0 ? 'none' : 'block' }};">
                                 Ce produit est indisponible pour le moment.
                             </div>
-                            
+
                             <!-- Quantité et boutons -->
                             <div class="cart-product-quantity mb-4">
-                                <div class="quantity">
+                                <div class="quantity" style="display: {{ init_stock > 0 ? 'flex' : 'none' }};">
                                     <input type="button" value="-" class="minus">
                                     <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
                                     <input type="button" value="+" class="plus">
                                 </div>
                             </div>
 
-                            <div class="cart_btn mb-4" style="display: none;">
-                                <a href="#" 
-                                    class="btn btn-fill-out btn-addtocart" 
-                                    data-variant-id="{{ variant.id }}" 
+                            <div class="cart_btn mb-4" style="display: {{ init_stock > 0 ? 'block' : 'none' }};">
+                                <a href="#"
+                                    class="btn btn-fill-out btn-addtocart"
+                                    data-variant-id="{{ init_variant_id }}"
                                     type="button">
-                                    <i class="icon-basket-loaded" data-variant-id="1"></i> Ajouter au panier
+                                    <i class="icon-basket-loaded"></i> Ajouter au panier
                                 </a>
                                 <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
                             </div>
@@ -474,13 +660,6 @@
                     {% endif %}
                 </div>
             </div>
-            {# <div class="row">
-                <div class="col-12">
-                    <div class="small_divider"></div>
-                    <div class="divider"></div>
-                    <div class="medium_divider"></div>
-                </div>
-            </div> #}
             <div class="container mt-4">
                 <div class="col-12">
                     <div class="heading_s1">
@@ -503,7 +682,7 @@
 
 
     <script type="application/json" id="productVariantsData">
-        {{ variants|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}
+        [{% for variant in product.variants %}{"id":{{ variant.id }},"color":{{ variant.color|json_encode|raw }},"colorHex":{{ (variant.colorHex ?? '')|json_encode|raw }},"ean":{{ (variant.ean ?? '')|json_encode|raw }},"price":{{ variant.price }},"offVariant":{{ variant.offVariant ?? 0 }},"sizes":[{% for size in variant.sizes %}{"size":{{ size.size|json_encode|raw }},"stock":{{ size.stock }}}{% if not loop.last %},{% endif %}{% endfor %}],"images":[{% for image in variant.variantImages %}{"imageName":{{ image.imageName|json_encode|raw }},"thumbnailName":{{ (image.thumbnailName ?? '')|json_encode|raw }}}{% if not loop.last %},{% endif %}{% endfor %}]}{% if not loop.last %},{% endif %}{% endfor %}]
     </script>
 
 
@@ -608,6 +787,112 @@
 
             colorSelect.addEventListener('change', updateSizes);
             updateSizes();
+        });
+
+
+        {# === SWATCHES COULEUR — gestion des clics === #}
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect = document.getElementById('color');
+            const colorNameLabel = document.getElementById('selected-color-name');
+
+            document.querySelectorAll('.color-swatch-circle').forEach(function (swatch) {
+                swatch.addEventListener('click', function () {
+                    const color = this.getAttribute('data-color');
+
+                    // Met à jour le select caché → déclenche toute la logique JS existante
+                    colorSelect.value = color;
+                    colorSelect.dispatchEvent(new Event('change'));
+
+                    // Met à jour le label
+                    if (colorNameLabel) colorNameLabel.textContent = color;
+
+                    // Retire l'état actif de tous les swatches
+                    document.querySelectorAll('.color-swatch-circle').forEach(function (s) {
+                        s.style.border      = '2px solid #ddd';
+                        s.style.boxShadow   = 'none';
+                    });
+
+                    // Active le swatch cliqué
+                    this.style.border     = '2px solid #C8A96E';
+                    this.style.boxShadow  = '0 0 0 2px #fff, 0 0 0 4px #C8A96E';
+                });
+            });
+        });
+
+
+        {# === PILLS TAILLE — gestion des clics + refresh quand couleur change === #}
+        document.addEventListener('DOMContentLoaded', function () {
+            const sizeSelect    = document.getElementById('size');
+            const colorSelect   = document.getElementById('color');
+            const sizeName      = document.getElementById('selected-size-name');
+            const pillContainer = document.getElementById('size-pills-container');
+
+            // ── Active une pill et sync le select caché ─────────────────────
+            function activatePill(pill) {
+                if (!pill || pill.dataset.outOfStock === '1') return;
+
+                // Reset toutes les pills
+                pillContainer.querySelectorAll('.size-pill').forEach(p => {
+                    p.style.border     = '2px solid #ddd';
+                    p.style.background = '#fff';
+                    p.style.color      = '#333';
+                });
+
+                // Active la pill cliquée
+                pill.style.border     = '2px solid #C8A96E';
+                pill.style.background = '#C8A96E';
+                pill.style.color      = '#fff';
+
+                // Sync select caché → déclenche tout le JS existant (stock, prix, images)
+                sizeSelect.value = pill.dataset.size;
+                sizeSelect.dispatchEvent(new Event('change'));
+
+                // Met à jour le label
+                if (sizeName) sizeName.textContent = pill.dataset.size;
+            }
+
+            // ── Rebuild les pills visibles quand la couleur change ───────────
+            function refreshPillsForColor(selectedColor) {
+                const allPills = pillContainer.querySelectorAll('.size-pill');
+                let firstVisible = null;
+
+                allPills.forEach(pill => {
+                    const pillColor = pill.dataset.color;
+                    if (pillColor === selectedColor) {
+                        pill.style.display = 'inline-flex';
+                        if (!firstVisible) firstVisible = pill;
+                    } else {
+                        pill.style.display = 'none';
+                        // Reset style des pills cachées
+                        pill.style.border     = '2px solid #ddd';
+                        pill.style.background = '#fff';
+                        pill.style.color      = '#333';
+                    }
+                });
+
+                // Active automatiquement la première taille disponible
+                if (firstVisible) activatePill(firstVisible);
+            }
+
+            // ── Listeners clics sur les pills ────────────────────────────────
+            pillContainer.querySelectorAll('.size-pill').forEach(pill => {
+                pill.addEventListener('click', function () {
+                    activatePill(this);
+                });
+            });
+
+            // ── Quand la couleur change → on filtre les pills ────────────────
+            if (colorSelect) {
+                colorSelect.addEventListener('change', function () {
+                    refreshPillsForColor(this.value);
+                });
+                // Init au chargement
+                refreshPillsForColor(colorSelect.value);
+            } else {
+                // Pas de couleur → active juste la première pill
+                const firstPill = pillContainer.querySelector('.size-pill:not([data-out-of-stock="1"])');
+                if (firstPill) activatePill(firstPill);
+            }
         });
 
 
@@ -828,7 +1113,18 @@
             const decreaseButton = document.querySelector('.minus');
             const addToCartContainer = document.querySelector('.cart_btn');
             const stockMessage = document.getElementById('stockMessage');
-            let maxStock = 0;
+            // Initialiser maxStock depuis le JSON côté serveur — zéro délai
+            let maxStock = (() => {
+                try {
+                    const data = JSON.parse(document.getElementById('productVariantsData').textContent);
+                    if (!data || !data[0]) return 0;
+                    const v = data[0];
+                    if (!v.sizes || v.sizes.length === 0) return 0;
+                    // Stock de la première taille avec stock > 0
+                    const s = v.sizes.find(s => s.stock > 0);
+                    return s ? parseInt(s.stock, 10) : 0;
+                } catch(e) { return 0; }
+            })();
 
             async function fetchStock(size, variantId) {
                 try {
@@ -846,6 +1142,9 @@
                 maxStock = stock;
                 resetQuantity();
                 updateIncrementButton();
+                // Mettre à jour le data-variant-id sur le bouton "Ajouter au panier"
+                const addToCartBtn = addToCartContainer.querySelector('.btn-addtocart');
+                if (addToCartBtn && variantId) addToCartBtn.dataset.variantId = variantId;
                 if (stock > 0) {
                     quantityInput.style.display = 'block';
                     incrementButton.style.display = 'block';
@@ -861,21 +1160,53 @@
                 }
             }
 
+            function getStockFromJSON(variantId) {
+                // Lit le stock directement depuis productVariantsData sans fetch réseau
+                try {
+                    const data = JSON.parse(document.getElementById('productVariantsData').textContent);
+                    const v = data.find(vv => String(vv.id) === String(variantId)) || data[0];
+                    if (!v) return 0;
+                    // Somme du stock de toutes les tailles (ou première taille si une seule)
+                    const sizes = v.sizes || [];
+                    return sizes.reduce((acc, s) => acc + parseInt(s.stock || 0, 10), 0);
+                } catch(e) { return 0; }
+            }
+
             function initStockFromHTML() {
-                // Lit data-stock directement dans le HTML → instantané, zéro réseau
                 const selectedOption = sizeSelect ? sizeSelect.options[sizeSelect.selectedIndex] : null;
-                if (!selectedOption) return;
-                const stock = parseInt(selectedOption.getAttribute('data-stock') || '0', 10);
-                const variantId = selectedOption.getAttribute('data-variant-id') || '';
-                applyStockUI(stock, variantId);
+                if (selectedOption) {
+                    const variantId = selectedOption.getAttribute('data-variant-id') || '';
+                    const sizeName  = (selectedOption.value || '').trim().toUpperCase();
+                    if (sizeName.includes('INDISPONIBLE')) {
+                        // Taille INDISPONIBLE → lire le stock total du variant depuis le JSON
+                        const stock = getStockFromJSON(variantId);
+                        applyStockUI(stock, variantId);
+                    } else {
+                        const stock = parseInt(selectedOption.getAttribute('data-stock') || '0', 10);
+                        applyStockUI(stock, variantId);
+                    }
+                } else {
+                    // Pas d'option du tout → fallback JSON premier variant
+                    try {
+                        const data = JSON.parse(document.getElementById('productVariantsData').textContent);
+                        const v = data[0];
+                        if (v) {
+                            const stock = getStockFromJSON(v.id);
+                            applyStockUI(stock, String(v.id));
+                        }
+                    } catch(e) { console.warn('initStockFromHTML fallback error', e); }
+                }
             }
 
             async function updateStock() {
                 const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-                const selectedSize = selectedOption.value;
-                const variantId = selectedOption.getAttribute('data-variant-id');
-                if (!selectedSize || !variantId) {
-                    console.warn('Taille ou variante non sélectionnée.');
+                const selectedSize   = selectedOption.value;
+                const variantId      = selectedOption.getAttribute('data-variant-id');
+                if (!selectedSize || !variantId) return;
+                // Si taille INDISPONIBLE → pas de fetch, on lit le JSON directement
+                if (selectedSize.trim().toUpperCase().includes('INDISPONIBLE')) {
+                    const stock = getStockFromJSON(variantId);
+                    applyStockUI(stock, variantId);
                     return;
                 }
                 const stock = await fetchStock(selectedSize, variantId);
@@ -909,8 +1240,7 @@
             incrementButton.addEventListener('click', () => setTimeout(updateIncrementButton, 0));
             decreaseButton.addEventListener('click',  () => setTimeout(updateIncrementButton, 0));
 
-            // Au chargement : lecture instantanée HTML (pas de fetch → pas de délai)
-            initStockFromHTML();
+            // État initial déjà rendu par Twig — initStockFromHTML() retiré pour éviter écrasement
         });
 
 
@@ -982,11 +1312,11 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             const colorOptions = document.querySelectorAll('#color option');
-            const sizeOptions = document.querySelectorAll('#size option');
-            if (colorOptions.length > 0 && Array.from(colorOptions).every(opt => opt.value.trim().toUpperCase() === 'COULEUR INDISPONIBLE')) {
+            const sizeOptions  = document.querySelectorAll('#size option');
+            if (colorOptions.length > 0 && Array.from(colorOptions).every(opt => opt.value.trim().toUpperCase().includes('INDISPONIBLE'))) {
                 document.getElementById('color-group')?.style.setProperty('display', 'none', 'important');
             }
-            if (sizeOptions.length > 0 && Array.from(sizeOptions).every(opt => opt.value.trim().toUpperCase() === 'TAILLE INDISPONIBLE')) {
+            if (sizeOptions.length > 0 && Array.from(sizeOptions).every(opt => opt.value.trim().toUpperCase().includes('INDISPONIBLE'))) {
                 document.getElementById('size-group')?.style.setProperty('display', 'none', 'important');
             }
         });
@@ -1105,6 +1435,75 @@
             if (sizeSelect) sizeSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
             updatePrice();
             updateImages();
+        });
+
+
+        {# === DEBUG PANIER + PRIX AU CHARGEMENT === #}
+        document.addEventListener('DOMContentLoaded', function () {
+            const variantsData = JSON.parse(document.getElementById('productVariantsData').textContent);
+            const addToCartBtn = document.querySelector('.btn-addtocart');
+            const priceDisplay  = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+
+            // ── PRIX AU CHARGEMENT : lecture immédiate depuis JSON (pas d'attente JS) ──
+            if (variantsData.length > 0) {
+                const v = variantsData[0];
+                const finalPrice = v.price - (v.price * (v.offVariant || 0) / 100);
+                if (priceDisplay) priceDisplay.textContent = finalPrice.toFixed(2) + ' €';
+                if (v.offVariant > 0) {
+                    if (oldPriceDisplay) { oldPriceDisplay.textContent = v.price.toFixed(2) + ' €'; oldPriceDisplay.style.display = 'inline'; }
+                    if (discountDisplay) { discountDisplay.querySelector('span').textContent = v.offVariant + '% réduction'; discountDisplay.style.display = 'block'; }
+                }
+            }
+
+            // ── DEBUG PANIER ──
+            if (!addToCartBtn) {
+                console.error('[PANIER] .btn-addtocart introuvable dans le DOM');
+                return;
+            }
+
+            addToCartBtn.addEventListener('click', function (e) {
+                const vid = this.dataset.variantId;
+                console.log('[PANIER] Clic sur Ajouter au panier');
+                console.log('[PANIER] data-variant-id =', vid);
+                if (!vid) {
+                    console.error('[PANIER] ❌ data-variant-id est VIDE — le thème ne peut pas envoyer la requête');
+                } else {
+                    console.log('[PANIER] ✅ variant ID ok →', vid);
+                }
+            });
+
+            // Vérifie aussi que l'ID est bien mis à jour à chaque changement
+            const observer = new MutationObserver(() => {
+                console.log('[PANIER] data-variant-id mis à jour →', addToCartBtn.dataset.variantId);
+            });
+            observer.observe(addToCartBtn, { attributes: true, attributeFilter: ['data-variant-id'] });
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect  = document.getElementById('color');
+            const sizeSelect   = document.getElementById('size');
+            const eanBlock     = document.getElementById('ean-block');
+            const eanValue     = document.getElementById('ean-value');
+            const variantsData = JSON.parse(document.getElementById('productVariantsData').textContent);
+
+            function updateEan() {
+                const color = colorSelect ? colorSelect.value : null;
+                const v = color
+                    ? variantsData.find(vv => vv.color === color)
+                    : variantsData[0];
+                if (!eanBlock || !eanValue) return;
+                if (v && v.ean) {
+                    eanValue.textContent   = v.ean;
+                    eanBlock.style.display = 'flex';
+                } else {
+                    eanBlock.style.display = 'none';
+                }
+            }
+
+            if (colorSelect) colorSelect.addEventListener('change', updateEan);
+            if (sizeSelect)  sizeSelect.addEventListener('change',  updateEan);
+            updateEan();
         });
 
     </script>

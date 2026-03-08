@@ -32,7 +32,25 @@ class OrderServices{
         if (is_array($collection)) {
             return $collection;
         }
-        return []; // Retourne un tableau vide si ce n'est ni une collection ni un tableau
+        return [];
+    }
+
+    /**
+     * Extrait les noms de tailles (strings) depuis une collection de SizeStock
+     */
+    private function getSizeNames($sizes): array
+    {
+        $sizeObjects = $this->convertToArray($sizes);
+        return array_map(fn($s) => strtoupper(trim($s->getSize())), $sizeObjects);
+    }
+
+    /**
+     * Vérifie si une taille est "virtuelle" (produit sans vraie taille)
+     */
+    private function isVirtualSize(string $size): bool
+    {
+        $upper = strtoupper(trim($size));
+        return in_array($upper, ['INDISPONIBLE', 'UNIQUE', 'UNI', 'TAILLE UNIQUE', 'DEFAULT']);
     }
 
     public function createOrder(Cart $cart)
@@ -63,43 +81,33 @@ class OrderServices{
                 throw new \Exception("La variante est introuvable pour le produit '{$cartProduct->getProductName()}'.");
             }
 
-            $sizes = $this->convertToArray($variant->getSizes());
-            $selectedSize = $cartProduct->getSelectedSize();
-            
-            // Remplacer le bloc existant par :
-        // Normalize sizes and selected size
-        $sizes = array_map('strtoupper', $this->convertToArray($variant->getSizes()));
-        $selectedSize = strtoupper(trim($cartProduct->getSelectedSize()));
+            $selectedSize = strtoupper(trim($cartProduct->getSelectedSize() ?? ''));
+            $sizeNames = $this->getSizeNames($variant->getSizes());
 
-        // Cas spécial pour produits sans variante de taille
-        if (empty($sizes)) {
-            if ($selectedSize !== 'UNI' && $selectedSize !== 'UNIQUE') {
-                throw new \Exception("Aucune taille requise mais sélection détectée : $selectedSize");
+            // Cas INDISPONIBLE ou taille virtuelle → pas de validation de stock
+            if ($this->isVirtualSize($selectedSize)) {
+                // Taille virtuelle acceptée telle quelle
+            } elseif (empty($sizeNames)) {
+                // Pas de tailles en BDD → on accepte tout
+            } elseif (!in_array($selectedSize, $sizeNames)) {
+                // Chercher une correspondance partielle (sécurité anti-troncature)
+                $found = false;
+                foreach ($sizeNames as $validSize) {
+                    if (str_starts_with($validSize, $selectedSize)) {
+                        $selectedSize = $validSize;
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    throw new \Exception(sprintf(
+                        "Taille '%s' invalide pour %s. Tailles valides : %s",
+                        $selectedSize,
+                        $variant->getProduct()->getName(),
+                        implode(', ', $sizeNames)
+                    ));
+                }
             }
-            $selectedSize = 'UNIQUE';
-        } 
-        else {
-            $normalizedSizes = array_map(function($size) {
-                $normalized = str_replace(['TAILLE ', ' '], '', strtoupper($size));
-                return $normalized === 'UNI' ? 'UNIQUE' : $normalized;
-            }, $sizes);
-
-            $normalizedSelected = str_replace(['TAILLE ', ' '], '', $selectedSize);
-            $normalizedSelected = $normalizedSelected === 'UNI' ? 'UNIQUE' : $normalizedSelected;
-
-            if (!in_array($normalizedSelected, $normalizedSizes)) {
-                throw new \Exception(sprintf(
-                    "Taille '%s' invalide pour %s. Tailles valides : %s",
-                    $selectedSize,
-                    $variant->getProduct()->getName(),
-                    implode(', ', $sizes)
-                ));
-            }
-
-            $selectedSize = in_array('UNIQUE', $normalizedSizes) ? 'TAILLE UNIQUE' : $selectedSize;
-        }
-            
-            
 
             $orderDetails->setOrders($order)
                 ->setProductName($cartProduct->getProductName())
@@ -127,32 +135,29 @@ class OrderServices{
         $line_items = [];
         foreach ($cartDetails as $details) {
             $product = $this->repoProduct->findOneByName($details->getProductName());
-            $variant = $details->getVariant(); // Récupération de la variante associée
+            $variant = $details->getVariant();
             
-            // Ajouter les informations de la variante, si elle existe
             $variantDetails = $variant ? [
                 'id' => $variant->getId(),
                 'price' => $variant->getPrice(),
                 'offVariant' => $variant->getOffVariant(),
-                'size' => $variant->getSizes(), // Attention, vérifiez que 'sizes' est bien défini
+                'size' => $variant->getSizes(),
                 'color' => $variant->getColor(),
             ] : null;
     
             $line_items[] = [
                 'price_data' => [
                     'currency' => 'eur',
-                    'unit_amount' => $variant ? $variant->getPrice() * 100 : $product->getPrice(), // Priorité au prix de la variante
+                    'unit_amount' => $variant ? $variant->getPrice() * 100 : $product->getPrice(),
                     'product_data' => [
                         'name' => $product->getName(),
-                        // 'images' => [$YOUR_DOMAIN . "/uploads/products/" . $product->getImages()[0]->getImageName()],
                     ],
                 ],
                 'quantity' => $details->getQuantity(),
-                'variant' => $variantDetails, // Ajout des détails de la variante
+                'variant' => $variantDetails,
             ];
         }
     
-        // Ajouter les frais de livraison
         $line_items[] = [
             'price_data' => [
                 'currency' => 'eur',
@@ -165,7 +170,6 @@ class OrderServices{
             'quantity' => 1,
         ];
     
-        // Ajouter la TVA
         $line_items[] = [
             'price_data' => [
                 'currency' => 'eur',
@@ -180,7 +184,6 @@ class OrderServices{
     
         return $line_items;
     }
-    
 
     public function saveCart($data, $user)
     {
@@ -205,7 +208,6 @@ class OrderServices{
             ->setUser($user)
             ->setCreatedAt(new \DateTimeImmutable());
         
-        // Adding each product to cart details
         foreach ($data['products'] as $productData) {
             $cartDetails = new CartDetails();
     
@@ -219,46 +221,31 @@ class OrderServices{
                 throw new \Exception('Product not found.');
             }
 
-            $selectedSize = $productData['variant']['size'] ?? null;
-            $sizes = $variant->getSizes();
+            $selectedSize = strtoupper(trim($productData['variant']['size'] ?? 'INDISPONIBLE'));
+            $sizeNames = $this->getSizeNames($variant->getSizes());
 
-            // Convertir la collection Doctrine en un tableau PHP
-            if ($sizes instanceof \Doctrine\Common\Collections\Collection) {
-                $sizes = $sizes->toArray();
+            // Valider la taille seulement si ce n'est pas une taille virtuelle
+            if (!$this->isVirtualSize($selectedSize) && !empty($sizeNames)) {
+                if (!in_array($selectedSize, $sizeNames)) {
+                    // Correspondance partielle (anti-troncature)
+                    $found = false;
+                    foreach ($sizeNames as $validSize) {
+                        if (str_starts_with($validSize, $selectedSize)) {
+                            $selectedSize = $validSize;
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        throw new \Exception("La taille sélectionnée '{$selectedSize}' n'est pas valide pour la variante ID {$variant->getId()}.");
+                    }
+                }
             }
 
-            if (!$selectedSize || !in_array($selectedSize, $sizes)) {
-                throw new \Exception("La taille sélectionnée '{$selectedSize}' n'est pas valide pour la variante ID {$variant->getId()}.");
-            }
-            $subTotal = $productData['quantity'] * $productEntity->getPrice() / 100;
-
-            // $cartDetails->setVariant($variant);
-    
-            $productEntity = $this->repoProduct->find($productData['product']['id']); // Assuming $productData['product'] is an array and has 'id'
-            if (!$productEntity) {
-                throw new \Exception('Product not found.');
-            }
-
-            // dump($productData['product']['id'], $productData['variant']['id']);exit();
-            
             $cart->setProduct($productEntity);
             $cart->setProductName($productEntity->getName());
 
             $subTotal = $productData['quantity'] * $productEntity->getPrice() / 100;
-
-            // $variant = $this->manager->getRepository(ProductVariant::class)->find($productData['variant']['id']);
-
-            // if (!$variant) {
-            //     throw new \Exception("Variant with ID {$productData['variant']['id']} not found.");
-            // }
-
-            // $cartDetails->setVariant($variant);
-
-            $variant = $this->repoProductVariant->find($productData['variant']['id']); // Récupère la variante
-            if (!$variant) {
-                throw new \Exception("Variant with ID {$productData['variant']['id']} not found.");
-            }
-
 
             $cartDetails->setCarts($cart)
                 ->setProductName($productEntity->getName())
@@ -266,16 +253,12 @@ class OrderServices{
                 ->setProduct($productEntity)
                 ->setQuantity($productData['quantity'])
                 ->setSubTotalHT($subTotal)
-                ->setTaxe($subTotal/1.2 * 0.2)
+                ->setTaxe($subTotal / 1.2 * 0.2)
                 ->setVariant($variant)
                 ->setSubTotalTTC($subTotal * 1.2)
-                ->setVariant($variant) // Associer la variante
                 ->setSelectedSize($selectedSize);
-
                 
-            
             $this->manager->persist($cartDetails);
-            
         }
         
         $this->manager->persist($cart);
@@ -284,24 +267,18 @@ class OrderServices{
         return $reference;
     }
 
-
     public function generateUuid()
     {
         mt_srand((double)microtime()*100000);
-
         $charid = strtoupper(md5(uniqid(rand(), true)));
-
         $hyphen = chr(45);
-
-        $uuid= ""
-        .substr($charid, 0, 8).$hyphen
-        .substr($charid, 8, 4).$hyphen
-        .substr($charid, 12, 4).$hyphen
-        .substr($charid, 12, 4).$hyphen
-        .substr($charid, 16, 4).$hyphen
-        .substr($charid, 20, 4);
+        $uuid = ""
+            .substr($charid, 0, 8).$hyphen
+            .substr($charid, 8, 4).$hyphen
+            .substr($charid, 12, 4).$hyphen
+            .substr($charid, 12, 4).$hyphen
+            .substr($charid, 16, 4).$hyphen
+            .substr($charid, 20, 4);
         return $uuid;
-        
     }
 }
-

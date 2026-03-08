@@ -1,201 +1,190 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}Invoice{% endblock %}
-
-{% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('css/invoice.css') }}">
-{% endblock %}
-
-{% block body %}
-
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        color: #333;
-    }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:Arial,sans-serif; font-size:11px; color:#333; background:#fff; }
+.page { width:190mm; margin:0 auto; padding:8mm 10mm; }
 
-    .container {
-        width: 90%;
-        margin: auto;
-    }
+/* HEADER */
+.header { display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; border-bottom:2px solid #1a1a2e; margin-bottom:10px; }
+.brand { font-size:22px; font-weight:900; color:#1a1a2e; letter-spacing:1px; }
+.brand span { color:#c0a060; }
+.company-info { font-size:9px; color:#666; line-height:1.6; text-align:right; }
 
-    h1, h2, h3, strong {
-        color: #222;
-    }
+/* META */
+.meta-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.invoice-label { font-size:16px; font-weight:700; color:#1a1a2e; text-transform:uppercase; letter-spacing:2px; }
+.invoice-sub { font-size:9px; color:#999; margin-top:2px; }
+.meta-right { text-align:right; font-size:9px; color:#555; line-height:1.8; }
+.meta-right strong { color:#1a1a2e; }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
+/* ADDRESSES */
+.addresses { display:flex; gap:8px; margin-bottom:10px; }
+.addr-box { flex:1; border:1px solid #e8e8e8; border-radius:4px; padding:7px 10px; background:#fafafa; }
+.addr-box h4 { font-size:8px; text-transform:uppercase; letter-spacing:1px; color:#999; margin-bottom:5px; padding-bottom:3px; border-bottom:1px solid #eee; }
+.addr-box p { font-size:9px; line-height:1.7; color:#444; }
 
-    th, td {
-        padding: 10px;
-        text-align: center;
-        border: 1px solid #ddd;
-    }
+/* TABLE */
+table.products { width:100%; border-collapse:collapse; margin-bottom:10px; }
+table.products thead tr { background:#1a1a2e; color:#fff; }
+table.products thead th { padding:6px 8px; font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; }
+table.products thead th.r { text-align:right; }
+table.products tbody tr { border-bottom:1px solid #f0f0f0; }
+table.products tbody tr:nth-child(even) { background:#fafafa; }
+table.products tbody td { padding:6px 8px; font-size:10px; vertical-align:middle; }
+table.products tbody td.r { text-align:right; }
+.ref { font-size:8px; color:#bbb; }
+.badge { display:inline-block; background:#eee; border-radius:3px; padding:1px 5px; font-size:9px; color:#666; }
 
-    thead {
-        background-color: #f2f2f2;
-    }
+/* BOTTOM */
+.bottom { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }
+.payment-info { flex:1; font-size:9px; color:#777; line-height:1.8; }
+.payment-info strong { color:#333; font-size:10px; display:block; margin-bottom:4px; }
 
-    tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
+.totals { width:200px; }
+.t-row { display:flex; justify-content:space-between; padding:4px 0; font-size:10px; border-bottom:1px solid #f0f0f0; }
+.t-row .lbl { color:#777; }
+.t-row .val { font-weight:600; }
+.t-row.disc .val { color:#e74c3c; }
+.t-row.ship .val { color:#27ae60; }
+.t-row.total { border-top:2px solid #1a1a2e; border-bottom:none; padding-top:7px; margin-top:3px; }
+.t-row.total .lbl, .t-row.total .val { font-size:13px; font-weight:800; color:#1a1a2e; }
 
-    .customer-info {
-        text-align: right;
-    }
-
-    .summary-table {
-        width: 50%;
-        margin-left: auto;
-        text-align: right;
-        border: 1px solid #ccc;
-        margin-top: 40px;
-    }
-
-    .summary-table td {
-        padding: 8px 12px;
-        border: 1px solid #ccc;
-    }
-
-    .summary-table tr:last-child {
-        background-color: #f1f1f1;
-        font-weight: bold;
-    }
-
-    .info-section {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 40px;
-    }
-
-    .info-section div {
-        width: 48%;
-    }
-
-    .company-details {
-        font-weight: bold;
-    }
-
-    hr {
-        border: 0;
-        border-top: 1px solid #999;
-        margin: 20px 0;
-    }
+/* FOOTER */
+.footer { margin-top:10px; padding-top:7px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+.footer-note { font-size:8px; color:#bbb; line-height:1.6; }
+.status-badge { font-size:9px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:0.5px; color:#fff; }
+.paid { background:#27ae60; }
+.unpaid { background:#e74c3c; }
 </style>
-<div class="container">
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
     <div class="header">
+        <div>
+            <div class="brand">YILMI<span>MARKET</span></div>
+        </div>
         <div class="company-info">
-            Yilmi Market<br>
-            38 RUE DE BERRI<br>
-            75008 PARIS<br>
-            France<br>
-            Siret: 93947750100018<br>
-            N° TVA Intracomm.: FR30 939 477 501
-        </div>
-        <div class="customer-info">
-            {{ order.billingAddress | replace({'[spr]':'<br>'}) | raw }}
+            38 Rue de Berri, 75008 Paris, France &nbsp;|&nbsp;
+            SIRET : 93947750100018 &nbsp;|&nbsp; N° TVA : FR30 939 477 501<br>
+            contact@yilmimarket.com
         </div>
     </div>
 
-    <div class="order-info">
-        <p><strong>Date de la commande:</strong> {{ order.createdAt | date('d-m-Y') }}</p>
-        <p><strong>Référence de la commande:</strong> {{ order.reference }}</p>
-        <p><strong>Numéro de Factures:</strong> {{ order.createdAt | date('m-Y') }}-{{ order.id }}</p>
+    <!-- META -->
+    <div class="meta-row">
+        <div>
+            <div class="invoice-label">Facture</div>
+            <div class="invoice-sub">N° {{ order.createdAt|date('Y-m') }}-{{ order.id }}</div>
+        </div>
+        <div class="meta-right">
+            <div><strong>Date :</strong> {{ order.createdAt|date('d/m/Y') }}</div>
+            <div><strong>Réf. commande :</strong> {{ order.reference }}</div>
+            <div><strong>Client :</strong> {{ order.fullName }}</div>
+        </div>
     </div>
 
-    <table>
+    <!-- ADDRESSES -->
+    <div class="addresses">
+        <div class="addr-box">
+            <h4>Vendeur</h4>
+            <p><strong>Yilmi Market</strong><br>38 Rue de Berri<br>75008 Paris, France<br>SIRET : 93947750100018</p>
+        </div>
+        <div class="addr-box">
+            <h4>Adresse de facturation</h4>
+            <p>{{ order.billingAddress|replace({'[spr]': "\n"})|nl2br|raw }}</p>
+        </div>
+        <div class="addr-box">
+            <h4>Adresse de livraison</h4>
+            <p>{{ order.deliveryAddress|replace({'[spr]': "\n"})|nl2br|raw }}</p>
+        </div>
+    </div>
+
+    <!-- PRODUCTS TABLE -->
+    <table class="products">
         <thead>
             <tr>
-                <th>Référence</th>
-                <th>Nom du Produit</th>
-                <th>Quantité</th>
-                <th>Sous Total HT</th>
-                <th>Total TTC</th>
+                <th style="width:40%;text-align:left">Produit</th>
+                <th style="text-align:left">Taille</th>
+                <th style="text-align:left">Couleur</th>
+                <th class="r">Qté</th>
+                <th class="r">Prix unit. HT</th>
+                <th class="r">TVA 20%</th>
+                <th class="r">Total TTC</th>
             </tr>
         </thead>
         <tbody>
             {% for detail in order.orderDetails %}
-            <tr>
-                <td>{{ detail.id }}</td>
-                <td class='text-center'>
-                {{ detail.productName|length > 50 
-                    ? detail.productName|slice(0, 50) ~ '...' 
-                    : detail.productName 
-                }}
-            </td>
-                <td>{{ detail.quantity }}</td>
-                <td>{{ (detail.variant.price / 1.2 * (1 - detail.variant.offVariant / 100) * detail.quantity) | round(2, 'common') | number_format(2, '.', ',') }} €</td>
-                <td>{{ (detail.variant.price * (1 - detail.variant.offVariant / 100) * detail.quantity) | round(2, 'common') | number_format(2, '.', ',') }} €</td>
-            </tr>
+                {% set priceHT  = detail.variant.price / 1.2 * (1 - detail.variant.offVariant / 100) %}
+                {% set priceTTC = detail.variant.price * (1 - detail.variant.offVariant / 100) %}
+                {% set tva      = priceTTC - priceHT %}
+                <tr>
+                    <td>
+                        {{ detail.productName|length > 60 ? detail.productName|slice(0,60)~'…' : detail.productName }}
+                        <br><span class="ref">Réf. #{{ detail.id }}</span>
+                    </td>
+                    <td>
+                        {% set s = detail.selectedSize|upper %}
+                        {% if s not in ['INDISPONIBLE','INDISPONNIBLE','UNIQUE','TAILLE UNIQUE','DEFAULT'] and not ('INDISPONIB' in s) %}
+                            <span class="badge">{{ detail.selectedSize }}</span>
+                        {% else %}<span style="color:#ccc">—</span>{% endif %}
+                    </td>
+                    <td>
+                        {% set c = detail.variant.color|upper %}
+                        {% if not ('INDISPONIB' in c) and c not in ['UNIQUE','DEFAULT'] %}
+                            <span class="badge">{{ detail.variant.color }}</span>
+                        {% else %}<span style="color:#ccc">—</span>{% endif %}
+                    </td>
+                    <td class="r">{{ detail.quantity }}</td>
+                    <td class="r">{{ (priceHT)|round(2)|number_format(2, '.', ' ') }} €</td>
+                    <td class="r">{{ (tva * detail.quantity)|round(2)|number_format(2, '.', ' ') }} €</td>
+                    <td class="r"><strong>{{ (priceTTC * detail.quantity)|round(2)|number_format(2, '.', ' ') }} €</strong></td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <table class="summary-table">
-        <tbody>
-            {% if order.coupon %}
-                <tr>
-                    <td class="cart_total_label">Prix HT (avant la réduction):</td>
-                    <td class="cart_total_amount">{{ (order.subTotalHT / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Taxe (avant la réduction):</td>
-                    <td class="cart_total_amount">{{ (order.taxe / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Total TTC (avant la réduction):</td>
-                    <td class="cart_total_amount">{{ (order.subTotalHT / 100 + order.taxe / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td colspan="2"><hr></td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Code promo appliqué:</td>
-                    <td class="cart_total_amount">{{ order.coupon.code }}</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Réduction appliquée:</td>
-                    <td class="cart_total_amount">{{ order.coupon.discountAmount | number_format(2, '.', ',') }}%</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Commande Sous total (après réduction):</td>
-                    <td class="cart_total_amount">{{ ((order.subTotalHT * (1 - order.coupon.discountAmount / 100)) / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Taxe (après réduction):</td>
-                    <td class="cart_total_amount">{{ ((order.taxe * (1 - order.coupon.discountAmount / 100)) / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
-                    <td class="cart_total_amount">{{ order.carrierPrice / 100 | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr class="total-row">
-                    <td class="cart_total_label"><strong>Total (après réduction):</strong></td>
-                    <td class="cart_total_amount"><strong>{{ (((order.subTotalHT + order.taxe) * (1 - order.coupon.discountAmount / 100)) + order.carrierPrice) / 100 | number_format(2, '.', ',') }} €</strong></td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td class="cart_total_label">Commande Sous total:</td>
-                    <td class="cart_total_amount">{{ (order.subTotalHT / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Taxe:</td>
-                    <td class="cart_total_amount">{{ (order.taxe / 100) | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr>
-                    <td class="cart_total_label">Livraison avec ({{ order.carrierName }}):</td>
-                    <td class="cart_total_amount">{{ order.carrierPrice / 100 | number_format(2, '.', ',') }} €</td>
-                </tr>
-                <tr class="total-row">
-                    <td class="cart_total_label"><strong>Total:</strong></td>
-                    <td class="cart_total_amount"><strong>{{ (order.subTotalHT / 100 + order.taxe / 100 + order.carrierPrice / 100) | number_format(2, '.', ',') }} €</strong></td>
-                </tr>
+    <!-- BOTTOM: payment info + totals -->
+    <div class="bottom">
+        <div class="payment-info">
+            <strong>Informations de paiement</strong>
+            Mode de paiement : Carte bancaire (Stripe)<br>
+            Statut : {{ order.isPaid ? 'Paiement confirmé' : 'En attente de confirmation' }}<br>
+            {% if order.moreInformations %}
+                Note : {{ order.moreInformations }}
             {% endif %}
-        </tbody>
-    </table>
+        </div>
+        <div class="totals">
+            {% if order.coupon %}
+                <div class="t-row"><span class="lbl">Sous-total HT</span><span class="val">{{ (order.subTotalHT/100)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row"><span class="lbl">TVA (20%)</span><span class="val">{{ (order.taxe/100)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row disc"><span class="lbl">Réduction ({{ order.coupon.discountAmount }}%)</span><span class="val">- {{ ((order.subTotalHT+order.taxe)/100*order.coupon.discountAmount/100)|round(2)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row ship"><span class="lbl">Livraison</span><span class="val">{{ (order.carrierPrice/100)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row total"><span class="lbl">Total</span><span class="val">{{ (((order.subTotalHT+order.taxe)*(1-order.coupon.discountAmount/100))/100+order.carrierPrice/100)|round(2)|number_format(2,'.',' ') }} €</span></div>
+            {% else %}
+                <div class="t-row"><span class="lbl">Sous-total HT</span><span class="val">{{ (order.subTotalHT/100)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row"><span class="lbl">TVA (20%)</span><span class="val">{{ (order.taxe/100)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row ship"><span class="lbl">Livraison ({{ order.carrierName }})</span><span class="val">{{ (order.carrierPrice/100)|number_format(2,'.',' ') }} €</span></div>
+                <div class="t-row total"><span class="lbl">Total TTC</span><span class="val">{{ ((order.subTotalHT+order.taxe+order.carrierPrice)/100)|round(2)|number_format(2,'.',' ') }} €</span></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="footer-note">
+            Yilmi Market — 38 Rue de Berri, 75008 Paris &nbsp;|&nbsp; SIRET : 93947750100018<br>
+            Merci pour votre achat. Pour toute question : contact@yilmimarket.com
+        </div>
+        <span class="status-badge {{ order.isPaid ? 'paid' : 'unpaid' }}">
+            {{ order.isPaid ? '✓ PAYÉE' : '⏳ EN ATTENTE' }}
+        </span>
+    </div>
+
 </div>
-{% endblock %}
+</body>
+</html>
