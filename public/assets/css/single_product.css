@@ -1,7 +1,139 @@
+
+.product-image-sticky {
+    position: sticky;
+    top: 100px;
+    height: auto;
+}
+
+.product-image-sticky #thumbnails {
+    width: 100%;
+    object-fit: cover;
+}
+
+
 .comment_list .description p {
     color: black;
 }
 
-.panel-heading h5:hover  {
-    color: #E439A1;
+
+.variant-price {
+    margin-left: 40px;
 }
+
+
+.cart_extra {
+    margin-top: 20px;
+}
+
+.cart-product-quantity{
+    margin-left : -10px
+}
+
+.main_image_container {
+    position: relative; /* Définit le contexte pour le positionnement absolu */
+}
+
+.add-to-wishlist .fa-heart {
+    position: absolute; /* Positionnement absolu */
+    top: 10px; /* Distance par rapport au haut */
+    right: 10px; /* Distance par rapport à la droite */
+    border: black;
+    z-index: 10; /* Assure que l'icône est au-dessus de l'image */
+    color: white; /* Optionnel : couleur de l'icône */
+    -webkit-text-stroke: 0.5px black; /* Contour noir de 2px */
+    text-stroke: 0.5px black; /* Contour pour autres navigateurs */
+    font-size: 30px; /* Optionnel : taille de l'icône */
+    text-decoration: none; /* Supprime le soulignement */
+}
+
+
+.add-to-wishlist.wishlist-active .fa-heart {
+    color: red; /* Couleur pour les produits dans la wishlist */
+}
+
+
+
+
+/* product appranté */
+.releted_product_slider .owl-item {
+    width: 174px !important; /* 160px + 14px */
+}
+
+.releted_product_slider .item {
+    width: 160px !important;
+    min-height: 310px; /* Conservé comme demandé */
+    margin: 0 auto;
+}
+
+.releted_product_slider .product {
+    width: 100%;
+    max-width: 160px;
+    min-height: 310px;
+    padding: 5px;
+}
+
+.releted_product_slider .product_img {
+    width: 160px;
+    height: 160px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -5px;
+    margin-top: -4px;
+}
+
+.releted_product_slider .product_img img {
+    max-width: 160px;
+    max-height: 160px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    box-shadow: none !important;
+}
+
+.releted_product_slider .product_info {
+    width: 100%;
+    max-width: 160px;
+    padding-top: 10px;
+}
+
+.releted_product_slider .product_title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.releted_product_slider .product_price {
+    font-size: 14px;
+}
+
+.releted_product_slider .rating_wrap {
+    font-size: 12px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

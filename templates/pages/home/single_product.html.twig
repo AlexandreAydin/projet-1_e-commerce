@@ -1,489 +1,1512 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ama noz poruduit{% endblock %}
+{% block title %}Yilmi poruduit{% endblock %}
 {% block stylesheets %}
     {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
     <link rel="stylesheet" href="{{ asset('assets/css/single_product.css') }}">
 {% endblock %}
-
+ 
 {% block body %}
-     <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
+    <link rel="stylesheet" href="asset {{"assets/css/single_product.css"}}">
     <div class="section">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
-                    <div class="product-image">
-                        {% if product.images|length > 0 %}
-                            {% set lastMedia = product.images|last %}
-                            {% set isLastMediaVideo = lastMedia.imageName ends with '.mp4' %}  <!-- Déterminer si la dernière média est une vidéo -->
-                            <div class="main_image_container">
-                                <div class="mb-3" style="width: 100%; height: 600px">
-                                    <a href="{{ asset('images/products/' ~ product.images|first.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                        <img id="main_product_img" src="{{ asset('images/products/' ~ product.images|first.imageName) }}" alt="{{ product.name }}" style="height: 100%; width: 100%; object-fit: cover;" />
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="row">
-                                {% for media in product.images %}
-                                    {% if loop.index > 1 %}
-                                        <div class="col-4 col-md-3 col-lg-2 mb-3 ml-3">
-                                            <div class="thumbnail_img_box" style="width: 100px; height: 100px; position: relative;">
-                                                {% if loop.last and isLastMediaVideo %}
-                                                    <!-- C'est la dernière itération et c'est une vidéo -->
-                                                    <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" data-type="video" data-width="640" data-height="360">
-                                                        <video controls style="width: 100%; height: 100%; object-fit: cover;">
-                                                            <source src="{{ asset('images/products/' ~ media.imageName) }}" type="video/mp4">
-                                                            Votre navigateur ne prend pas en charge la balise vidéo.
-                                                        </video>
-                                                        <i class="fas fa-play-circle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 2rem;"></i>
-                                                    </a>
-                                                {% else %}
-                                                    <!-- Ce n'est pas la dernière itération, donc c'est une image -->
-                                                    <a href="{{ asset('images/products/' ~ media.imageName) }}" data-fancybox="product-images" title="{{ product.name }}">
-                                                        <img class="thumbnail img-fluid" src="{{ asset('images/products/' ~ media.imageName) }}" data-large-src="{{ asset('images/products/' ~ media.imageName) }}" alt="{{ product.name }}" onclick="changeMainImage(this)" style="width: 100%; height: 100%; object-fit: cover;" />
-                                                    </a>
-                                                {% endif %}
-                                            </div>
-                                        </div>
+                    <div class="product-image product-image-sticky">
+                        <div class="main_image_container position-relative">
+                            <div class="mb-4">
+                                {# Image initiale rendue côté serveur — zéro délai #}
+                                {% set first_img = null %}
+                                {% for v in product.variants %}
+                                    {% if first_img is null and v.variantImages|length > 0 %}
+                                        {% set first_img = v.variantImages|first %}
                                     {% endif %}
                                 {% endfor %}
+                                <img id="main_product_img"
+                                     src="{{ first_img ? asset('images/products/' ~ first_img.imageName) : asset('images/products/default.jpg') }}"
+                                     alt="Image principale"
+                                     style="height: 100%; width: 100%; object-fit: cover;" />
                             </div>
-                        {% endif %}
-                    </div>
+                        </div>
 
+                        <div id="thumbnails" class="row">
+                            {# Miniatures initiales rendues côté serveur #}
+                            {% if first_img is not null %}
+                                {% set first_variant = null %}
+                                {% for v in product.variants %}
+                                    {% if first_variant is null and v.variantImages|length > 0 %}
+                                        {% set first_variant = v %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if first_variant %}
+                                    {% set imgs = first_variant.variantImages|filter(i => not (i.imageName matches '/\.(mp4|webm)$/i')) %}
+                                    {% for image in imgs|slice(0, 5) %}
+                                        <div class="mb-3 mx-2">
+                                            <div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;">
+                                                <a href="/images/products/{{ image.imageName }}"
+                                                   data-fancybox="product-images"
+                                                   data-large-src="/images/products/{{ image.imageName }}">
+                                                    <img src="/images/products/{{ image.imageName }}"
+                                                         class="thumbnail img-fluid"
+                                                         style="width:100%;height:100%;object-fit:cover;">
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-6 col-md-6">
                     <div class="pr_detail">
                         <div class="product_description">
-                            <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
-                            <div class="product_price">
-                                <span class="price">{{ ((product.price/100) - (product.price/100 * product.off/100)) | number_format(2, ',', '.') }} €</span>
-                 {% if product.off is defined and product.off > 0 %}
-                <del>{{ (product.price / 100)|number_format(2, ',', '.') }} €</del>
-                    <div class="on_sale">
-                        <span>{{product.off}}% réduction</span>
-                    </div>
-                {% endif %}
+                            <h4 class="product_title">{{ product.name }}</h4>
+                            {% set first_variant = product.variants|first %}
+                            {% if first_variant %}
+                                {% set init_price = first_variant.price %}
+                                {% set init_off   = first_variant.offVariant ?? 0 %}
+                                {% set init_final = init_price - (init_price * init_off / 100) %}
+                            {% endif %}
+                            <div class="product_price d-flex variant-price" style=" margin-left: 0;">
+                                <span id="variant-price" class="price">{{ first_variant ? init_final|number_format(2, '.', '') ~ ' €' : '-- €' }}</span>
+                                <del id="old-price" style="display: {{ (first_variant and init_off > 0) ? 'inline' : 'none' }};">{{ first_variant ? init_price|number_format(2, '.', '') ~ ' €' : '-- €' }}</del>
+                                <div id="variant-off" class="on_sale" style="display: {{ (first_variant and init_off > 0) ? 'block' : 'none' }};">
+                                <span>{{ (first_variant and init_off > 0) ? init_off ~ '% réduction' : '--% réduction' }}</span>
                             </div>
-                            <div class="rating_wrap">
+                        </div> 
+                        <hr class="hr-price">
+                            <a href="javascript:void(0);" class="rating_wrap">
                                 <div class="rating">
                                     <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
                                 </div>
                                 <span class="rating_num">({{ product.rewiewsProducts | length }})</span>
+                            </a>
+                            <br>
+                            <br>
+                            <hr>
+
+                            {# ── SEUL CHANGEMENT : badges modernes + EAN dynamique ── #}
+                            <div class="product_sort_info">
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    {% if product.isWarranty %}
+                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#f0faf4;border:1px solid #b7dfc8;color:#2d7a4f;font-size:13px;font-weight:600;">
+                                        <i class="linearicons-shield-check"></i> Garantie
+                                    </span>
+                                    {% endif %}
+                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#f0f6ff;border:1px solid #b3cdf0;color:#2a5cb8;font-size:13px;font-weight:600;">
+                                        <i class="linearicons-truck"></i> Livraison Rapide
+                                    </span>
+                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#fffbf0;border:1px solid #f0dcb3;color:#a0700a;font-size:13px;font-weight:600;">
+                                        <i class="linearicons-bag-dollar"></i> Paiement sécurisé
+                                    </span>
+                                </div>
+                                {# EAN initial : première variante avec un EAN #}
+                                {% set init_ean = '' %}
+                                {% for v in product.variants %}
+                                    {% if init_ean == '' and v.ean %}
+                                        {% set init_ean = v.ean %}
+                                    {% endif %}
+                                {% endfor %}
+                                <div id="ean-block" style="display:{{ init_ean ? 'flex' : 'none' }};align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#fafafa;border:1px solid #e8e8e8;width:fit-content;">
+                                    <i class="linearicons-barcode" style="color:#555;font-size:16px;"></i>
+                                    <div style="line-height:1.3;">
+                                        <span style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;display:block;">EAN / Code-barres</span>
+                                        <span id="ean-value" style="font-size:14px;font-weight:700;color:#333;letter-spacing:1px;font-family:monospace;">{{ init_ean }}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <br>
-                            <br>
-                            <div >
-                                <p>{{ product.description | raw }}</p>
+                            {# ── FIN CHANGEMENT ── #}
+
+                            {% set displayed_sizes = [] %}
+                            {% set displayed_colors = [] %}
+                        
+                            <!-- Sélection de la couleur -->
+                            {# <div class="d-flex variant-product">
+                                <!-- Sélection de la couleur -->
+                                <div class="form-group">
+                                    <label for="color">Couleur :</label>
+                                    <select name="color" id="color" class="form-control">
+                                        {% set displayed_colors = [] %}
+                                        {% for variant in product.variants %}
+                                            {% if variant.color not in displayed_colors %}
+                                                <option value="{{ variant.color }}">{{ variant.color }}</option>
+                                                {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group mx-4">
+                                    <label for="size">Taille :</label>
+                                    <select name="size" id="size" class="form-control">
+                                        {% for variant in product.variants %}
+                                            {% for size in variant.sizes %}
+                                                <option value="{{ size.size }}" data-variant-id="{{ variant.id }}" data-stock="{{ size.stock }}" data-color="{{ variant.color }}">
+                                                    {{ size.size }}
+                                                </option>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div> #}
+
+                            {# === COULEUR === #}
+                        <!-- Sélection de la couleur -->
+                        <div class="d-flex flex-column variant-product">
+
+                            {# === BLOC COULEUR === #}
+                            {% set has_real_color = false %}
+                            {% for variant in product.variants %}
+                                {% if 'INDISPONIBLE' not in variant.color|trim|upper %}
+                                    {% set has_real_color = true %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <div class="form-group" id="color-group" {% if not has_real_color %}style="display: none;"{% endif %}>
+                                <label class="d-block mb-2">
+                                    Couleur : <strong id="selected-color-name">
+                                        {% set first_color_shown = false %}
+                                        {% for variant in product.variants %}
+                                            {% if not first_color_shown and 'INDISPONIBLE' not in variant.color|trim|upper %}
+                                                {{ variant.color }}
+                                                {% set first_color_shown = true %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </strong>
+                                </label>
+
+                                {# Select caché — toutes les couleurs incluses (même INDISPONIBLE) pour que le thème puisse lire la valeur #}
+                                <select name="color" id="color" class="form-control" style="display:none;">
+                                    {% set displayed_colors = [] %}
+                                    {% for variant in product.variants %}
+                                        {% if variant.color not in displayed_colors %}
+                                            <option value="{{ variant.color }}">{{ variant.color }}</option>
+                                            {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+
+                                {# Swatches modernes #}
+                                <div class="color-swatches d-flex flex-wrap gap-2">
+                                    {% set displayed_colors = [] %}
+                                    {% set is_first = true %}
+                                    {% for variant in product.variants %}
+                                        {% if variant.color not in displayed_colors and 'INDISPONIBLE' not in variant.color|trim|upper %}
+                                            <div class="color-swatch-item text-center" style="cursor:pointer; width:52px;">
+                                                <div class="color-swatch-circle {% if is_first %}active{% endif %}"
+                                                     data-color="{{ variant.color }}"
+                                                     style="
+                                                        width: 40px;
+                                                        height: 40px;
+                                                        border-radius: 50%;
+                                                        background-color: {{ variant.colorHex ?? variant.color }};
+                                                        margin: 0 auto 4px;
+                                                        border: 2px solid {% if is_first %}#C8A96E{% else %}#ddd{% endif %};
+                                                        box-shadow: {% if is_first %}0 0 0 2px #fff, 0 0 0 4px #C8A96E{% else %}none{% endif %};
+                                                        transition: all .2s;
+                                                     ">
+                                                </div>
+                                                <span style="font-size:10px; color:#555; display:block; line-height:1.2; word-break:break-word;">
+                                                    {{ variant.color }}
+                                                </span>
+                                            </div>
+                                            {% set displayed_colors = displayed_colors|merge([variant.color]) %}
+                                            {% set is_first = false %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
 
-                            <div class="product_sort_info">
-                                <ul>
-                                    <li><i class="linearicons-shield-check"></i>Produit sous garantie</li>
-                                    <li><i class="linearicons-truck"></i>Livraison Rapide</li>
-                                    <li><i class="linearicons-bag-dollar"></i> Payement sécurisé</li>
-                                </ul>
+                            {# === BLOC TAILLE === #}
+                            {% set has_real_size = false %}
+                            {% for variant in product.variants %}
+                                {% for size in variant.sizes %}
+                                    {% if 'INDISPONIBLE' not in size.size|trim|upper %}
+                                        {% set has_real_size = true %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+
+                            <div class="form-group mt-3" id="size-group" {% if not has_real_size %}style="display: none;"{% endif %}>
+                                <label class="d-block mb-2">
+                                    Taille : <strong id="selected-size-name">
+                                        {% set first_size_shown = false %}
+                                        {% for variant in product.variants %}
+                                            {% for size in variant.sizes %}
+                                                {% if not first_size_shown and 'INDISPONIBLE' not in size.size|trim|upper %}
+                                                    {{ size.size }}
+                                                    {% set first_size_shown = true %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </strong>
+                                </label>
+
+                                {# Select caché — toutes les tailles incluses (même INDISPONIBLE) pour que le stock soit lisible #}
+                                <select name="size" id="size" class="form-control" style="display:none;">
+                                    {% for variant in product.variants %}
+                                        {% for size in variant.sizes %}
+                                            <option value="{{ size.size }}"
+                                                    data-variant-id="{{ variant.id }}"
+                                                    data-stock="{{ size.stock }}"
+                                                    data-color="{{ variant.color }}">
+                                                {{ size.size }}
+                                            </option>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </select>
+
+                                {# Pills modernes — seules les tailles de la première couleur active sont visibles au chargement #}
+                                {% set init_color = '' %}
+                                {% for v in product.variants %}
+                                    {% if init_color == '' and 'INDISPONIBLE' not in v.color|trim|upper %}
+                                        {% set init_color = v.color %}
+                                    {% endif %}
+                                {% endfor %}
+                                {# Si toutes les couleurs sont INDISPONIBLE, prendre la première quand même #}
+                                {% if init_color == '' and product.variants|length > 0 %}
+                                    {% set init_color = product.variants|first.color %}
+                                {% endif %}
+                                <div class="size-pills d-flex flex-wrap gap-2" id="size-pills-container">
+                                    {% set displayed_sizes = [] %}
+                                    {% set is_first_size = true %}
+                                    {% for variant in product.variants %}
+                                        {% for size in variant.sizes %}
+                                            {% if 'INDISPONIBLE' not in size.size|trim|upper and size.size not in displayed_sizes %}
+                                                {# Visible uniquement si cette pill correspond à la couleur initiale #}
+                                                {% set pill_visible = (variant.color == init_color) %}
+                                                {% set pill_active  = (is_first_size and pill_visible) %}
+                                                <button type="button"
+                                                        class="size-pill {% if pill_active %}active{% endif %}"
+                                                        data-size="{{ size.size }}"
+                                                        data-color="{{ variant.color }}"
+                                                        {% if size.stock == 0 %}data-out-of-stock="1"{% endif %}
+                                                        style="
+                                                            display: {% if pill_visible %}inline-flex{% else %}none{% endif %};
+                                                            align-items: center;
+                                                            justify-content: center;
+                                                            min-width: 44px;
+                                                            height: 36px;
+                                                            padding: 0 12px;
+                                                            border-radius: 6px;
+                                                            border: 2px solid {% if pill_active %}#C8A96E{% else %}#ddd{% endif %};
+                                                            background: {% if pill_active %}#C8A96E{% else %}#fff{% endif %};
+                                                            color: {% if pill_active %}#fff{% else %}#333{% endif %};
+                                                            font-size: 13px;
+                                                            font-weight: 600;
+                                                            cursor: {% if size.stock == 0 %}not-allowed{% else %}pointer{% endif %};
+                                                            opacity: {% if size.stock == 0 %}0.4{% else %}1{% endif %};
+                                                            transition: all .2s;
+                                                            position: relative;
+                                                        ">
+                                                    {{ size.size }}
+                                                    {% if size.stock == 0 %}
+                                                        <span style="position:absolute;top:50%;left:0;width:100%;height:1px;background:#999;transform:rotate(-15deg);"></span>
+                                                    {% endif %}
+                                                </button>
+                                                {% if pill_visible %}
+                                                    {% set displayed_sizes = displayed_sizes|merge([size.size]) %}
+                                                    {% set is_first_size = false %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
                             </div>
+
                         </div>
-                        <hr />
-                        {# <div class="product-quantity mt-4" data-title="Quantity">
-                            <div class="quantity">
-                                <input type="button" value="-" class="minus">  </input>
-                                <input type="text" name="quantity" value="" title="Qty" class="qty" size="4">
-                                <a type="button" value="+" class="plus"> + </a>
+                        {# Stock initial calculé côté serveur — zéro flash #}
+                        {% set init_stock = 0 %}
+                        {% set init_variant_id = '' %}
+                        {% for v in product.variants %}
+                            {% for s in v.sizes %}
+                                {% if init_stock == 0 and s.stock > 0 %}
+                                    {% set init_stock = s.stock %}
+                                    {% set init_variant_id = v.id %}
+                                {% endif %}
+                            {% endfor %}
+                            {# Si pas de tailles du tout, prendre le premier variant_id uniquement #}
+                            {% if init_variant_id == '' %}
+                                {% set init_variant_id = v.id %}
+                            {% endif %}
+                        {% endfor %}
+                        <div class="cart_extra col-12">
+                            <div id="stockMessage" class="stock-message" style="display: {{ init_stock > 0 ? 'none' : 'block' }};">
+                                Ce produit est indisponible pour le moment.
                             </div>
-                        </div> #}
-                        {% if product.quantity == 0  %}
-                            <div>
-                                <br>
-                                <span> 
-                                    Ce produit est indisponible pour le moment.
-                                </span>
-                                <br>
-                                <br>
+
+                            <!-- Quantité et boutons -->
+                            <div class="cart-product-quantity mb-4">
+                                <div class="quantity" style="display: {{ init_stock > 0 ? 'flex' : 'none' }};">
+                                    <input type="button" value="-" class="minus">
+                                    <input type="" id="quantity" name="quantity" value="1" title="Qty" size="4" min="1" class="qty" readonly>
+                                    <input type="button" value="+" class="plus">
+                                </div>
                             </div>
-                        {% else %}
-                        <div class="cart-product-quantity">
-                            <div class="quantity"><input type="button" value="-" class="minus"><input type="text"
-                                        name="quantity" value="1" title="Qty" size="4" class="qty"><input type="button"
-                                        value="+" class="plus"></div>
-                        </div>
-                        <div class="cart_extra mt-4">
-                            {# TODO: Implement product quantity selection #}
-                            <div class="cart_btn">
-                            
-                                <a href="/panier/{{product.id}}/ajouter/1" class="btn btn-fill-out btn-addtocart" type="button">
-                                    <i class="icon-basket-loaded"></i>
-                                    Ajouter au panier
+
+                            <div class="cart_btn mb-4" style="display: {{ init_stock > 0 ? 'block' : 'none' }};">
+                                <a href="#"
+                                    class="btn btn-fill-out btn-addtocart"
+                                    data-variant-id="{{ init_variant_id }}"
+                                    type="button">
+                                    <i class="icon-basket-loaded"></i> Ajouter au panier
                                 </a>
                                 <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
-                                <a class="add-to-wishlist" href="{{ path ('app_add_to_wishList', {'id': product.id}) }}"><i class="icon-heart"></i></a>
                             </div>
                         </div>
-                        {% endif %}
-                        <hr />
-                        <ul class="product-meta">
-                            <li>Category: <a href="#">{{ product.categorie.name }}</a></li>
-                            {# <li>Tags: {{ product.tags }}</li> #}
-                        </ul>
+                            <hr>
+                            <div>
+                                <ul class="product-meta col-12 text-dark">
+                                    {% if product.categorie %}
+                                        <li class="text-dark"><strong>Catégorie: </strong>
+                                            <a href="{{ path('app_categorie', {'slug': product.categorie.slug}) }}">
+                                                {{ product.categorie.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if product.subCategorie and product.categorie %}
+                                        <li class="text-dark"><strong>Sous Catégorie: </strong>
+                                            <a href="{{ path('app_sub_categorie', {'categorySlug': product.categorie.slug, 'subCategorySlug': product.subCategorie.slug}) }}">
+                                                {{ product.subCategorie.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if product.productBrand %}
+                                        <li class="text-dark"><strong>Marque: </strong>
+                                            <a href="{{ path('app_marque', {'slug': product.productBrand.slug}) }}">
+                                                {{ product.productBrand.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if product.brandModel and product.productBrand %}
+                                        <li class="text-dark"><strong>Modèle: </strong>
+                                            <a href="{{ path('app_brand_model', {'brandSlug': product.productBrand.slug, 'modelSlug': product.brandModel.slug}) }}">
+                                                {{ product.brandModel.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if product.moreInformations and product.moreInformations %}
+                                    <li class="toggle-more-li">
+                                        <span class="toggle-more text-dark" style="cursor: pointer; text-decoration: underline;">
+                                            <i class="fas fa-chevron-down"></i> Voir plus
+                                        </span>
+                                    </li>
+                                    <div class="more-info-content" style="display: none;">
+                                        {{ product.moreInformations | raw }}
+                                        <li class="toggle-less-li">
+                                            <span class="toggle-less text-dark" style="cursor: pointer; text-decoration: underline;">
+                                                <i class="fas fa-chevron-up"></i> Voir moins
+                                            </span>
+                                        </li>
+                                    </div>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            </div> 
+                            <hr>
+                            <div class='mt-4 text-dark mx-2'>
+                                <h2>À propos de cet article</h2>
+                                <p class='mt-4 text-dark mx-2'>{{ product.description | raw }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <br><br>
-             {% if product.illustrationText1 %}
-            <div class="row nav nav-tabs">
-            </div>
-                <div class="row nav nav-tabs">
-                    <div class="large_divider clearfix mt-4">
+            {% if product.illustrationText1 %}
+
+                <div class=" nav nav-tabs">
+                    <div class="mx-4 mt-4">
                         {{ product.illustrationText1 | raw }}
                     </div>
                 </div>
             {% endif %}
-            <div class="row">
+            <div class="">
                 <div class="col-12">
-                    <div class="tab-style3">
+                    <div class="container tab-style3" id="Reviews" role="" aria-labelledby="">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link active" id="Description-tab" data-toggle="tab" href="#Description" role="tab" aria-controls="Description" aria-selected="true">Description</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="Reviews-tab" data-toggle="tab" href="#Reviews" role="tab" aria-controls="Reviews" aria-selected="false">Commentaire ({{ reviewCount }})</a>
+                                <p class="text-dark text-uppercase">Description</p>
                             </li>
                         </ul>
                         <div class="tab-content shop_info_tab">
-                            <div class="tab-pane fade show active" id="Description" role="tabpanel" aria-labelledby="Description-tab">
+                            <div class="container" id="Description">
                                 <p>{{ product.description2  | raw }}</p>
                             </div>
-
-                            <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
-                                <div class="comments">
-                                  
-                                    <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
-                                        <div class="a-row">
-                                            <h3>Commentaires client</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container tab-style3" id="Reviews" role="" aria-labelledby="">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <p class="text-dark text-uppercase">Commentaire ({{ reviewCount }})</p>
+                    </li>
+                </ul>
+                <div class="comments">
+                    <div id="cm_cr_dp_d_rating_histogram" class="a-section celwidget reviews-clients">
+                        <div class="a-row">
+                            <h3>Commentaires client</h3>
+                        </div>
+                        <div class="rating_wrap mb-2">
+                            <div class="rating">
+                                <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
+                            </div>
+                                    <span class="average_rating">{{ averageRating | round(1, 'floor') }} sur 5</span>
+                        </div>
+                        
+                        <!-- Display Histogram of Ratings -->
+                        {% for review in reviews %}
+                        {% set note = review.note %}
+                            {# {% if note >= 1 and note <= 5 %}
+                            
+                            {% endif %} #}
+                        {% endfor %}
+                        <div class="a-fixed-left-grid a-spacing-none">
+                            <div class="a-fixed-left-grid-inner">
+                                <div class="a-fixed-left-grid-col a-col-left">
+                                    <table id="histogramTable" class="a-normal a-align-center a-spacing-base">
+                                        <tbody>
+                                        <div class="a-row a-spacing-medium averageStarRatingNumerical mb-2">
+                                            <span class="a-size-base a-color-secondary">{{ totalReviews }}&nbsp;évaluations globales et {{ reviewCount }} avis</span>
                                         </div>
-                                        <div class="rating_wrap mb-2">
-                                            <div class="rating">
-                                                <div class="product_rate" style="width: {{ (averageRating * 20) | round(0, 'floor') }}%"></div>
-                                            </div>
-                                                 <span class="average_rating">{{ averageRating | round(1, 'floor') }} sur 5</span>
-                                        </div>
-                                        
-                                        <!-- Display Histogram of Ratings -->
-                                        {% for review in reviews %}
-                                        {% set note = review.note %}
-                                            {# {% if note >= 1 and note <= 5 %}
-                                            
-                                            {% endif %} #}
+                                        {% for star in [5, 4, 3, 2, 1] %}
+                                        {% set percentage = totalReviews > 0 ? (starCounts[star]/totalReviews)*100 : 0 %}
+                                        <tr class="a-histogram-row a-align-center">
+                                            <td class="aok-nowrap a-nowrap">
+                                                <a class="a-size-base a-link-normal">{{ star }} étoiles</a>
+                                            </td>
+                                            <td class="a-span10">
+                                                <div class="a-meter" role="progressbar" aria-valuenow="{{ percentage }}">
+                                                    <div class="a-meter-bar" style="width:{{ percentage }}%"></div>
+                                                </div>
+                                            </td>
+                                            <td class="a-text-right a-nowrap a-nowrap">
+                                                <a class="a-size-base a-link-normal">{{ percentage | round(0, 'floor') }}%</a>
+                                            </td>
+                                        </tr>
                                         {% endfor %}
-                                        <div class="a-fixed-left-grid a-spacing-none">
-                                            <div class="a-fixed-left-grid-inner">
-                                                <div class="a-fixed-left-grid-col a-col-left">
-                                                    <table id="histogramTable" class="a-normal a-align-center a-spacing-base">
-                                                        <tbody>
-                                                        <div class="a-row a-spacing-medium averageStarRatingNumerical mb-2">
-                                                            <span class="a-size-base a-color-secondary">{{ totalReviews }}&nbsp;évaluations globales et {{ reviewCount }} avis</span>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h5 class="product_tab_title">({{ reviewCount }}) Commentaire <span>{{product.name}}</span></h5>
+                    <ul class="container list_none comment_list mt-4">
+                        {% for review in reviews %}
+                            {% if review.comment %}
+                                <li>
+                                    <div class="comment_img">
+                                        <img  src="{{ asset('assets/images/fa-user.png') }}"  alt="user2"/>
+                                    </div>
+                                    <div class="comment_block">
+                                        <div class="customer_meta">
+                                            <div>
+                                                <span class="review_author">{{ review.user.firstname }}</span>
+                                            </div>
+                                             <div class="rating_wrap">
+                                                <div class="rating">
+                                                    <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="description">
+                                            <p>{{ review.comment }}</p>
+                                        </div>
+                                        <hr>
+                                        <div class="review_images mt-4">
+                                            {% if review.rewiewImage %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImage) }}" alt="Image 1" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages2 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 2">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" alt="Image 2" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages3 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 3">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" alt="Image 3" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages4 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 4">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" alt="Image 4" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                            {% if review.rewiewImages5 %}
+                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 5">
+                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" alt="Image 5" class="img-fluid" width="200" height="150">
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                        <div class="review_video">
+                                            {% if review.reviewVideo %}
+                                                <a href="{{ asset('uploads/images/' ~ review.reviewVideo) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Video" data-type="video">
+                                                    <video id="video-{{ review.id }}" controls style="width: 300px; height: auto;">
+                                                        <source src="{{ asset('uploads/images/' ~ review.reviewVideo) }}" type="video/mp4">
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>                       
+                <div class="container review_form field_form">
+                    {% set hasBoughtProduct = false %}
+                    {% set hasReceivedProduct = false %}
+                    
+                    {% for order in orders %}
+                        {% for orderDetail in order.orderDetails %}
+                            {% if orderDetail.productName == product.name %}
+                                {% set hasBoughtProduct = true %}
+                                {% if order.state == 4 %}
+                                    {% set hasReceivedProduct = true %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% if not hasBoughtProduct %}
+                        Vous devez avoir acheté ce produit pour laisser un commentaire!
+                    {% elseif not hasReceivedProduct %}
+                        Vous devez recevoir le produit pour laisser un commentaire!
+                    {% else %}
+                        <h5>Ajoutez un commentaire</h5>
+
+                        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
+                        <div class="form-group col-12">
+                            <div class="star_rating">
+                                <span data-value="1"><i class="far fa-star"></i></span>
+                                <span data-value="2"><i class="far fa-star"></i></span>
+                                <span data-value="3"><i class="far fa-star"></i></span>
+                                <span data-value="4"><i class="far fa-star"></i></span>
+                                <span data-value="5"><i class="far fa-star"></i></span>
+                                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-group col-12">
+                            {{ form_widget(form.comment) }}
+                        </div>
+                        <div class="container">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="panel-heading" role="tab" id="headingImages"> 
+                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
+                                            <div class="d-flex">
+                                                <h5> Ajouter des images </h5>
+                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <div id="filter_article_numberOfPlaces">
+                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                        <div class="">
+                                                            {{ form_widget(form.rewiewImage) }}
+                                                            {{ form_widget(form.rewiewImages2) }}
+                                                            {{ form_widget(form.rewiewImages3) }}
+                                                            {{ form_widget(form.rewiewImages4) }}
+                                                            {{ form_widget(form.rewiewImages5) }}
                                                         </div>
-                                                        {% for star in [5, 4, 3, 2, 1] %}
-                                                        {% set percentage = totalReviews > 0 ? (starCounts[star]/totalReviews)*100 : 0 %}
-                                                        <tr class="a-histogram-row a-align-center">
-                                                            <td class="aok-nowrap a-nowrap">
-                                                                <a class="a-size-base a-link-normal">{{ star }} étoiles</a>
-                                                            </td>
-                                                            <td class="a-span10">
-                                                                <div class="a-meter" role="progressbar" aria-valuenow="{{ percentage }}">
-                                                                    <div class="a-meter-bar" style="width:{{ percentage }}%"></div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="a-text-right a-nowrap a-nowrap">
-                                                                <a class="a-size-base a-link-normal">{{ percentage | round(0, 'floor') }}%</a>
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                        </tbody>
-                                                    </table>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <h5 class="product_tab_title">({{ reviewCount }}) Commentaire <span>{{product.name}}</span></h5>
-                                    <ul class="list_none comment_list mt-4">
-                                        {% for review in reviews %}
-                                            {% if review.comment %}
-                                                <li>
-                                                    <div class="comment_block">
-                                                        <div class="rating_wrap">
-                                                            <div class="rating">
-                                                                <div class="product_rate" style="width: {{ review.note * 20 }}%"></div>
-                                                            </div>
+                                    <hr>
+                                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
+                                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
+                                            <div class="d-flex">
+                                                <h5> Ajouter une vidéo </h5>
+                                                <i class="fa-solid fa-chevron-down m-1"></i>
+                                            <hr>
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <div id="filter_article_numberOfPlaces">
+                                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
+                                                        <div class="">
+                                                            {{ form_widget(form.reviewVideo) }}
                                                         </div>
-                                                        <p class="customer_meta">
-                                                            <span class="review_author">{{ review.user.username }}</span>
-                                                            <span class="comment-date">{{ review.createdAt|date("d M, Y", "Europe/Paris", "fr_FR") }}</span>
-                                                        </p>
-                                                        <hr>
-                                                        <div class="description">
-                                                            <p>{{ review.comment }}</p>
-                                                        </div>
-                                                        <hr>
-                                                        <div class="review_images mt-4">
-                                                            {% if review.rewiewImage %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImage) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 1">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImage) }}" alt="Image 1" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages2 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 2">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages2) }}" alt="Image 2" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages3 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 3">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages3) }}" alt="Image 3" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages4 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 4">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages4) }}" alt="Image 4" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                            {% if review.rewiewImages5 %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Image 5">
-                                                                    <img src="{{ asset('uploads/images/' ~ review.rewiewImages5) }}" alt="Image 5" class="img-fluid" width="200" height="150">
-                                                                </a>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="review_video">
-                                                            {% if review.reviewVideo %}
-                                                                <a href="{{ asset('uploads/images/' ~ review.reviewVideo) }}" data-fancybox="review-gallery-{{ review.id }}" data-caption="Video" data-type="video">
-                                                                    <video id="video-{{ review.id }}" controls style="width: 300px; height: auto;">
-                                                                        <source src="{{ asset('uploads/images/' ~ review.reviewVideo) }}" type="video/mp4">
-                                                                        Your browser does not support the video tag.
-                                                                    </video>
-                                                                </a>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </ul>
-                                </div>                       
-<div class="review_form field_form">
-    {% set hasBoughtProduct = false %}
-    {% set hasReceivedProduct = false %}
-    
-    {% for order in orders %}
-        {% for orderDetail in order.orderDetails %}
-            {% if orderDetail.productName == product.name %}
-                {% set hasBoughtProduct = true %}
-                {% if order.state == 4 %}
-                    {% set hasReceivedProduct = true %}
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    {% endfor %}
-
-    {% if not hasBoughtProduct %}
-        Vous devez avoir acheté ce produit pour laisser un commentaire!
-    {% elseif not hasReceivedProduct %}
-        Vous devez recevoir le produit pour laisser un commentaire!
-    {% else %}
-        <h5>Ajoutez un commentaire</h5>
-
-        {{ form_start(form, {'attr': {'class': 'row mt-3'}}) }}
-
-        <div class="form-group col-12">
-            <div class="star_rating">
-                <span data-value="1"><i class="far fa-star"></i></span>
-                <span data-value="2"><i class="far fa-star"></i></span>
-                <span data-value="3"><i class="far fa-star"></i></span>
-                <span data-value="4"><i class="far fa-star"></i></span>
-                <span data-value="5"><i class="far fa-star"></i></span>
-                {{ form_widget(form.note, {'attr': {'style': 'position: absolute; left: -9999px; visibility: hidden;'}}) }}
-            </div>
-        </div>
-
-        <div class="form-group col-12">
-            {{ form_widget(form.comment) }}
-        </div>
-
-        {# <div class="form-group p-4">
-            <h5>Ajouter des images</h5>
-                {{ form_widget(form.rewiewImage) }}
-                {{ form_widget(form.rewiewImages2) }}
-                {{ form_widget(form.rewiewImages3) }}
-                {{ form_widget(form.rewiewImages4) }}
-                {{ form_widget(form.rewiewImages5) }}
-             <h5 class="mt-4 mb-2">Ajouter une vidéo</h5>
-            {{ form_widget(form.reviewVideo) }}
-        </div> #}
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <div class="panel-heading" role="tab" id="headingImages"> 
-                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages">
-                            <div class="d-flex">
-                                <h5> Ajouter des images </h5>
-                                <i class="fa-solid fa-chevron-down m-1"></i>
-                            </div>
-                        </a>
-                    </div>
-                    <div id="collapseImages" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImages">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <div id="filter_article_numberOfPlaces">
-                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
-                                        <div class="">
-                                            {{ form_widget(form.rewiewImage) }}
-                                            {{ form_widget(form.rewiewImages2) }}
-                                            {{ form_widget(form.rewiewImages3) }}
-                                            {{ form_widget(form.rewiewImages4) }}
-                                            {{ form_widget(form.rewiewImages5) }}
+                                                </div>
+                                            </div>
                                         </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                     <hr>
-                    <div class="panel-heading mt-4 mb-4" role="tab" id="headingVideos"> 
-                        <a class="panel-title accordion-toggle" role="button" data-toggle="collapse" href="#collapseVideos" aria-expanded="true" aria-controls="collapseVideos">
-                            <div class="d-flex">
-                                <h5> Ajouter une vidéo </h5>
-                                <i class="fa-solid fa-chevron-down m-1"></i>
-                            <hr>
-                            </div>
-                        </a>
-                    </div>
 
-                    <div id="collapseVideos" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingVideos">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <div id="filter_article_numberOfPlaces">
-                                    {# {% for choice in search.filterVoitures.numberOfPlaces %} #}
-                                        <div class="">
-                                            {{ form_widget(form.reviewVideo) }}
-                                        </div>
-                                </div>
-                            </div>
+                        <div class="form-group col-12">
+                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
                         </div>
-                    </div>
+
+                        {{ form_end(form) }}
+                    {% endif %}
                 </div>
             </div>
-        </div>
-
-        <div class="form-group col-12">
-            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-fill-out'}}) }}
-        </div>
-
-        {{ form_end(form) }}
-    {% endif %}
-</div>
-
-
-
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="small_divider"></div>
-                    <div class="divider"></div>
-                    <div class="medium_divider"></div>
-                </div>
-            </div>
-
-            <div class="row">
+            <div class="container mt-4">
                 <div class="col-12">
                     <div class="heading_s1">
                         <h3>Produits apparentés</h3>
                     </div>
-                    <div class="releted_product_slider carousel_slider owl-carousel owl-theme" data-margin="20" data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
-                      {% for relatedProduct in product.categorie.products %}
-                        {% if relatedProduct.id != product.id %}
-                            {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
-                            {% include 'partials/_product_item.html.twig' with {'product': relatedProduct} %}
-                        {% endif %}
-                    {% endfor %}
+                    <div class="releted_product_slider carousel_slider owl-carousel owl-theme" 
+                        data-margin="14" 
+                        data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
+                        {% for relatedProduct in product.categorie.products %}
+                            {% if relatedProduct.id != product.id %}
+                                {% set productRating = relatedRatings[relatedProduct.id] ?? 0 %}
+                                {% include 'partials/_product_item.html.twig' with {'product': relatedProduct, 'relatedRatings': relatedRatings} %}
+                            {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-<script>
-    (function() {  // IIFE pour encapsuler le code
-        // Fonctionnalité : Elevate Zoom
-        function initElevateZoom() {
-            $('#main_product_img').elevateZoom({
-                zoomType: "inner",
-                cursor: "crosshair"
-            });
 
-            {% for image in product.images %}
-            $('#thumbnail_{{ loop.index }}').elevateZoom({
-                zoomType: "inner",
-                cursor: "crosshair"
-            });
-            {% endfor %}
-        }
+    <script type="application/json" id="productVariantsData">
+        [{% for variant in product.variants %}{"id":{{ variant.id }},"color":{{ variant.color|json_encode|raw }},"colorHex":{{ (variant.colorHex ?? '')|json_encode|raw }},"ean":{{ (variant.ean ?? '')|json_encode|raw }},"price":{{ variant.price }},"offVariant":{{ variant.offVariant ?? 0 }},"sizes":[{% for size in variant.sizes %}{"size":{{ size.size|json_encode|raw }},"stock":{{ size.stock }}}{% if not loop.last %},{% endif %}{% endfor %}],"images":[{% for image in variant.variantImages %}{"imageName":{{ image.imageName|json_encode|raw }},"thumbnailName":{{ (image.thumbnailName ?? '')|json_encode|raw }}}{% if not loop.last %},{% endif %}{% endfor %}]}{% if not loop.last %},{% endif %}{% endfor %}]
+    </script>
 
-        function changeMainImage(thumbnail) {
-            const mainImage = $('#main_product_img');
-            const largeSrc = thumbnail.getAttribute('data-large-src');
-            mainImage.attr('src', largeSrc);
-            mainImage.data('zoom-image', largeSrc);
 
-            mainImage.removeData('elevateZoom');
-            $('.zoomContainer').remove();
-            initElevateZoom();
-        }
+    <script>
 
-        $(window).on('load', initElevateZoom);
+        {# Voir + et voir moins start  #}
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleMore = document.querySelector('.toggle-more');
+            const toggleLess = document.querySelector('.toggle-less');
+            const moreInfoContent = document.querySelector('.more-info-content');
 
-        // Fonctionnalité : Évaluation par étoiles
-        function handleStarRating() {
-            const stars = document.querySelectorAll(".star_rating span");
-            stars.forEach(star => {
-                star.addEventListener('click', function(e) {
-                    const value = e.currentTarget.getAttribute('data-value');
-                    document.getElementById('rewiews_product_note').value = value;  // mise à jour de l'input caché
-                    highlightStars(value);  // mise en surbrillance des étoiles
+            if (toggleMore && toggleLess && moreInfoContent) {
+                toggleMore.addEventListener('click', () => {
+                    moreInfoContent.style.display = 'block';
+                    toggleMore.parentElement.style.display = 'none';
                 });
-            });
-        }
 
-        function highlightStars(value) {
-            const stars = document.querySelectorAll(".star_rating span i");
-            stars.forEach((star, index) => {
-                if (index < value) {
-                    star.classList.remove("far");
-                    star.classList.add("fas");
-                } else {
-                    star.classList.remove("fas");
-                    star.classList.add("far");
+                toggleLess.addEventListener('click', () => {
+                    moreInfoContent.style.display = 'none';
+                    toggleMore.parentElement.style.display = 'block';
+                });
+            }
+        });
+        {# Voir + et voir moins end  #}
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelector(".rating_wrap").addEventListener("click", function (event) {
+                event.preventDefault();
+                let reviewTab = document.querySelector("#Reviews-tab");
+                if (reviewTab) { reviewTab.click(); }
+                let reviewSection = document.querySelector("#Reviews");
+                if (reviewSection) {
+                    setTimeout(() => {
+                        reviewSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 300);
                 }
             });
-        }
-
-
-        document.addEventListener("DOMContentLoaded", function() {
-            handleStarRating();
-        
         });
 
 
-    })();
+        (function() {
+            function initElevateZoom() {
+                $('#main_product_imgs').elevateZoom({ zoomType: "inner", cursor: "crosshair" });
+                {% for image in product.images %}
+                $('#thumbnails_{{ loop.index }}').elevateZoom({ zoomType: "inner", cursor: "crosshair" });
+                {% endfor %}
+            }
+            function changeMainImage(thumbnail) {
+                const mainImage = $('#main_product_img');
+                const largeSrc = thumbnail.getAttribute('data-large-src');
+                mainImage.attr('src', largeSrc);
+                mainImage.data('zoom-image', largeSrc);
+                mainImage.removeData('elevateZoom');
+                $('.zoomContainer').remove();
+                initElevateZoom();
+            }
+            $(window).on('load', initElevateZoom);
+
+            function handleStarRating() {
+                const stars = document.querySelectorAll(".star_rating span");
+                stars.forEach(star => {
+                    star.addEventListener('click', function(e) {
+                        const value = e.currentTarget.getAttribute('data-value');
+                        document.getElementById('rewiews_product_note').value = value;
+                        highlightStars(value);
+                    });
+                });
+            }
+            function highlightStars(value) {
+                const stars = document.querySelectorAll(".star_rating span i");
+                stars.forEach((star, index) => {
+                    if (index < value) { star.classList.remove("far"); star.classList.add("fas"); }
+                    else { star.classList.remove("fas"); star.classList.add("far"); }
+                });
+            }
+            document.addEventListener("DOMContentLoaded", function() { handleStarRating(); });
+        })();
 
 
-    
-    
-</script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorSelect = document.getElementById('color');
+            const sizeSelect = document.getElementById('size');
+            const variants = {{ product.variants|json_encode()|raw }};
+
+            function updateSizes() {
+                const selectedColor = colorSelect.value;
+                Array.from(sizeSelect.options).forEach(option => {
+                    option.disabled = false;
+                    option.hidden = false;
+                });
+                Array.from(sizeSelect.options).forEach(option => {
+                    const optionColor = option.getAttribute('data-color');
+                    if (optionColor !== selectedColor) {
+                        option.disabled = true;
+                        option.hidden = true;
+                    }
+                });
+                const firstAvailableOption = Array.from(sizeSelect.options).find(option => !option.disabled);
+                if (firstAvailableOption) { firstAvailableOption.selected = true; }
+            }
+
+            colorSelect.addEventListener('change', updateSizes);
+            updateSizes();
+        });
+
+
+        {# === SWATCHES COULEUR — gestion des clics === #}
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect = document.getElementById('color');
+            const colorNameLabel = document.getElementById('selected-color-name');
+
+            document.querySelectorAll('.color-swatch-circle').forEach(function (swatch) {
+                swatch.addEventListener('click', function () {
+                    const color = this.getAttribute('data-color');
+
+                    // Met à jour le select caché → déclenche toute la logique JS existante
+                    colorSelect.value = color;
+                    colorSelect.dispatchEvent(new Event('change'));
+
+                    // Met à jour le label
+                    if (colorNameLabel) colorNameLabel.textContent = color;
+
+                    // Retire l'état actif de tous les swatches
+                    document.querySelectorAll('.color-swatch-circle').forEach(function (s) {
+                        s.style.border      = '2px solid #ddd';
+                        s.style.boxShadow   = 'none';
+                    });
+
+                    // Active le swatch cliqué
+                    this.style.border     = '2px solid #C8A96E';
+                    this.style.boxShadow  = '0 0 0 2px #fff, 0 0 0 4px #C8A96E';
+                });
+            });
+        });
+
+
+        {# === PILLS TAILLE — gestion des clics + refresh quand couleur change === #}
+        document.addEventListener('DOMContentLoaded', function () {
+            const sizeSelect    = document.getElementById('size');
+            const colorSelect   = document.getElementById('color');
+            const sizeName      = document.getElementById('selected-size-name');
+            const pillContainer = document.getElementById('size-pills-container');
+
+            // ── Active une pill et sync le select caché ─────────────────────
+            function activatePill(pill) {
+                if (!pill || pill.dataset.outOfStock === '1') return;
+
+                // Reset toutes les pills
+                pillContainer.querySelectorAll('.size-pill').forEach(p => {
+                    p.style.border     = '2px solid #ddd';
+                    p.style.background = '#fff';
+                    p.style.color      = '#333';
+                });
+
+                // Active la pill cliquée
+                pill.style.border     = '2px solid #C8A96E';
+                pill.style.background = '#C8A96E';
+                pill.style.color      = '#fff';
+
+                // Sync select caché → déclenche tout le JS existant (stock, prix, images)
+                sizeSelect.value = pill.dataset.size;
+                sizeSelect.dispatchEvent(new Event('change'));
+
+                // Met à jour le label
+                if (sizeName) sizeName.textContent = pill.dataset.size;
+            }
+
+            // ── Rebuild les pills visibles quand la couleur change ───────────
+            function refreshPillsForColor(selectedColor) {
+                const allPills = pillContainer.querySelectorAll('.size-pill');
+                let firstVisible = null;
+
+                allPills.forEach(pill => {
+                    const pillColor = pill.dataset.color;
+                    if (pillColor === selectedColor) {
+                        pill.style.display = 'inline-flex';
+                        if (!firstVisible) firstVisible = pill;
+                    } else {
+                        pill.style.display = 'none';
+                        // Reset style des pills cachées
+                        pill.style.border     = '2px solid #ddd';
+                        pill.style.background = '#fff';
+                        pill.style.color      = '#333';
+                    }
+                });
+
+                // Active automatiquement la première taille disponible
+                if (firstVisible) activatePill(firstVisible);
+            }
+
+            // ── Listeners clics sur les pills ────────────────────────────────
+            pillContainer.querySelectorAll('.size-pill').forEach(pill => {
+                pill.addEventListener('click', function () {
+                    activatePill(this);
+                });
+            });
+
+            // ── Quand la couleur change → on filtre les pills ────────────────
+            if (colorSelect) {
+                colorSelect.addEventListener('change', function () {
+                    refreshPillsForColor(this.value);
+                });
+                // Init au chargement
+                refreshPillsForColor(colorSelect.value);
+            } else {
+                // Pas de couleur → active juste la première pill
+                const firstPill = pillContainer.querySelector('.size-pill:not([data-out-of-stock="1"])');
+                if (firstPill) activatePill(firstPill);
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sizeSelect = document.getElementById('size');
+            const colorSelect = document.getElementById('color');
+            const priceDisplay = document.getElementById('variant-price');
+            const variantImages = document.querySelectorAll('.product-variant-image');
+            let variants = {{ variants|json_encode()|raw }};
+
+            function getVariantBySizeAndColor(size, color) {
+                if (!Array.isArray(variants) || variants.length === 0) { return null; }
+                return variants.find(variant => {
+                    const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+                    return variant.color === color && sizeArray.includes(size);
+                });
+            }
+
+            function updatePrice() {
+                const selectedVariant = getVariantBySizeAndColor(sizeSelect.value, colorSelect.value);
+                if (selectedVariant) { priceDisplay.textContent = `${selectedVariant.price} €`; }
+                else { priceDisplay.textContent = 'Prix indisponible'; }
+            }
+
+            function updateVariantImages() {
+                const selectedVariant = getVariantBySizeAndColor(sizeSelect.value, colorSelect.value);
+                if (selectedVariant) {
+                    variantImages.forEach(image => {
+                        image.style.display = 'none';
+                        if (image.getAttribute('data-variant-id') === String(selectedVariant.id)) {
+                            image.style.display = 'block';
+                        }
+                    });
+                }
+            }
+
+            sizeSelect.addEventListener('change', updateVariantImages);
+            colorSelect.addEventListener('change', updateVariantImages);
+            sizeSelect.addEventListener('change', updatePrice);
+            colorSelect.addEventListener('change', updatePrice);
+            updatePrice();
+            updateVariantImages();
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sizeSelect = document.getElementById('size');
+            const colorSelect = document.getElementById('color');
+            const priceDisplay = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+            let variants = {{ variants|json_encode()|raw }};
+
+            function getVariantBySizeAndColor(size, color) {
+                if (!Array.isArray(variants) || variants.length === 0) { return null; }
+                return variants.find(variant => {
+                    const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+                    return variant.color === color && sizeArray.includes(size);
+                });
+            }
+
+            function updatePrice() {
+                const selectedVariant = getVariantBySizeAndColor(sizeSelect.value, colorSelect.value);
+                if (selectedVariant) {
+                    const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+                    priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+                    if (selectedVariant.offVariant > 0) {
+                        oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`;
+                        oldPriceDisplay.style.display = 'inline';
+                        discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`;
+                        discountDisplay.style.display = 'block';
+                    } else {
+                        oldPriceDisplay.style.display = 'none';
+                        discountDisplay.style.display = 'none';
+                    }
+                } else {
+                    priceDisplay.textContent = 'Prix indisponible';
+                    oldPriceDisplay.style.display = 'none';
+                    discountDisplay.style.display = 'none';
+                }
+            }
+
+            sizeSelect.addEventListener('change', updatePrice);
+            colorSelect.addEventListener('change', updatePrice);
+            updatePrice();
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorSelect = document.getElementById('color');
+            const mainImage = document.getElementById('main_product_img');
+            const thumbnailsContainer = document.getElementById('thumbnails');
+            const variants = {{ variants|json_encode()|raw }};
+            
+            function updateImages(selectedColor) {
+                const selectedVariant = variants.find(variant => variant.color === selectedColor);
+                if (selectedVariant && selectedVariant.images.length > 0) {
+                    const firstImage = selectedVariant.images[0].imageName;
+                    mainImage.src = `/images/products/${firstImage}`;
+                    thumbnailsContainer.innerHTML = '';
+                    const images = selectedVariant.images.filter(img => !/\.(mp4|webm)$/i.test(img.imageName));
+                    const videos = selectedVariant.images.filter(img => /\.(mp4|webm)$/i.test(img.imageName));
+
+                    images.slice(0, 5).forEach((image, index) => {
+                        const thumbnail = document.createElement('div');
+                        thumbnail.classList.add('mb-3', 'mx-2');
+                        if (index === 4 && images.length > 5) {
+                            const remainingImages = images.length - 5;
+                            thumbnail.innerHTML = `<div class="thumbnail_img_box" style="width: 60px; height: 60px; position: relative;"><a href="/images/products/${image.imageName}" data-fancybox="product-images" data-fancybox-index="${index}" title="Miniature" data-large-src="/images/products/${image.imageName}"><img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;"><div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; font-size: 16px; text-shadow: 0 0 5px rgba(0,0,0,0.5); z-index: 10;">+${remainingImages}</div></a></div>`;
+                        } else {
+                            thumbnail.innerHTML = `<div class="thumbnail_img_box" style="width: 60px; height: 60px; position: relative;"><a href="/images/products/${image.imageName}" data-fancybox="product-images" data-fancybox-index="${index}" title="Miniature" data-large-src="/images/products/${image.imageName}"><img class="thumbnail img-fluid" src="/images/products/${image.imageName}" alt="Miniature" style="width: 100%; height: 100%; object-fit: cover;"></a></div>`;
+                        }
+                        thumbnailsContainer.appendChild(thumbnail);
+                    });
+
+                    if (images.length > 5) {
+                        const existingFancyboxContainer = thumbnailsContainer.querySelector('.fancybox-container');
+                        if (existingFancyboxContainer) { existingFancyboxContainer.remove(); }
+                        const fancyboxContainer = document.createElement('div');
+                        fancyboxContainer.classList.add('fancybox-container');
+                        fancyboxContainer.style.display = 'none';
+                        images.slice(5).forEach((image, index) => {
+                            const link = document.createElement('a');
+                            link.href = `/images/products/${image.imageName}`;
+                            link.setAttribute('data-fancybox', 'product-images');
+                            link.setAttribute('data-fancybox-index', (index + 5).toString());
+                            link.setAttribute('title', 'Miniature');
+                            const img = document.createElement('img');
+                            img.src = `/images/products/${image.imageName}`;
+                            img.alt = 'Miniature';
+                            link.appendChild(img);
+                            fancyboxContainer.appendChild(link);
+                        });
+                        thumbnailsContainer.appendChild(fancyboxContainer);
+                    }
+
+                    if (videos.length > 0) {
+                        const video = videos[0];
+                        const thumbnail = document.createElement('div');
+                        thumbnail.classList.add('mb-3', 'mx-2');
+                        let thumbnailSrc = video.thumbnailName ? `/images/products/${video.thumbnailName}` : `/images/products/${video.imageName.replace(/\.(mp4|webm)$/i, '.jpg')}`;
+                        thumbnail.innerHTML = `<div class="thumbnail_img_box" style="width: 60px; height: 60px; position: relative; background-color: #000;"><a href="/images/products/${video.imageName}" data-fancybox="product-images" data-fancybox-index="${images.length}" data-type="video" title="Vidéo" data-large-src="${thumbnailSrc}"><div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;"><svg width="30" height="30" viewBox="0 0 24 24" fill="white" style="opacity: 0.8;"><polygon points="5,3 19,12 5,21" /></svg></div></a></div>`;
+                        thumbnailsContainer.appendChild(thumbnail);
+                    }
+
+                    if (typeof Fancybox !== 'undefined') {
+                        Fancybox.bind('[data-fancybox="product-images"]', { groupAll: true, startIndex: 0 });
+                    }
+                } else {
+                    mainImage.src = `/images/products/default.jpg`;
+                    thumbnailsContainer.innerHTML = '';
+                }
+            }
+
+            colorSelect.addEventListener('change', function() { updateImages(this.value); });
+            if (colorSelect.value) { updateImages(colorSelect.value); }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sizeSelect = document.getElementById('size');
+            const colorSelect = document.getElementById('color');
+            const priceDisplay = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+            let variants = {{ variants|json_encode()|raw }};
+
+            function getVariantBySizeAndColor(size, color) {
+                if (!Array.isArray(variants) || variants.length === 0) { return null; }
+                return variants.find(variant => {
+                    const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+                    return variant.color === color && sizeArray.includes(size);
+                });
+            }
+
+            function updatePrice() {
+                const selectedVariant = getVariantBySizeAndColor(sizeSelect.value, colorSelect.value);
+                if (selectedVariant) {
+                    const finalPrice = selectedVariant.price - (selectedVariant.price * selectedVariant.offVariant / 100);
+                    priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+                    if (selectedVariant.offVariant > 0) {
+                        oldPriceDisplay.textContent = `${selectedVariant.price.toFixed(2)} €`;
+                        oldPriceDisplay.style.display = 'inline';
+                        discountDisplay.textContent = `${selectedVariant.offVariant}% réduction`;
+                        discountDisplay.style.display = 'block';
+                    } else {
+                        oldPriceDisplay.style.display = 'none';
+                        discountDisplay.style.display = 'none';
+                    }
+                } else {
+                    priceDisplay.textContent = 'Prix indisponible';
+                    oldPriceDisplay.style.display = 'none';
+                    discountDisplay.style.display = 'none';
+                }
+            }
+
+            sizeSelect.addEventListener('change', updatePrice);
+            colorSelect.addEventListener('change', updatePrice);
+            updatePrice();
+        });
+
+
+        const variants = {{ variants|json_encode()|raw }};
+
+        function getVariantBySizeAndColor(size, color) {
+            if (!Array.isArray(variants) || variants.length === 0) { return null; }
+            return variants.find(variant => {
+                const sizeArray = Array.isArray(variant.sizes) ? variant.sizes : [];
+                return variant.color === color && sizeArray.includes(size);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const sizeSelect = document.getElementById('size');
+            const colorSelect = document.getElementById('color');
+            const quantityInput = document.getElementById('quantity');
+            const incrementButton = document.querySelector('.plus');
+            const decreaseButton = document.querySelector('.minus');
+            const addToCartContainer = document.querySelector('.cart_btn');
+            const stockMessage = document.getElementById('stockMessage');
+            // Initialiser maxStock depuis le JSON côté serveur — zéro délai
+            let maxStock = (() => {
+                try {
+                    const data = JSON.parse(document.getElementById('productVariantsData').textContent);
+                    if (!data || !data[0]) return 0;
+                    const v = data[0];
+                    if (!v.sizes || v.sizes.length === 0) return 0;
+                    // Stock de la première taille avec stock > 0
+                    const s = v.sizes.find(s => s.stock > 0);
+                    return s ? parseInt(s.stock, 10) : 0;
+                } catch(e) { return 0; }
+            })();
+
+            async function fetchStock(size, variantId) {
+                try {
+                    const response = await fetch(`/api/get-stock?size=${size}&variantId=${variantId}`);
+                    const data = await response.json();
+                    return data.stock !== undefined ? parseInt(data.stock, 10) : 0;
+                } catch (error) {
+                    console.error('Erreur réseau lors de la récupération du stock:', error);
+                    return 0;
+                }
+            }
+
+            // CORRECTION 2 : lecture instantanée de data-stock au chargement (pas de fetch)
+            function applyStockUI(stock, variantId) {
+                maxStock = stock;
+                resetQuantity();
+                updateIncrementButton();
+                // Mettre à jour le data-variant-id sur le bouton "Ajouter au panier"
+                const addToCartBtn = addToCartContainer.querySelector('.btn-addtocart');
+                if (addToCartBtn && variantId) addToCartBtn.dataset.variantId = variantId;
+                if (stock > 0) {
+                    quantityInput.style.display = 'block';
+                    incrementButton.style.display = 'block';
+                    addToCartContainer.style.display = 'block';
+                    decreaseButton.style.display = 'block';
+                    stockMessage.style.display = 'none';
+                } else {
+                    quantityInput.style.display = 'none';
+                    incrementButton.style.display = 'none';
+                    addToCartContainer.style.display = 'none';
+                    decreaseButton.style.display = 'none';
+                    stockMessage.style.display = 'block';
+                }
+            }
+
+            function getStockFromJSON(variantId) {
+                // Lit le stock directement depuis productVariantsData sans fetch réseau
+                try {
+                    const data = JSON.parse(document.getElementById('productVariantsData').textContent);
+                    const v = data.find(vv => String(vv.id) === String(variantId)) || data[0];
+                    if (!v) return 0;
+                    // Somme du stock de toutes les tailles (ou première taille si une seule)
+                    const sizes = v.sizes || [];
+                    return sizes.reduce((acc, s) => acc + parseInt(s.stock || 0, 10), 0);
+                } catch(e) { return 0; }
+            }
+
+            function initStockFromHTML() {
+                const selectedOption = sizeSelect ? sizeSelect.options[sizeSelect.selectedIndex] : null;
+                if (selectedOption) {
+                    const variantId = selectedOption.getAttribute('data-variant-id') || '';
+                    const sizeName  = (selectedOption.value || '').trim().toUpperCase();
+                    if (sizeName.includes('INDISPONIBLE')) {
+                        // Taille INDISPONIBLE → lire le stock total du variant depuis le JSON
+                        const stock = getStockFromJSON(variantId);
+                        applyStockUI(stock, variantId);
+                    } else {
+                        const stock = parseInt(selectedOption.getAttribute('data-stock') || '0', 10);
+                        applyStockUI(stock, variantId);
+                    }
+                } else {
+                    // Pas d'option du tout → fallback JSON premier variant
+                    try {
+                        const data = JSON.parse(document.getElementById('productVariantsData').textContent);
+                        const v = data[0];
+                        if (v) {
+                            const stock = getStockFromJSON(v.id);
+                            applyStockUI(stock, String(v.id));
+                        }
+                    } catch(e) { console.warn('initStockFromHTML fallback error', e); }
+                }
+            }
+
+            async function updateStock() {
+                const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+                const selectedSize   = selectedOption.value;
+                const variantId      = selectedOption.getAttribute('data-variant-id');
+                if (!selectedSize || !variantId) return;
+                // Si taille INDISPONIBLE → pas de fetch, on lit le JSON directement
+                if (selectedSize.trim().toUpperCase().includes('INDISPONIBLE')) {
+                    const stock = getStockFromJSON(variantId);
+                    applyStockUI(stock, variantId);
+                    return;
+                }
+                const stock = await fetchStock(selectedSize, variantId);
+                applyStockUI(stock, variantId);
+            }
+
+            function resetQuantity() {
+                quantityInput.value = 1;
+            }
+
+            function updateIncrementButton() {
+                const quantity = parseInt(quantityInput.value, 10) || 1;
+                incrementButton.style.display = quantity >= maxStock ? 'none' : 'inline-block';
+            }
+
+            sizeSelect.addEventListener('change', updateStock);
+            if (colorSelect) {
+                colorSelect.addEventListener('change', () => {
+                    resetQuantity();
+                    updateIncrementButton();
+                    updateStock();
+                });
+            }
+
+            // Le thème gère déjà les clics + / - dans son propre JS.
+            // On observe juste le changement de valeur de l'input pour mettre à jour le bouton +.
+            const observer = new MutationObserver(() => updateIncrementButton());
+            observer.observe(quantityInput, { attributes: true, attributeFilter: ['value'] });
+            // Fallback : certains thèmes changent .value sans attribut → on écoute aussi les clics
+            // mais UNIQUEMENT pour cacher/afficher le +, sans modifier la valeur.
+            incrementButton.addEventListener('click', () => setTimeout(updateIncrementButton, 0));
+            decreaseButton.addEventListener('click',  () => setTimeout(updateIncrementButton, 0));
+
+            // État initial déjà rendu par Twig — initStockFromHTML() retiré pour éviter écrasement
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect = document.getElementById('color');
+            const sizeSelect = document.getElementById('size');
+            const colorGroup = document.getElementById('color-group');
+            const sizeGroup = document.getElementById('size-group');
+            const priceDisplay = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+            const variants = {{ variants|json_encode()|raw }};
+
+            const isColorVisible = colorGroup && getComputedStyle(colorGroup).display !== 'none';
+            const isSizeVisible = sizeGroup && getComputedStyle(sizeGroup).display !== 'none';
+
+            function getActiveVariant() {
+                let selectedColor = isColorVisible && colorSelect?.value ? colorSelect.value : null;
+                let selectedSize = isSizeVisible && sizeSelect?.value ? sizeSelect.value : null;
+                if (!selectedColor && variants.length > 0) { selectedColor = variants[0].color; }
+                return variants.find(variant => {
+                    const matchesColor = !selectedColor || variant.color === selectedColor;
+                    const sizeArray = Array.isArray(variant.sizes) ? variant.sizes.map(s => typeof s === 'object' ? s.size : s) : [];
+                    const matchesSize = !selectedSize || sizeArray.includes(selectedSize);
+                    return matchesColor && matchesSize;
+                });
+            }
+
+            function updatePrice() {
+                const variant = getActiveVariant();
+                if (variant) {
+                    const finalPrice = variant.price - (variant.price * (variant.offVariant || 0) / 100);
+                    priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+                    if (variant.offVariant > 0) {
+                        oldPriceDisplay.textContent = `${variant.price.toFixed(2)} €`;
+                        oldPriceDisplay.style.display = 'inline';
+                        discountDisplay.textContent = `${variant.offVariant}% réduction`;
+                        discountDisplay.style.display = 'block';
+                    } else {
+                        oldPriceDisplay.style.display = 'none';
+                        discountDisplay.style.display = 'none';
+                    }
+                } else {
+                    priceDisplay.textContent = 'Prix indisponible';
+                    oldPriceDisplay.style.display = 'none';
+                    discountDisplay.style.display = 'none';
+                }
+            }
+
+            function updateImages() {
+                const variant = getActiveVariant();
+                const mainImage = document.getElementById('main_product_img');
+                const thumbnailsContainer = document.getElementById('thumbnails');
+                if (variant && variant.images?.length > 0) {
+                    const firstImg = variant.images[0];
+                    mainImage.src = `/images/products/${firstImg.imageName || firstImg}`;
+                } else {
+                    mainImage.src = '/images/products/default.jpg';
+                    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
+                }
+            }
+
+            if (colorSelect) colorSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+            if (sizeSelect) sizeSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+            updatePrice();
+            updateImages();
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorOptions = document.querySelectorAll('#color option');
+            const sizeOptions  = document.querySelectorAll('#size option');
+            if (colorOptions.length > 0 && Array.from(colorOptions).every(opt => opt.value.trim().toUpperCase().includes('INDISPONIBLE'))) {
+                document.getElementById('color-group')?.style.setProperty('display', 'none', 'important');
+            }
+            if (sizeOptions.length > 0 && Array.from(sizeOptions).every(opt => opt.value.trim().toUpperCase().includes('INDISPONIBLE'))) {
+                document.getElementById('size-group')?.style.setProperty('display', 'none', 'important');
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect = document.getElementById('color');
+            const sizeSelect = document.getElementById('size');
+            const colorGroup = document.getElementById('color-group');
+            const sizeGroup = document.getElementById('size-group');
+            const mainImage = document.getElementById('main_product_img');
+            const thumbnailsContainer = document.getElementById('thumbnails');
+            const priceDisplay = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+            const variants = {{ variants|json_encode()|raw }};
+
+            function isVisible(el) { return el && window.getComputedStyle(el).display !== 'none'; }
+
+            function getActiveVariant() {
+                const colorVisible = isVisible(colorGroup);
+                const sizeVisible = isVisible(sizeGroup);
+                let selectedColor = colorVisible && colorSelect?.value ? colorSelect.value : null;
+                let selectedSize = sizeVisible && sizeSelect?.value ? sizeSelect.value : null;
+                if (!selectedColor && variants.length > 0) { return variants[0]; }
+                return variants.find(v => {
+                    const matchesColor = !selectedColor || v.color === selectedColor;
+                    const sizeArray = Array.isArray(v.sizes) ? v.sizes.map(s => typeof s === 'object' ? s.size : s) : [];
+                    const matchesSize = !selectedSize || sizeArray.includes(selectedSize);
+                    return matchesColor && matchesSize;
+                });
+            }
+
+            function updatePrice() {
+                const variant = getActiveVariant();
+                if (variant) {
+                    const finalPrice = variant.price - (variant.price * (variant.offVariant || 0) / 100);
+                    priceDisplay.textContent = `${finalPrice.toFixed(2)} €`;
+                    if (variant.offVariant > 0) {
+                        oldPriceDisplay.textContent = `${variant.price.toFixed(2)} €`;
+                        oldPriceDisplay.style.display = 'inline';
+                        discountDisplay.textContent = `${variant.offVariant}% réduction`;
+                        discountDisplay.style.display = 'block';
+                    } else {
+                        oldPriceDisplay.style.display = 'none';
+                        discountDisplay.style.display = 'none';
+                    }
+                } else {
+                    priceDisplay.textContent = 'Prix indisponible';
+                    oldPriceDisplay.style.display = 'none';
+                    discountDisplay.style.display = 'none';
+                }
+            }
+
+            function updateImages() {
+                const variant = getActiveVariant();
+                if (!variant || !variant.images || variant.images.length === 0) {
+                    mainImage.src = '/images/products/default.jpg';
+                    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
+                    return;
+                }
+                const firstImage = variant.images[0];
+                const imageName = firstImage.imageName || firstImage;
+                mainImage.src = `/images/products/${imageName}`;
+                thumbnailsContainer.innerHTML = '';
+                const images = variant.images.filter(img => !/\.(mp4|webm)$/.test((img.imageName || img).toLowerCase()));
+                const videos = variant.images.filter(img => /\.(mp4|webm)$/.test((img.imageName || img).toLowerCase()));
+
+                images.slice(0, 5).forEach((img, index) => {
+                    const name = img.imageName || img;
+                    const thumbnail = document.createElement('div');
+                    thumbnail.classList.add('mb-3', 'mx-2');
+                    if (index === 4 && images.length > 5) {
+                        const remaining = images.length - 5;
+                        thumbnail.innerHTML = `<div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;"><a href="/images/products/${name}" data-fancybox="product-images" data-fancybox-index="${index}" data-large-src="/images/products/${name}"><img src="/images/products/${name}" class="thumbnail img-fluid" style="width:100%;height:100%;object-fit:cover;opacity:0.6;"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-weight:bold;font-size:16px;text-shadow:0 0 5px rgba(0,0,0,0.5);z-index:10;">+${remaining}</div></a></div>`;
+                    } else {
+                        thumbnail.innerHTML = `<div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;"><a href="/images/products/${name}" data-fancybox="product-images" data-fancybox-index="${index}" data-large-src="/images/products/${name}"><img src="/images/products/${name}" class="thumbnail img-fluid" style="width:100%;height:100%;object-fit:cover;"></a></div>`;
+                    }
+                    thumbnailsContainer.appendChild(thumbnail);
+                });
+
+                if (images.length > 5) {
+                    const fancyboxContainer = document.createElement('div');
+                    fancyboxContainer.style.display = 'none';
+                    fancyboxContainer.classList.add('fancybox-container');
+                    images.slice(5).forEach((img, i) => {
+                        const name = img.imageName || img;
+                        const link = document.createElement('a');
+                        link.href = `/images/products/${name}`;
+                        link.setAttribute('data-fancybox', 'product-images');
+                        link.setAttribute('data-fancybox-index', (i + 5).toString());
+                        const imgEl = document.createElement('img');
+                        imgEl.src = `/images/products/${name}`;
+                        link.appendChild(imgEl);
+                        fancyboxContainer.appendChild(link);
+                    });
+                    thumbnailsContainer.appendChild(fancyboxContainer);
+                }
+
+                if (videos.length > 0) {
+                    const video = videos[0];
+                    const videoName = video.imageName || video;
+                    const thumbName = video.thumbnailName || videoName.replace(/\.(mp4|webm)$/i, '.jpg');
+                    const thumbnail = document.createElement('div');
+                    thumbnail.classList.add('mb-3', 'mx-2');
+                    thumbnail.innerHTML = `<div class="thumbnail_img_box" style="width:60px;height:60px;position:relative;background:#000;"><a href="/images/products/${videoName}" data-fancybox="product-images" data-fancybox-index="${images.length}" data-type="video" data-large-src="/images/products/${thumbName}"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;"><svg width="30" height="30" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg></div></a></div>`;
+                    thumbnailsContainer.appendChild(thumbnail);
+                }
+
+                if (typeof Fancybox !== 'undefined') {
+                    Fancybox.bind('[data-fancybox="product-images"]', { groupAll: true });
+                }
+            }
+
+            if (colorSelect) colorSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+            if (sizeSelect) sizeSelect.addEventListener('change', () => { updatePrice(); updateImages(); });
+            updatePrice();
+            updateImages();
+        });
+
+
+        {# === DEBUG PANIER + PRIX AU CHARGEMENT === #}
+        document.addEventListener('DOMContentLoaded', function () {
+            const variantsData = JSON.parse(document.getElementById('productVariantsData').textContent);
+            const addToCartBtn = document.querySelector('.btn-addtocart');
+            const priceDisplay  = document.getElementById('variant-price');
+            const oldPriceDisplay = document.getElementById('old-price');
+            const discountDisplay = document.getElementById('variant-off');
+
+            // ── PRIX AU CHARGEMENT : lecture immédiate depuis JSON (pas d'attente JS) ──
+            if (variantsData.length > 0) {
+                const v = variantsData[0];
+                const finalPrice = v.price - (v.price * (v.offVariant || 0) / 100);
+                if (priceDisplay) priceDisplay.textContent = finalPrice.toFixed(2) + ' €';
+                if (v.offVariant > 0) {
+                    if (oldPriceDisplay) { oldPriceDisplay.textContent = v.price.toFixed(2) + ' €'; oldPriceDisplay.style.display = 'inline'; }
+                    if (discountDisplay) { discountDisplay.querySelector('span').textContent = v.offVariant + '% réduction'; discountDisplay.style.display = 'block'; }
+                }
+            }
+
+            // ── DEBUG PANIER ──
+            if (!addToCartBtn) {
+                console.error('[PANIER] .btn-addtocart introuvable dans le DOM');
+                return;
+            }
+
+            addToCartBtn.addEventListener('click', function (e) {
+                const vid = this.dataset.variantId;
+                console.log('[PANIER] Clic sur Ajouter au panier');
+                console.log('[PANIER] data-variant-id =', vid);
+                if (!vid) {
+                    console.error('[PANIER] ❌ data-variant-id est VIDE — le thème ne peut pas envoyer la requête');
+                } else {
+                    console.log('[PANIER] ✅ variant ID ok →', vid);
+                }
+            });
+
+            // Vérifie aussi que l'ID est bien mis à jour à chaque changement
+            const observer = new MutationObserver(() => {
+                console.log('[PANIER] data-variant-id mis à jour →', addToCartBtn.dataset.variantId);
+            });
+            observer.observe(addToCartBtn, { attributes: true, attributeFilter: ['data-variant-id'] });
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const colorSelect  = document.getElementById('color');
+            const sizeSelect   = document.getElementById('size');
+            const eanBlock     = document.getElementById('ean-block');
+            const eanValue     = document.getElementById('ean-value');
+            const variantsData = JSON.parse(document.getElementById('productVariantsData').textContent);
+
+            function updateEan() {
+                const color = colorSelect ? colorSelect.value : null;
+                const v = color
+                    ? variantsData.find(vv => vv.color === color)
+                    : variantsData[0];
+                if (!eanBlock || !eanValue) return;
+                if (v && v.ean) {
+                    eanValue.textContent   = v.ean;
+                    eanBlock.style.display = 'flex';
+                } else {
+                    eanBlock.style.display = 'none';
+                }
+            }
+
+            if (colorSelect) colorSelect.addEventListener('change', updateEan);
+            if (sizeSelect)  sizeSelect.addEventListener('change',  updateEan);
+            updateEan();
+        });
+
+    </script>
 
 
 {% endblock %}
-

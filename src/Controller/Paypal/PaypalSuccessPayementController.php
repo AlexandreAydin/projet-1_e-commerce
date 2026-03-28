@@ -6,7 +6,7 @@ use App\Classe\Mail;
 use App\Classe\StockManagerServices as ClasseStockManagerServices;
 use App\Entity\Order;
 use App\Service\CartService;
-use App\Repository\ProductRepository;
+use App\Classe\StockManagerServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +19,7 @@ class PaypalSuccessPayementController extends AbstractController
     public function index(
         ?Order $order,
         CartService $cartServices,
-        ClasseStockManagerServices $stockManager,
+        StockManagerServices $stockManager,
         EntityManagerInterface $manager
     ): Response {
 
@@ -30,7 +30,6 @@ class PaypalSuccessPayementController extends AbstractController
     
 
         $order->setIsPaid(true);
-        
         
         // Commande payée
         if (!$order->getIsPaid()) {

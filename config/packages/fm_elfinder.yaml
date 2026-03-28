@@ -1,5 +1,5 @@
 fm_elfinder:
-    assets_path: /assets 
+    assets_path: http://127.0.0.1:8001
     instances:
         default:
             locale: fr 

@@ -33,7 +33,7 @@ class OrderDetailsCrudController extends AbstractCrudController
             IdField::new('id', 'ID'),
             AssociationField::new('orders', 'Commande ID'),
             TextField::new('productName', 'Product Name'),
-            IntegerField::new('quantity', 'Quantity'), // Utilisez IntegerField ici
+            IntegerField::new('quantity', 'Quantity'),
             MoneyField::new('subtotalHT', 'Sub Total HT')->setCurrency('EUR'),
             MoneyField::new('taxe', 'Taxe')->setCurrency('EUR'),
             MoneyField::new('subTotalTTC', 'Sub Total TTC')->setCurrency('EUR')

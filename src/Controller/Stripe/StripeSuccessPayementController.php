@@ -9,6 +9,7 @@ use App\Service\CartService;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -21,7 +22,8 @@ class StripeSuccessPayementController extends AbstractController
         CartService $cartServices,
         ClasseStockManagerServices $stockManager,
         UrlGeneratorInterface $router,
-        ProductRepository $productRepository,
+        ProductRepository $productRepository, 
+        RequestStack $requestStack,
         EntityManagerInterface $manager
     ): Response {
         if (!$order || $order->getUser() !== $this->getUser()) {
@@ -29,11 +31,18 @@ class StripeSuccessPayementController extends AbstractController
         }
     
         $mail = new Mail();
+
         
         // Commande payée
         if (!$order->getIsPaid()) {
             $order->setIsPaid(true);
             $stockManager->deStock($order);
+             // Vérifiez si un coupon a été appliqué avec RequestStack
+            $session = $requestStack->getSession();
+            $appliedCoupon = $session->get('applied_coupon');
+            if ($appliedCoupon) {
+                $order->setCouponApplied(true);
+            }
             $manager->flush();
             $cartServices->deleteCart();
             $content = "Bonjour " . $order->getUser()->getFirstname() . 
@@ -41,7 +50,7 @@ class StripeSuccessPayementController extends AbstractController
                        "<br/><br/>Numéro de Commande: " . $order->getId() .
                        "<br/><br/>Référence de Commande: " . $order->getReference() .
                        "<br><br/>Vous recevrez bientôt votre colis.<br/> Vous pouvez suivre le statut de votre commande dans votre espace personnel.";
-            $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Anamoz est bien validée.', $content);
+            $mail->send($order->getUser()->getEmail(), $order->getUser()->getFirstname(), 'Votre commande Yilmi Market est bien validée.', $content);
         }
 
         $order->setIsPaid(true);

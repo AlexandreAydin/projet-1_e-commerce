@@ -12,16 +12,16 @@
 					</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="{{ path('app_recipe.community')}}">Recettes de la communauté
+					<a class="nav-link" href="">Recettes de la communauté
 					</a>
 				</li> 
 				{% if app.user %}
 					<li class="nav-item">
-						<a class="nav-link" href="{{ path('app_ingredient') }}">Mes ingrédients
+						<a class="nav-link" href="">Mes ingrédients
 						</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="{{ path('app_recipe') }}">Mes recettes
+						<a class="nav-link" href="">Mes recettes
 						</a>
 					</li>
 				{% endif %}
@@ -32,23 +32,23 @@
 						<li class="nav-item dropdown" style="margin-right: 5rem;">
 							<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ app.user.fullName }}</a>
 							<div class="dropdown-menu">
-								<a class="dropdown-item" href="{{ path('app_user.edit', {id : app.user.id}) }}">Modifier mes informations</a>
-								<a class="dropdown-item" href="{{ path('app_user.edit.password', {id : app.user.id}) }}">Modifier mon mot de passe</a>
+								{# <a class="dropdown-item" href="{{ path('app_user.edit', {id : app.user.id}) }}">Modifier mes informations</a>
+								<a class="dropdown-item" href="{{ path('app_user.edit.password', {id : app.user.id}) }}">Modifier mon mot de passe</a> #}
 								<div class="dropdown-divider"></div>
 								{% if 'ROLE_ADMIN' in app.user.roles %}
 									<a class="dropdown-item" href="{{ path('admin') }}">Administration</a>
 									<div class="dropdown-divider"></div>
 								{% endif %}
-								<a class="dropdown-item" href="{{ path('app_security.logout') }}">Déconnexion</a>
+								{# <a class="dropdown-item" href="{{ path('app_security.logout') }}">Déconnexion</a> #}
 							</div>
 						</li>
 					{% else %}
 						<li class="nav-item">
-							<a class="nav-link" href="{{ path('app_security.login') }}">Connexion
+							<a class="nav-link" href="">Connexion
 							</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="{{ path('app_security.registration') }}">Inscription
+							<a class="nav-link" href="">Inscription
 							</a>
 						</li>
 					{% endif %}

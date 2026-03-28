@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Yilmi Market - Modéle{% endblock %}
+
+{% block body %}
+    <div class="breadcrumb_section bg_gray page-title-mini">
+        <div class="container">
+            <div class="container">
+                <ol class="breadcrumb justify-content-md-start">
+                    <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                    <li class="breadcrumb-item active"><a href="{{ path('app_marque', {'slug': brand.slug}) }}">{{ brand.name }}</a></li>
+                    <li class="breadcrumb-item active">{{ model.name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    {# <h1>Catégorie: {{ category.name }}</h1>
+    <h1>{{ category.name }} - Sous-catégorie: {{ subCategory.name }}</h1> #}
+    <div class="products-list">
+    {% block stylesheets %}
+    {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
+        <link rel="stylesheet" href="{{ asset('assets/css/_product.css') }}">
+    {% endblock %}
+        {% for product in items %}
+
+ <div class="">
+        <div class="m-4">
+            <div class="row flex-column flex-lg-row-reverse">
+                <div class="col-lg-10 order-2 order-lg-1 w-100">
+                    <div class="row shop_container">
+                        {% if not items %}
+                            <p>Désolé, aucun produit ne correspond au résultat de votre recherche</p>
+                        {% endif %}
+                        {% for product in items %}
+                            {% include "partials/_product.html.twig" with {'product':product} %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {# <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
+                    <div class="sidebar">
+                        {{ form_start(search) }}
+                            <div class="widget">
+                                <h5 class="widget_title">Rechercher</h5>
+                                <div class="scrollable-checkbox">
+                                    {{ form_row(search.string) }}
+                                </div>
+                            </div>
+                            <div class="widget">
+                                <h5 class="widget_title">Categories</h5>
+                                <div class="scrollable-checkbox">
+                                    {{ form_row(search.categories) }}
+                                </div>
+                            </div>
+                            <div class="widget">
+                                <h5 class="widget_title">Price</h5>
+                                <div class="form-row">
+                                    <div class="col-md-6">
+                                        {{ form_row(search.minPrice) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_row(search.maxPrice) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-border-fill btn-block mb-4">Rechercher</button>
+                        {{ form_end(search) }}
+                    </div>
+                </div> #}
+            </div>
+        </div>
+    </div>
+
+        {% endfor %}
+    </div>
+
+
+{% endblock %}
+
+

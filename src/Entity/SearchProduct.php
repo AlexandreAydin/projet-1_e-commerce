@@ -5,11 +5,6 @@ namespace App\Entity;
 class SearchProduct
 {
 
-    /**
-     * @var string
-     */
-    public $string = '';
-
     private ?int $minPrice = null;
 
     private ?int $maxPrice = null;
@@ -21,6 +16,28 @@ class SearchProduct
      */
     private array $categories = [];
 
+       /**
+     * Undocumented variable
+     *
+     * @var Categorie[]
+     */
+    private ?array $subCategories = [];
+
+
+    /**
+     * Undocumented variable
+     *
+     * @var ProductBrand[]
+     */
+    private ?array $productBrand = [];
+    
+
+     /**
+     * Undocumented variable
+     *
+     * @var BrandModel[]
+     */
+    private ?array $brandModel = [];
 
     public function getMinPrice(): ?int
     {
@@ -54,6 +71,43 @@ class SearchProduct
     public function setCategories(?array $categories): self
     {
         $this->categories = $categories;
+
+        return $this;
+    }
+
+
+    public function getSubCategories(): ?array
+    {
+        return $this->subCategories;
+    }
+
+    public function setSubCategories(?array $subCategories): self
+    {
+        $this->subCategories = $subCategories;
+
+        return $this;
+    }
+
+    public function getProductBrand(): ?array
+    {
+        return $this->productBrand;
+    }
+
+    public function setProductBrand(?array $productBrand): self
+    {
+        $this->productBrand = $productBrand;
+
+        return $this;
+    }
+
+    public function getBrandModel(): ?array
+    {
+        return $this->brandModel;
+    }
+
+    public function setBrandModel(?array $brandModel): self
+    {
+        $this->brandModel = $brandModel;
 
         return $this;
     }

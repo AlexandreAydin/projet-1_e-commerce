@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Yilmi Market - Marque{% endblock %}
+
+{% block body %}
+    <h2 class="mt-4 mx-4">Marque: {{ brand.name }}</h2>
+    <div class="products-list">
+    {% block stylesheets %}
+    {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
+        <link rel="stylesheet" href="{{ asset('assets/css/_product.css') }}">
+    {% endblock %}
+        {% for product in items %}
+
+ <div class="">
+        <div class="m-4">
+            <div class="row flex-column flex-lg-row-reverse">
+                <div class="col-lg-10 order-2 order-lg-1 w-100">
+                    <div class="row shop_container">
+                        {% if not items %}
+                            <p>Désolé, aucun produit ne correspond au résultat de votre recherche</p>
+                        {% endif %}
+                        {% for product in items %}
+                            {% include "partials/_product.html.twig" with {'product':product} %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
+                    <div class="">
+                        <h4 class="widget_title">Modèles</h4>
+                        {% for brandsModel in brandsModels %}
+                            <div class="">
+                                <a href="{{ path('app_brand_model', { 'brandSlug': brand.slug, 'modelSlug': brandsModel.slug }) }}" class="">
+                                    <div class="mt-2 mx-4">
+                                        {{ brandsModel.name }}
+                                    </div>
+                                </a>
+                            </div>
+                        {% else %}
+                            <p>Aucun modèle disponible.</p>
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <h4 class="widget_title">Catégorie</h4>
+                            <div class="scrollable-checkbox">
+                                {% for category in categories %}
+                                    <div class="">
+                                        <a href="{{ path('app_categorie', { 'slug': category.slug }) }}" class="">
+                                            <div class="mt-2 mx-4">
+                                                {{ category.name }}
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p>Aucune catégorie disponible.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+        {% endfor %}
+    </div>
+
+
+{% endblock %}

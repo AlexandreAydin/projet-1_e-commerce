@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics · Yilmi Market</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#0B0F1A; --surface:#111827; --card:#161D2F; --border:#1E2A45;
+      --blue:#3B82F6; --green:#10B981; --yellow:#F59E0B; --purple:#8B5CF6;
+      --red:#EF4444; --muted:#64748B; --text:#E2E8F0; --sub:#94A3B8;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font-family:'DM Sans','Segoe UI',sans-serif;
+    }
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+    /* ── Top nav bar (lien retour EasyAdmin) ── */
+    .topbar {
+      background:var(--surface); border-bottom:1px solid var(--border);
+      padding:10px 24px; display:flex; align-items:center; gap:16px;
+    }
+    .topbar a {
+      color:var(--sub); text-decoration:none; font-size:13px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .topbar a:hover { color:var(--text); }
+    .topbar .sep { color:var(--border); }
+    .topbar .current { color:var(--text); font-weight:600; font-size:13px; }
+
+    /* ── Main content ── */
+    .wrap { padding:24px; }
+
+    /* ── Header ── */
+    .sh { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:28px; }
+    .sh small { display:block; font-size:11px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+    .sh h1 { font-size:24px; font-weight:800; letter-spacing:-.03em; color:var(--text); }
+    .pinfo { font-size:12px; color:var(--muted); margin-top:4px; }
+
+    /* ── Dropdown ── */
+    .sdrop { position:relative; }
+    .sdrop-btn {
+      background:var(--card); border:1px solid rgba(59,130,246,.3); color:var(--text);
+      padding:9px 16px; border-radius:10px; cursor:pointer; font-size:13px;
+      font-weight:600; font-family:inherit; display:flex; align-items:center; gap:8px;
+    }
+    .sdrop-btn:hover { border-color:var(--blue); }
+    .sdrop-menu {
+      display:none; position:absolute; top:calc(100% + 8px); right:0;
+      background:var(--card); border:1px solid var(--border); border-radius:12px;
+      z-index:9999; min-width:230px; box-shadow:0 16px 48px rgba(0,0,0,.6); overflow:hidden;
+    }
+    .sdrop-menu.open { display:block; }
+    .sdrop-menu button {
+      display:block; width:100%; text-align:left; background:transparent; color:var(--text);
+      padding:10px 18px; border:none; border-left:3px solid transparent;
+      cursor:pointer; font-size:13px; font-family:inherit;
+    }
+    .sdrop-menu button:hover { background:var(--border); }
+    .sdrop-menu button.act { background:#1E2A45; color:var(--blue); border-left-color:var(--blue); font-weight:700; }
+
+    /* ── Custom range ── */
+    .scust {
+      display:none; background:var(--card); border:1px solid var(--border);
+      border-radius:12px; padding:16px 20px; margin-bottom:20px;
+      flex-wrap:wrap; gap:12px; align-items:center;
+    }
+    .scust.open { display:flex; }
+    .scust label { color:var(--sub); font-size:13px; }
+    .scust input[type=date] {
+      background:var(--surface); border:1px solid var(--border); color:var(--text);
+      padding:7px 12px; border-radius:8px; font-size:13px; font-family:inherit;
+    }
+    input[type=date]::-webkit-calendar-picker-indicator { filter:invert(.5); }
+    .sbadge { background:rgba(16,185,129,.15); color:var(--green); font-size:12px; font-weight:700; padding:3px 10px; border-radius:20px; }
+
+    /* ── Error ── */
+    .serr {
+      display:none; background:rgba(239,68,68,.1); border:1px solid var(--red);
+      border-radius:10px; padding:12px 18px; margin-bottom:20px; color:var(--red); font-size:13px;
+    }
+
+    /* ── KPI ── */
+    .skpi { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .skpi-card {
+      background:var(--card); border:1px solid var(--border); border-radius:14px;
+      padding:20px 24px; display:flex; flex-direction:column; gap:8px;
+      position:relative; overflow:hidden;
+    }
+    .skpi-card::before {
+      content:''; position:absolute; top:0; right:0; width:80px; height:80px;
+      background:radial-gradient(circle at top right, var(--ac), transparent 70%);
+    }
+    .skpi-top { display:flex; justify-content:space-between; }
+    .skpi-lbl { font-size:11px; color:var(--sub); font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+    .skpi-val { font-size:28px; font-weight:800; letter-spacing:-.02em; }
+    .skpi-bot { display:flex; gap:8px; align-items:center; }
+    .skpi-badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
+    .skpi-badge.up   { background:rgba(16,185,129,.15); color:var(--green); }
+    .skpi-badge.down { background:rgba(239,68,68,.15);  color:var(--red); }
+    .skpi-sub { color:var(--muted); font-size:11px; }
+
+    /* ── Chart card ── */
+    .scard { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:20px; }
+    .scard-hd { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+    .scard-hd h2 { font-size:16px; font-weight:700; color:var(--text); }
+    .scard-hd p  { color:var(--muted); font-size:12px; margin-top:2px; }
+    .stbns { display:flex; gap:6px; }
+    .stbns button {
+      background:var(--surface); color:var(--muted); border:1px solid var(--border);
+      padding:5px 14px; border-radius:8px; font-size:12px; font-weight:600;
+      cursor:pointer; font-family:inherit;
+    }
+    .stbns button.act { background:var(--blue); color:#fff; border-color:var(--blue); }
+    .stbns button:hover:not(.act) { background:var(--border); }
+
+    /* ── 2-col ── */
+    .s2col { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:20px; margin-bottom:20px; }
+
+    /* ── Status bars ── */
+    .sstat-list { display:flex; flex-direction:column; gap:12px; }
+    .sstat-row  { display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px; color:var(--text); }
+    .sbar-track { height:5px; background:var(--border); border-radius:3px; }
+    .sbar-fill  { height:100%; border-radius:3px; transition:width .6s ease; }
+
+    /* ── Skeleton ── */
+    .sskel {
+      background:linear-gradient(90deg,var(--card) 25%,#1a2540 50%,var(--card) 75%);
+      background-size:200% 100%; animation:sshim 1.4s infinite; border-radius:12px;
+    }
+
+    footer { text-align:center; margin-top:28px; padding-bottom:24px; color:var(--muted); font-size:11px; }
+
+    @keyframes sshim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    @keyframes sfade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    .fade { animation:sfade .4s ease; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Breadcrumb retour EasyAdmin ── -->
+  <nav class="topbar">
+    <a href="/admin">← Tableau de bord</a>
+    <span class="sep">›</span>
+    <span class="current">📊 Analytics & Ventes</span>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- Header -->
+    <div class="sh">
+      <div>
+        <small>Yilmi Market · Admin</small>
+        <h1>Analytics &amp; Ventes 📊</h1>
+        <p class="pinfo" id="sPInfo"></p>
+      </div>
+      <div class="sdrop">
+        <button class="sdrop-btn" id="sBtn">📅 <span id="sBtnLbl">30 derniers jours</span> ▾</button>
+        <div class="sdrop-menu" id="sMenu"></div>
+      </div>
+    </div>
+
+    <!-- Custom range -->
+    <div class="scust" id="sCust">
+      <label>Du</label><input type="date" id="sFrom">
+      <label>Au</label><input type="date" id="sTo">
+      <span class="sbadge" id="sBadge" style="display:none"></span>
+    </div>
+
+    <!-- Error -->
+    <div class="serr" id="sErr"></div>
+
+    <!-- KPI -->
+    <div class="skpi" id="sKpi">
+      <div class="sskel" style="height:120px"></div>
+      <div class="sskel" style="height:120px"></div>
+      <div class="sskel" style="height:120px"></div>
+      <div class="sskel" style="height:120px"></div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="scard">
+      <div class="scard-hd">
+        <div><h2>Revenus (TTC)</h2><p id="sRevSub">30 derniers jours</p></div>
+        <div class="stbns">
+          <button class="act" onclick="sSW('area',this)">Aire</button>
+          <button onclick="sSW('bar',this)">Barres</button>
+          <button onclick="sSW('line',this)">Ligne</button>
+        </div>
+      </div>
+      <canvas id="sRevC" height="100"></canvas>
+    </div>
+
+    <!-- 2-col -->
+    <div class="s2col">
+      <div class="scard" style="margin-bottom:0">
+        <div class="scard-hd"><div><h2>Commandes</h2><p>Commandes payées</p></div></div>
+        <canvas id="sOrdC" height="120"></canvas>
+      </div>
+      <div class="scard" style="margin-bottom:0">
+        <div class="scard-hd"><div><h2>Statuts</h2><p>Toutes commandes confondues</p></div></div>
+        <div class="sstat-list" id="sStats"><div class="sskel" style="height:180px"></div></div>
+      </div>
+    </div>
+
+    <!-- Fiscal -->
+    <div class="scard" style="margin-top:20px">
+      <div class="scard-hd"><div><h2>Détail fiscal HT / TVA</h2><p>Décomposition par période</p></div></div>
+      <canvas id="sFiscC" height="80"></canvas>
+    </div>
+
+    <footer>Yilmi Market Analytics · Données réelles depuis la base Symfony</footer>
+  </div>
+
+<script>
+const _API = '/admin/api/stats';
+const _PR = [
+  {k:'today',      l:"Aujourd'hui"},
+  {k:'yesterday',  l:'Hier'},
+  {k:'7d',         l:'7 derniers jours'},
+  {k:'30d',        l:'30 derniers jours'},
+  {k:'mtd',        l:'Mois en cours'},
+  {k:'prev_month', l:'Mois précédent'},
+  {k:'12m',        l:'12 derniers mois'},
+  {k:'ytd',        l:"Année en cours"},
+  {k:'lifetime',   l:'Depuis toujours'},
+  {k:'custom',     l:'Personnalisé ✏️'},
+];
+const _SM = {
+  0:{l:'Non payée',      i:'❌', c:'#EF4444'},
+  1:{l:'Payée',          i:'💳', c:'#F59E0B'},
+  2:{l:'En préparation', i:'📦', c:'#8B5CF6'},
+  3:{l:'En livraison',   i:'🚚', c:'#3B82F6'},
+  4:{l:'Livré',          i:'✅', c:'#10B981'},
+};
+Chart.defaults.color = '#64748B';
+Chart.defaults.borderColor = '#1E2A45';
+
+let _preset = '30d', _ct = 'area', _rc, _oc, _fc;
+
+// ── Dropdown ──────────────────────────────────────────────────────────────
+const _menu = document.getElementById('sMenu');
+_PR.forEach(p => {
+  const b = document.createElement('button');
+  b.textContent = p.l;
+  b.dataset.k   = p.k;
+  if (p.k === _preset) b.classList.add('act');
+  b.onclick = () => {
+    _preset = p.k;
+    document.getElementById('sBtnLbl').textContent = p.l;
+    _menu.classList.remove('open');
+    _menu.querySelectorAll('button').forEach(x => x.classList.toggle('act', x.dataset.k === p.k));
+    document.getElementById('sCust').classList.toggle('open', p.k === 'custom');
+    if (p.k !== 'custom') _load();
+  };
+  _menu.appendChild(b);
+});
+document.getElementById('sBtn').onclick = e => { e.stopPropagation(); _menu.classList.toggle('open'); };
+document.addEventListener('click', () => _menu.classList.remove('open'));
+
+// ── Custom dates ──────────────────────────────────────────────────────────
+const _sf = document.getElementById('sFrom');
+const _st = document.getElementById('sTo');
+function _days() {
+  if (_sf.value && _st.value) {
+    const d = Math.round((new Date(_st.value) - new Date(_sf.value)) / 86400000);
+    if (d > 0) {
+      const b = document.getElementById('sBadge');
+      b.textContent   = `✓ ${d} jours`;
+      b.style.display = 'inline-block';
+      _load();
+    }
+  }
+}
+_sf.onchange = _days;
+_st.onchange = _days;
+
+// ── Fetch ─────────────────────────────────────────────────────────────────
+async function _load() {
+  const p = new URLSearchParams({ preset: _preset });
+  if (_preset === 'custom' && _sf.value && _st.value) {
+    p.set('from', _sf.value);
+    p.set('to',   _st.value);
+  }
+  _err(null);
+  try {
+    const r = await fetch(`${_API}?${p}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _render(await r.json());
+  } catch(e) {
+    _err(`⚠️ ${e.message} — Vérifiez que AdminStatsController est bien accessible.`);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function _render({ kpi, series, states, period }) {
+  document.getElementById('sPInfo').textContent =
+    `${period.from} → ${period.to} · ${period.days} jours`;
+  document.getElementById('sRevSub').textContent =
+    _PR.find(p => p.k === _preset)?.l ?? '';
+
+  // KPI
+  const cards = [
+    { l:'Commandes',           v:_f(_kpi.totalOrders),     i:'🛒', c:'#3B82F6', t:kpi.trendOrders,  s:'vs période préc.' },
+    { l:"Chiffre d'affaires",  v:'€'+_fm(kpi.totalRevenue),i:'💰', c:'#10B981', t:kpi.trendRevenue, s:'vs période préc.' },
+    { l:'Panier moyen',        v:'€'+_fm(kpi.avgOrderValue),i:'📦',c:'#F59E0B', t:0,                s:'par commande' },
+    { l:'Total HT',            v:'€'+_fm(kpi.totalHT),     i:'🧾', c:'#8B5CF6', t:0,                s:`TVA: €${_fm(kpi.totalTVA)}` },
+  ];
+  document.getElementById('sKpi').innerHTML = cards.map(c => `
+    <div class="skpi-card fade" style="--ac:${c.c}22">
+      <div class="skpi-top"><span class="skpi-lbl">${c.l}</span><span>${c.i}</span></div>
+      <div class="skpi-val" style="color:${c.c}">${c.v}</div>
+      <div class="skpi-bot">
+        <span class="skpi-badge ${c.t >= 0 ? 'up':'down'}">${c.t >= 0 ? '▲':'▼'} ${Math.abs(c.t)}%</span>
+        <span class="skpi-sub">${c.s}</span>
+      </div>
+    </div>`).join('');
+
+  const lbl = series.map(s => s.label);
+  _drawRev( lbl, series.map(s => s.revenue));
+  _drawOrd( lbl, series.map(s => s.orders));
+  _drawFisc(lbl, series.map(s => s.ht), series.map(s => s.tva));
+  _drawStat(states);
+}
+
+function _drawRev(lbl, rev) {
+  if (_rc) _rc.destroy();
+  const ctx = document.getElementById('sRevC').getContext('2d');
+  const g   = ctx.createLinearGradient(0,0,0,280);
+  g.addColorStop(0,'rgba(59,130,246,.35)'); g.addColorStop(1,'rgba(59,130,246,0)');
+  const isBar = _ct === 'bar';
+  _rc = new Chart(ctx, {
+    type: isBar ? 'bar' : 'line',
+    data: { labels: lbl, datasets: [{ label:'CA (€)', data: rev,
+      borderColor:'#3B82F6',
+      backgroundColor: isBar ? 'rgba(59,130,246,.6)' : g,
+      fill: !isBar && _ct !== 'line', tension:.4,
+      pointRadius:0, pointHoverRadius:5, borderWidth:2.5, borderRadius: isBar ? 4:0
+    }]},
+    options: _opts('€'),
+  });
+}
+function _drawOrd(lbl, ord) {
+  if (_oc) _oc.destroy();
+  const ctx = document.getElementById('sOrdC').getContext('2d');
+  const g   = ctx.createLinearGradient(0,0,0,220);
+  g.addColorStop(0,'rgba(16,185,129,.35)'); g.addColorStop(1,'rgba(16,185,129,0)');
+  _oc = new Chart(ctx, {
+    type: 'line',
+    data: { labels: lbl, datasets:[{ label:'Commandes', data: ord,
+      borderColor:'#10B981', backgroundColor: g,
+      fill:true, tension:.4, pointRadius:0, pointHoverRadius:5, borderWidth:2.5
+    }]},
+    options: _opts(''),
+  });
+}
+function _drawFisc(lbl, ht, tva) {
+  if (_fc) _fc.destroy();
+  const ctx = document.getElementById('sFiscC').getContext('2d');
+  _fc = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: lbl, datasets:[
+      { label:'HT',  data: ht,  backgroundColor:'rgba(16,185,129,.7)', borderRadius:4, stack:'a' },
+      { label:'TVA', data: tva, backgroundColor:'rgba(245,158,11,.7)', borderRadius:4, stack:'a' },
+    ]},
+    options: { ..._opts('€'), plugins:{ ..._opts('€').plugins, legend:{ display:true, labels:{ color:'#94A3B8', font:{size:11} }}}},
+  });
+}
+function _drawStat(states) {
+  const total = states.reduce((s,r) => s + r.count, 0);
+  if (!states.length) {
+    document.getElementById('sStats').innerHTML = '<p style="color:var(--muted)">Aucune donnée.</p>';
+    return;
+  }
+  document.getElementById('sStats').innerHTML = states.map(s => {
+    const m   = _SM[s.state] ?? { l:'Inconnu', i:'❓', c:'#64748B' };
+    const pct = total > 0 ? Math.round(s.count / total * 100) : 0;
+    return `<div>
+      <div class="sstat-row">
+        <span>${m.i} ${m.l}</span>
+        <span style="font-weight:700;color:${m.c}">${s.count}
+          <span style="color:var(--muted);font-weight:400">(${pct}%)</span>
+        </span>
+      </div>
+      <div class="sbar-track"><div class="sbar-fill" style="width:${pct}%;background:${m.c}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function sSW(type, btn) {
+  _ct = type;
+  document.querySelectorAll('.stbns button').forEach(b => b.classList.remove('act'));
+  btn.classList.add('act');
+  if (_rc) _drawRev(_rc.data.labels, _rc.data.datasets[0].data);
+}
+
+function _opts(px) {
+  return {
+    responsive: true,
+    interaction: { mode:'index', intersect:false },
+    plugins: {
+      legend: { display:false },
+      tooltip: {
+        backgroundColor:'#1E2A45', borderColor:'#1E2A45', borderWidth:1,
+        titleColor:'#94A3B8', bodyColor:'#E2E8F0', padding:10,
+        callbacks: { label: c => ` ${c.dataset.label}: ${px}${Number(c.parsed.y).toLocaleString('fr-FR',{maximumFractionDigits:2})}` }
+      }
+    },
+    scales: {
+      x: { grid:{color:'#1E2A45'}, ticks:{font:{size:11}} },
+      y: { grid:{color:'#1E2A45'}, ticks:{font:{size:11}, callback: v => `${px}${v}` } },
+    }
+  };
+}
+
+function _err(msg) {
+  const b = document.getElementById('sErr');
+  if (msg) { b.innerHTML = msg; b.style.display = 'block'; }
+  else      { b.style.display = 'none'; }
+}
+function _f(n)  { return Number(n ?? 0).toLocaleString('fr-FR'); }
+function _fm(n) { return Number(n ?? 0).toLocaleString('fr-FR', { maximumFractionDigits:2 }); }
+
+// ── Fix typo in _render : _kpi → kpi ─────────────────────────────────────
+// (patch inline pour éviter l'erreur de frappe ci-dessus)
+const _origRender = _render;
+function _render(data) {
+  const { kpi, series, states, period } = data;
+
+  document.getElementById('sPInfo').textContent =
+    `${period.from} → ${period.to} · ${period.days} jours`;
+  document.getElementById('sRevSub').textContent =
+    _PR.find(p => p.k === _preset)?.l ?? '';
+
+  const cards = [
+    { l:'Commandes',          v:_f(kpi.totalOrders),      i:'🛒', c:'#3B82F6', t:kpi.trendOrders,  s:'vs période préc.' },
+    { l:"Chiffre d'affaires", v:'€'+_fm(kpi.totalRevenue),i:'💰', c:'#10B981', t:kpi.trendRevenue, s:'vs période préc.' },
+    { l:'Panier moyen',       v:'€'+_fm(kpi.avgOrderValue),i:'📦',c:'#F59E0B', t:0,                s:'par commande' },
+    { l:'Total HT',           v:'€'+_fm(kpi.totalHT),     i:'🧾', c:'#8B5CF6', t:0,                s:`TVA: €${_fm(kpi.totalTVA)}` },
+  ];
+  document.getElementById('sKpi').innerHTML = cards.map(c => `
+    <div class="skpi-card fade" style="--ac:${c.c}22">
+      <div class="skpi-top"><span class="skpi-lbl">${c.l}</span><span>${c.i}</span></div>
+      <div class="skpi-val" style="color:${c.c}">${c.v}</div>
+      <div class="skpi-bot">
+        <span class="skpi-badge ${c.t >= 0 ? 'up':'down'}">${c.t >= 0 ? '▲':'▼'} ${Math.abs(c.t)}%</span>
+        <span class="skpi-sub">${c.s}</span>
+      </div>
+    </div>`).join('');
+
+  const lbl = series.map(s => s.label);
+  _drawRev( lbl, series.map(s => s.revenue));
+  _drawOrd( lbl, series.map(s => s.orders));
+  _drawFisc(lbl, series.map(s => s.ht), series.map(s => s.tva));
+  _drawStat(states);
+}
+
+_load();
+</script>
+</body>
+</html>

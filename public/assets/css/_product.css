@@ -1,0 +1,27 @@
+.product {
+    position: relative; /* Nécessaire pour positionner le cœur par rapport au conteneur */
+}
+
+.add-to-wishlist .fa-heart {
+    position: absolute; /* Positionnement absolu */
+    top: 10px; /* Distance par rapport au haut */
+    right: 10px; /* Distance par rapport à la droite */
+    border: black;
+    z-index: 10; /* Assure que l'icône est au-dessus de l'image */
+    color: white; /* Optionnel : couleur de l'icône */
+    -webkit-text-stroke: 0.5px black; /* Contour noir de 2px */
+    text-stroke: 0.5px black; /* Contour pour autres navigateurs */
+    font-size: 30px; /* Optionnel : taille de l'icône */
+    text-decoration: none; /* Supprime le soulignement */
+}
+
+.fa-heart:hover {
+    border: black;
+    color: red;
+    /* Optionnel : couleur au survol */
+}
+
+
+.add-to-wishlist.wishlist-active .fa-heart {
+    color: red; /* Couleur pour les produits dans la wishlist */
+}

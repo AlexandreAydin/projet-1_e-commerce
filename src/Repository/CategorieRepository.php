@@ -39,6 +39,9 @@ class CategorieRepository extends ServiceEntityRepository
         }
     }
 
+
+
+
 //    /**
 //     * @return Categorie[] Returns an array of Categorie objects
 //     */

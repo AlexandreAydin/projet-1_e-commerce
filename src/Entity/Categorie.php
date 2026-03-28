@@ -3,10 +3,14 @@
 namespace App\Entity;
 
 use App\Repository\CategorieRepository;
+use App\Entity\Coupon;
+use App\Entity\SubCategorie;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
+#[UniqueEntity('slug')]
 #[ORM\Entity(repositoryClass: CategorieRepository::class)]
 class Categorie
 {
@@ -18,8 +22,22 @@ class Categorie
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Product::class)]
+    #[ORM\Column(length: 255, unique:true)]
+    private ?string $slug = null;
+
+    #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Product::class, fetch: 'EAGER', cascade: ['persist', 'remove'])]
     private Collection $products;
+
+    private $coupons;
+
+    /**
+     * @var Collection<int, SubCategorie>
+     */
+    #[ORM\ManyToMany(targetEntity: SubCategorie::class, mappedBy: 'categories')]
+    private Collection $subCategories;
+
+    // #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: SubCategorie::class)]
+    // private Collection $subCategories;
 
     public function __toString()
     {
@@ -30,6 +48,8 @@ class Categorie
     public function __construct()
     {
         $this->products = new ArrayCollection();
+        $this->coupons = new ArrayCollection();
+        // $this->subCategories = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -45,6 +65,18 @@ class Categorie
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
 
         return $this;
     }
@@ -74,6 +106,77 @@ class Categorie
             if ($product->getCategorie() === $this) {
                 $product->setCategorie(null);
             }
+        }
+
+        return $this;
+    }
+
+    public function addCoupon(Coupon $coupon): self
+    {
+        if (!$this->coupons->contains($coupon)) {
+            $this->coupons->add($coupon);
+        }
+        return $this;
+    }
+
+    public function removeCoupon(Coupon $coupon): self
+    {
+        $this->coupons->removeElement($coupon);
+        return $this;
+    }
+
+    // /**
+    //  * @return Collection<int, SubCategorie>
+    //  */
+    // public function getSubCategories(): Collection
+    // {
+    //     return $this->subCategories;
+    // }
+
+    // public function addSubCategory(SubCategorie $subCategory): static
+    // {
+    //     if (!$this->subCategories->contains($subCategory)) {
+    //         $this->subCategories->add($subCategory);
+    //         $subCategory->setCategorie($this);
+    //     }
+
+    //     return $this;
+    // }
+
+    // public function removeSubCategory(SubCategorie $subCategory): static
+    // {
+    //     if ($this->subCategories->removeElement($subCategory)) {
+    //         // set the owning side to null (unless already changed)
+    //         if ($subCategory->getCategorie() === $this) {
+    //             $subCategory->setCategorie(null);
+    //         }
+    //     }
+
+    //     return $this;
+    // }
+
+    /**
+     * @return Collection<int, SubCategorie>
+     */
+    public function getSubCategories(): Collection
+    {
+        return $this->subCategories;
+    }
+
+    public function addSubCategory(SubCategorie $subCategory): static
+    {
+        if (!$this->subCategories->contains($subCategory)) {
+            $this->subCategories->add($subCategory);
+            $subCategory->addCategory($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubCategory(SubCategorie $subCategory): static
+    {
+        if ($this->subCategories->removeElement($subCategory)) {
+            $subCategory->removeCategory($this);
         }
 
         return $this;

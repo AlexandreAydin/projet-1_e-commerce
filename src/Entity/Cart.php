@@ -56,6 +56,10 @@ class Cart
     #[ORM\JoinColumn(nullable: false)]
     private ?Product $product = null;
 
+    #[ORM\ManyToOne(inversedBy: 'Carts')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?ProductVariant $variant = null;
+
     #[ORM\Column(length: 255)]
     private ?string $productName = null;
 
@@ -73,6 +77,9 @@ class Cart
 
     #[ORM\Column (nullable:true)]
     private ?int $count = null;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $couponApplied = false;
 
     public function __construct()
     {
@@ -315,6 +322,29 @@ class Cart
     {
         $this->count = $count;
 
+        return $this;
+    }
+
+    public function getVariant(): ?ProductVariant
+    {
+        return $this->variant;
+    }
+
+    public function setVariant(?ProductVariant $variant): self
+    {
+        $this->variant = $variant;
+
+        return $this;
+    }
+
+    public function isCouponApplied(): bool
+    {
+        return $this->couponApplied;
+    }
+
+    public function setCouponApplied(bool $couponApplied): self
+    {
+        $this->couponApplied = $couponApplied;
         return $this;
     }
 

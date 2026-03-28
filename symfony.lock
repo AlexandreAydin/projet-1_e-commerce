@@ -78,6 +78,9 @@
             "./config/routes/fm_elfinder.yaml"
         ]
     },
+    "knplabs/knp-paginator-bundle": {
+        "version": "v6.6.1"
+    },
     "knpuniversity/oauth2-client-bundle": {
         "version": "2.15",
         "recipe": {

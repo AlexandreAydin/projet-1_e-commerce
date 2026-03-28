@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Amanoz Caisse{% endblock %}
+{% block title %}Yilmi Market Caisse{% endblock %}
 
 {% block scriptStripe %}
 <script src="https://www.paypal.com/sdk/js?client-id={{paypal_public_Key}}&currency=EUR"></script>
@@ -101,29 +101,68 @@ data-reference="{{reference}}">
                             <tbody>
                                 {% for element in cart.products %}
                                     <tr>
-                                        <td>{{ element.product.name }} <span class="product-qty">x {{ element.quantity }}</span></td>
-                                        <td>{{ (element.product.price/100) | number_format(2, '.', ',') }} €</td>
+                                        <td>
+                                            {% set displayName = element.product.name|length > 50 ? element.product.name|slice(0, 40) ~ '...' : element.product.name %}
+                                            {{ displayName }} <span class="product-qty"> x {{ element.quantity }}</span>
+                                        </td>
+                                        <td>
+                                            {% set originalPrice = element.variant['price'] %}
+                                            {% set discount = (element.variant['offVariant'] is defined and element.variant['offVariant'] > 0) ? (element.variant['offVariant'] / 100) : 0 %}
+                                            {% set discountedPrice = originalPrice * (1 - discount) %}
+                                            {{ discountedPrice | number_format(2, '.', ',') }} €
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>Sous Total HT</th>
-                                    <td class="product-subtotal"> {{ cart.data.subTotalHT | number_format(2, '.', ',') }} €</td>
-                                </tr>
-                                <tr>
-                                    <th>Taxe</th>
-                                    <td class="product-subtotal"> {{ cart.data.Taxe | number_format(2, '.', ',') }} €</td>
-                                </tr>
-                                <tr>
-                                    <th>Expédition({{ carrier.name }})</th>
-                                    <td class="product-subtotal"> {{ carrier.price/100 | number_format(2, '.', ',') }} €</td>
-                                </tr>
-                                <tr>
-                                    <th>Total</th>
-                                   <td class="product-subtotal"> {{ (cart.data.subTotalTTC + carrier.price/100) | number_format(2, '.', ',') }} €</td>
-                                </tr>
-                            </tfoot>
+                      <tfoot>
+    {% if cart.data.isCouponApplied %}
+        <tr>
+            <th>Code promo appliqué :</th>
+            <td class="product-subtotal">{{ cart.appliedCouponCode }}</td>
+        </tr>
+        <tr>
+            <th>Réduction appliquée :</th>
+            <td class="product-subtotal">{{ cart.data.appliedDiscountPercentage | number_format(2, '.', ',') }}%</td>
+        </tr>
+        <tr>
+            <th>Montant de la réduction {{ cart.data.appliedDiscountPercentage | number_format(2, '.', ',') }}% :</th>
+            <td class="product-subtotal">- {{ cart.data.appliedDiscountAmount | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Total HT (après réduction) :</th>
+            <td class="product-subtotal">{{ (cart.data.subTotalHT * (1 - cart.data.appliedDiscountPercentage / 100)) | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Total TVA 20% (après réduction) :</th>
+            <td class="product-subtotal">{{ (cart.data.Taxe * (1 - cart.data.appliedDiscountPercentage / 100)) | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Expédition({{ carrier.name }})</th>
+            <td class="product-subtotal"> {{ carrier.price/100 | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Total TTC (après réduction) :</th>
+            <td class="product-subtotal">{{ (cart.data.subTotalTTC +  carrier.price/100 ) | number_format(2, '.', ',') }} €</td>
+        </tr>
+    {% else %}
+        <tr>
+            <th>Total HT :</th>
+            <td class="product-subtotal">{{ cart.data.subTotalHT | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Total TVA 20% :</th>
+            <td class="product-subtotal">{{ cart.data.Taxe | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Expédition({{ carrier.name }})</th>
+            <td class="product-subtotal"> {{ carrier.price/100 | number_format(2, '.', ',') }} €</td>
+        </tr>
+        <tr>
+            <th>Total TTC :</th>
+            <td class="product-subtotal">{{ cart.data.subTotalTTC +  carrier.price/100 | number_format(2, '.', ',') }} €</td>
+        </tr>
+    {% endif %}
+</tfoot>
                         </table>
                     </div>
                     <div class="payment_method">
@@ -147,7 +186,7 @@ data-reference="{{reference}}">
                                     </label>
                                     <div id="stripe-checkout-button" class="d-flex justify-content-center" style="display: none;">
                                         <button type="button" id="checkout-stripe-button" class="btn btn-fill-out d-none">
-                                            Payer | {{ (cart.data.subTotalTTC + carrier.price/100) | number_format(2, '.', ',')}} €
+                                            Payer |  {{ (cart.data.subTotalTTC + carrier.price/100) | number_format(2, '.', ',') }} €
                                         </button>
                                     </div>
                                 </div>

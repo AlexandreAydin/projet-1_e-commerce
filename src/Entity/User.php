@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Coupon;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -55,9 +56,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: Wishlist::class, cascade: ['persist', 'remove'])]
     private $wishlist;
 
+
     public function __toString(): string
     {
-        return $this->username;
+        return $this->username ?? '';
+
     }
 
     public function __construct()
@@ -310,4 +313,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
 }

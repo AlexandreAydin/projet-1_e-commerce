@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Yilmi Market - Catégories{% endblock %}
+
+{% block body %}
+    <h2 class="mx-4 mt-4" >Catégorie: {{ category.name }}</h2>
+    <div class="products-list">
+    {% block stylesheets %}
+    {# {{ parent() }} <!-- Ensures that the parent styles are included --> #}
+        <link rel="stylesheet" href="{{ asset('assets/css/_product.css') }}">
+    {% endblock %}
+        {% for product in items %}
+
+    <div class="">
+        <div class="m-4">
+            <div class="row flex-column flex-lg-row-reverse">
+                <div class="col-lg-10 order-2 order-lg-1 w-100">
+                    <div class="row shop_container">
+                        {% if not items %}
+                            <p>Désolé, aucun produit ne correspond au résultat de votre recherche</p>
+                        {% endif %}
+                        {% for product in items %}
+                            {% include "partials/_product.html.twig" with {'product':product} %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
+                    <div class="">
+                         <h4 class="widget_title">Sous-Catégories</h4>
+                        {% for subCategory in subCategories %}
+                            <div class="">
+                                <a href="{{ path('app_sub_categorie', { 
+                                    'categorySlug': category.slug, 
+                                    'subCategorySlug': subCategory.slug 
+                                }) }}" class="">
+                                    <div class="mt-2 mx-4">
+                                    {{ subCategory.name }}
+                                    </div>
+                                </a>
+                            </div>
+                        {% else %}
+                            <p>Aucune sous-catégorie disponible.</p>
+                        {% endfor %}
+                        <div class="mt-4">
+                            <h4 class="widget_title">Marques</h4>
+                            <div class="scrollable-checkbox">
+                                {% for brand in brands %}
+                                    <div class="">
+                                        <a href="{{ path('app_marque', { 'slug': brand.slug }) }}" class="form-check-label">
+                                            <div class="mt-2 mx-4">
+                                            {{ brand.name }}
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p>Aucune marque disponible.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        {% endfor %}
+    </div>
+
+
+{% endblock %}

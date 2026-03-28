@@ -35,11 +35,14 @@ class Product
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $moreInformations = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type:"integer", nullable: true)]
     private ?float $price = null;
 
     #[ORM\Column(nullable: false)]
     private ?bool $isBestSeller = null;
+
+    #[ORM\Column(nullable: false)]
+    private ?bool $isWarranty = null;
 
     #[ORM\Column(nullable: false)]
     private ?bool $isNewArrival = null;
@@ -59,7 +62,7 @@ class Product
     #[ORM\ManyToOne(inversedBy: 'products')]
     private ?Categorie $categorie = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type:"integer", nullable: true)]
     private ?int $quantity = null;
 
     /**
@@ -73,7 +76,7 @@ class Product
     #[ORM\Column(length: 255, unique:true)]
     private ?string $slug = null;
 
-     /**
+    /**
      * @ORM\Column(type="datetime")
      */
     private $updatedAt;
@@ -99,6 +102,22 @@ class Product
     #[ORM\ManyToMany(targetEntity: Wishlist::class, mappedBy: 'products')]
     private Collection $wishlists;
 
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: ProductVariant::class, fetch: 'EAGER', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: true)]
+    private Collection $variants;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $ean = null;
+
+    #[ORM\ManyToOne(inversedBy: 'products')]
+    private ?SubCategorie $subCategorie = null;
+
+    #[ORM\ManyToOne(inversedBy: 'products')]
+    private ?ProductBrand $productBrand = null;
+
+    #[ORM\ManyToOne(inversedBy: 'products')]
+    private ?BrandModel $brandModel = null;
+
 
         public function __construct()
         {
@@ -110,6 +129,7 @@ class Product
             $this->rewiewsProducts = new ArrayCollection();
             $this->cartDetails = new ArrayCollection();
             $this->wishlists = new ArrayCollection();
+            $this->variants = new ArrayCollection();
         }
 
         public function __toString(): string
@@ -180,6 +200,18 @@ class Product
     public function setIsBestSeller(?bool $isBestSeller): self
     {
         $this->isBestSeller = $isBestSeller;
+
+        return $this;
+    }
+    
+    public function isIsWarranty(): ?bool
+    {
+        return $this->isWarranty;
+    }
+
+    public function setIsWarranty(?bool $isWarranty): self
+    {
+        $this->isWarranty = $isWarranty;
 
         return $this;
     }
@@ -508,5 +540,82 @@ class Product
         return $this;
     }
 
+    /**
+     * @return Collection<int, ProductVariant>
+     */
+    public function getVariants(): Collection
+    {
+        return $this->variants;
+    }
+
+    public function addVariant(ProductVariant $variant): self
+    {
+        if (!$this->variants->contains($variant)) {
+            $this->variants[] = $variant;
+            $variant->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVariant(ProductVariant $variant): self
+    {
+        if ($this->variants->removeElement($variant)) {
+            // Set the owning side to null (unless already changed)
+            if ($variant->getProduct() === $this) {
+                $variant->setProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getEan(): ?int
+    {
+        return $this->ean;
+    }
+
+    public function setEan(?int $ean): static
+    {
+        $this->ean = $ean;
+
+        return $this;
+    }
+
+    public function getSubCategorie(): ?SubCategorie
+    {
+        return $this->subCategorie;
+    }
+
+    public function setSubCategorie(?SubCategorie $subCategorie): static
+    {
+        $this->subCategorie = $subCategorie;
+
+        return $this;
+    }
+
+    public function getProductBrand(): ?ProductBrand
+    {
+        return $this->productBrand;
+    }
+
+    public function setProductBrand(?ProductBrand $productBrand): static
+    {
+        $this->productBrand = $productBrand;
+
+        return $this;
+    }
+
+    public function getBrandModel(): ?BrandModel
+    {
+        return $this->brandModel;
+    }
+
+    public function setBrandModel(?BrandModel $brandModel): static
+    {
+        $this->brandModel = $brandModel;
+
+        return $this;
+    }
 
 }

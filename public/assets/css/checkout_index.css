@@ -1,0 +1,15 @@
+/* Empêche le débordement horizontal */
+.content {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Style responsive pour les <select> */
+.content select.form-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    font-size: 1rem;
+    height: 2.25rem;
+}

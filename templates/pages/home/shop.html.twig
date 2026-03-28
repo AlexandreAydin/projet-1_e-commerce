@@ -3,50 +3,343 @@
 {% block title %}Hello HomeController!{% endblock %}
 
 {% block body %}
-    <div class="">
-        <div class="m-4">
-            <div class="row flex-column flex-lg-row-reverse">
-                <div class="col-lg-10 order-2 order-lg-1 w-100">
-                    <div class="row shop_container">
-                        {% if not products %}
-                            <p>Désolé, aucun produit ne correspond au résultat de votre recherche</p>
-                        {% endif %}
-                        {% for product in products %}
-                            {% include "partials/_product.html.twig" with {'product':product} %}
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
-                    <div class="sidebar">
-                        {{ form_start(search) }}
-                            <div class="widget">
-                                <h5 class="widget_title">Rechercher</h5>
-                                <div class="scrollable-checkbox">
-                                    {{ form_row(search.string) }}
-                                </div>
-                            </div>
-                            <div class="widget">
-                                <h5 class="widget_title">Categories</h5>
-                                <div class="scrollable-checkbox">
-                                    {{ form_row(search.categories) }}
-                                </div>
-                            </div>
-                            <div class="widget">
-                                <h5 class="widget_title">Price</h5>
-                                <div class="form-row">
-                                    <div class="col-md-6">
-                                        {{ form_row(search.minPrice) }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        {{ form_row(search.maxPrice) }}
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="btn btn-border-fill btn-block mb-4">Rechercher</button>
-                        {{ form_end(search) }}
-                    </div>
-                </div>
-            </div>
+<style>
+/* --------- Styles légers, on garde ton look et on affine les listes imbriquées --------- */
+
+/* Titres des catégories */
+.category-title{font-weight:bold;margin-bottom:10px}
+
+/* Sous-catégories & modèles sous leurs parents */
+.subcategory-list,.model-list{margin-left:18px;margin-top:6px}
+.subcategory-item,.model-item{margin:6px 0}
+
+/* Cases & labels propres */
+.form-check{border:none;margin:0;padding:0}
+.form-check-input{margin-right:8px}
+.form-check-label{cursor:pointer}
+
+/* On cache les labels Symfony à gauche */
+.col-form-label{display:none}
+
+/* Recherche nombre sans flèches */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{ -webkit-appearance:none;margin:0 }
+input[type="number"]{ -moz-appearance:textfield }
+
+/* Barre de recherche */
+.sidebar .position-relative input[type="text"]{padding-left:2rem;border:.5px solid #80838a;height:35px;font-size:.85rem}
+
+/* Petites aides d’accessibilité */
+.hidden-focus{visibility:hidden;position:absolute;opacity:0}
+</style>
+
+<div class="">
+  <div class="m-4">
+    <div class="row flex-column flex-lg-row-reverse">
+      <!-- PRODUITS -->
+      <div class="col-lg-8 order-2 order-lg-1 w-100">
+        <div class="row shop_container">
+          {% if not products %}
+            <p>Désolé, aucun produit ne correspond au résultat de votre recherche.</p>
+          {% else %}
+            {% for product in products %}
+              {% include "partials/_product.html.twig" with {'product':product} %}
+            {% endfor %}
+          {% endif %}
         </div>
+      </div>
+
+      <!-- SIDEBAR / FILTRES -->
+      <div class="col-lg-2 order-1 order-lg-2 mt-4 pt-2 mt-lg-0 pt-lg-0 w-100">
+        <div class="sidebar">
+          <form action="{{ path('app_shop') }}" method="get" id="filter-form">
+            {{ form_start(search) }}
+
+            <!-- champ query caché (conserve la valeur) -->
+            <input type="hidden" name="query" id="query-input" value="{{ app.request.query.get('query') }}">
+
+            <!-- Recherche visible avec auto-submit -->
+            <div class="position-relative w-100 mb-4">
+              <input type="text" name="query" id="query-live" class="form-control rounded-pill"
+                     placeholder="Rechercher..." value="{{ app.request.query.get('query') }}">
+              <i class="fa-solid fa-magnifying-glass position-absolute"
+                 style="left:10px;top:50%;transform:translateY(-50%);color:#6c757d;font-size:.9rem"></i>
+            </div>
+
+            <h4 class="widget_title">Filtrage</h4>
+
+            <h5 class="widget_title">Catégories</h5>
+            <div class="scrollable-checkbox js-categories-container">
+              {{ form_row(search.categories) }}
+            </div>
+
+            <!-- zone miroir utilisée par le formulaire (cachée dans ton markup) -->
+            <div class="scrollable-checkbox js-subcategories-container d-none">
+              {{ form_row(search.subCategories) }}
+            </div>
+
+            <div class="widget">
+              <div class="form-row">
+                <div class="col-md-6">{{ form_row(search.minPrice) }}</div>
+                <div class="col-md-6">{{ form_row(search.maxPrice) }}</div>
+              </div>
+            </div>
+
+            <h5 class="widget_title">Marque et Modèle</h5>
+            <div class="scrollable-checkbox productBrand">
+              {{ form_row(search.productBrand) }}
+            </div>
+
+            <!-- zone miroir pour les modèles cochés -->
+            <div class="scrollable-checkbox js-brandModel-container d-none">
+              {{ form_row(search.brandModel) }}
+            </div>
+
+            <button type="submit" class="btn btn-border-fill btn-block mb-4">Rechercher</button>
+            {{ form_end(search) }}
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+{# Données auxiliaires pour restreindre sous-catégories & modèles aux produits visibles #}
+{% for product in products %}
+  <div class="product-card d-none"
+       data-id="{{ product.id }}"
+       data-subcategory-id="{{ product.subCategorie ? product.subCategorie.id : '' }}"
+       data-brandModel-id="{{ product.brandModel ? product.brandModel.id : '' }}">
+  </div>
+{% endfor %}
+
+<script>
+/* =========================
+   Utilitaires généraux
+========================= */
+function getForm(){ return document.getElementById('filter-form') || document.querySelector('.sidebar form'); }
+function debounceSubmit(delay=0){
+  const f = getForm(); if(!f) return;
+  clearTimeout(f.__t);
+  f.__t = setTimeout(()=> (f.requestSubmit ? f.requestSubmit() : f.submit()), delay);
+}
+function normInt(v){ const n = parseInt(v,10); return Number.isNaN(n)?null:n; }
+
+/* =========================
+   Recherche texte (auto)
+========================= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const qLive = document.getElementById('query-live');
+  const qHidden = document.getElementById('query-input');
+  if(!qLive) return;
+  let t=null;
+  qLive.addEventListener('input', ()=>{
+    if(qHidden) qHidden.value = qLive.value || '';
+    clearTimeout(t);
+    t = setTimeout(()=> debounceSubmit(0), 250); // debounce 250ms
+  });
+});
+
+/* ===================================================
+   Catégories => Sous-catégories sous chaque parent
+   - Présente uniquement les sous-cat réellement présentes
+   - Conserve les cases cochées
+   - Auto-submit immédiat
+=================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const catBoxes = document.querySelectorAll('.js-categories-container input[type="checkbox"]');
+
+  // ids de sous-catégories réellement existantes sur la page
+  const getVisibleSubcatIds = () => {
+    const nodes = document.querySelectorAll('.product-card');
+    const ids = new Set();
+    nodes.forEach(n => { const id = n.getAttribute('data-subcategory-id'); if(id) ids.add(parseInt(id)); });
+    return Array.from(ids);
+  };
+
+  const mirrorSubHidden = () => {
+    const mirror = document.querySelector('.js-subcategories-container');
+    if(!mirror) return;
+    mirror.innerHTML = '';
+    document.querySelectorAll('.subcategory-list input[type="checkbox"]:checked').forEach(cb=>{
+      const h = document.createElement('input');
+      h.type='hidden'; h.name='search_product[subCategories][]'; h.value=cb.value;
+      mirror.appendChild(h);
+    });
+  };
+
+  const renderSubcats = (data, categoryId) => {
+    const input = document.querySelector(`.js-categories-container input[value="${categoryId}"]`);
+    if(!input) return;
+    const holder = input.closest('.form-check');
+    let box = holder.querySelector('.subcategory-list');
+    if(!box){ box = document.createElement('div'); box.className='subcategory-list'; holder.appendChild(box); }
+
+    // On mémorise l’état coché (toutes catégories confondues)
+    const checked = new Set(Array.from(document.querySelectorAll('.subcategory-list input[type="checkbox"]:checked')).map(i=>+i.value));
+
+    const valids = getVisibleSubcatIds();
+    const filtered = data.filter(s => valids.includes(s.id));
+
+    // Remplissage
+    const frag = document.createDocumentFragment();
+    filtered.forEach(s=>{
+      const row = document.createElement('div'); row.className='subcategory-item';
+      const cb = document.createElement('input'); cb.type='checkbox';
+      cb.className='form-check-input'; cb.name='search_product[subCategories][]';
+      cb.value=s.id; cb.id=`sub_${categoryId}_${s.id}`; cb.checked = checked.has(s.id);
+      const lab = document.createElement('label'); lab.className='form-check-label'; lab.setAttribute('for', cb.id); lab.textContent = s.name;
+      row.appendChild(cb); row.appendChild(lab);
+      frag.appendChild(row);
+    });
+    box.replaceChildren(frag);
+
+    mirrorSubHidden(); // synchronise le miroir
+  };
+
+  const fetchSubcats = async (categoryId) => {
+    try{
+      const r = await fetch('/get-subcategories', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ categories:[categoryId] })
+      });
+      if(!r.ok) throw new Error('Erreur sous-catégories');
+      const data = await r.json();
+      renderSubcats(data, categoryId);
+    }catch(e){ console.error(e); }
+  };
+
+  // Init : pour chaque catégorie déjà cochée, on affiche ses sous-catégories
+  catBoxes.forEach(cb => { if(cb.checked) fetchSubcats(cb.value); });
+
+  // Changement de catégorie => (ré)afficher, synchroniser, auto-submit
+  catBoxes.forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const id = e.target.value;
+      if(e.target.checked){
+        fetchSubcats(id);
+      }else{
+        e.target.closest('.form-check')?.querySelector('.subcategory-list')?.remove();
+        mirrorSubHidden();
+      }
+      debounceSubmit(0); // auto-filtrage immédiat
+    });
+  });
+
+  // Changement sous-catégorie => synchronise & auto-submit
+  document.addEventListener('change', (e)=>{
+    if(e.target.matches('.subcategory-list input[type="checkbox"]')){
+      mirrorSubHidden();
+      debounceSubmit(0);
+    }
+  });
+});
+
+/* ===================================================
+   Marques => Modèles sous chaque parent
+   - Restreint aux modèles réellement présents
+   - Conserve les cases cochées
+   - Auto-submit immédiat
+=================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const brandBoxes = document.querySelectorAll('.productBrand input[type="checkbox"]');
+
+  const getVisibleModelIds = () => {
+    const nodes = document.querySelectorAll('.product-card');
+    const ids = new Set();
+    nodes.forEach(n => { const id = n.getAttribute('data-brandModel-id'); if(id) ids.add(parseInt(id)); });
+    return Array.from(ids);
+  };
+
+  const mirrorModelsHidden = () => {
+    const mirror = document.querySelector('.js-brandModel-container');
+    if(!mirror) return;
+    mirror.innerHTML = '';
+    document.querySelectorAll('.model-list input[type="checkbox"]:checked').forEach(cb=>{
+      const h = document.createElement('input');
+      h.type='hidden'; h.name='search_product[brandModel][]'; h.value=cb.value;
+      mirror.appendChild(h);
+    });
+  };
+
+  const renderModels = (data, brandId) => {
+    const input = document.querySelector(`.productBrand input[value="${brandId}"]`);
+    if(!input) return;
+    const holder = input.closest('.form-check');
+    let box = holder.querySelector('.model-list');
+    if(!box){ box = document.createElement('div'); box.className='model-list'; holder.appendChild(box); }
+
+    const checked = new Set(Array.from(document.querySelectorAll('.model-list input[type="checkbox"]:checked')).map(i=>+i.value));
+    const valids = getVisibleModelIds();
+    const filtered = data.filter(m => valids.includes(m.id));
+
+    const frag = document.createDocumentFragment();
+    filtered.forEach(m=>{
+      const row = document.createElement('div'); row.className='model-item';
+      const cb = document.createElement('input'); cb.type='checkbox';
+      cb.className='form-check-input'; cb.name='search_product[brandModel][]';
+      cb.value=m.id; cb.id=`model_${brandId}_${m.id}`; cb.checked = checked.has(m.id);
+      const lab = document.createElement('label'); lab.className='form-check-label'; lab.setAttribute('for', cb.id); lab.textContent = m.name;
+      row.appendChild(cb); row.appendChild(lab);
+      frag.appendChild(row);
+    });
+    box.replaceChildren(frag);
+
+    mirrorModelsHidden();
+  };
+
+  const fetchModels = async (brandId) => {
+    try{
+      const r = await fetch('/get-brandModel', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ productBrand:[brandId] })
+      });
+      if(!r.ok) throw new Error('Erreur modèles');
+      const data = await r.json();
+      renderModels(data, brandId);
+    }catch(e){ console.error(e); }
+  };
+
+  // Init pour les marques déjà cochées
+  brandBoxes.forEach(cb => { if(cb.checked) fetchModels(cb.value); });
+
+  // Changement de marque => (ré)affiche, synchronise, auto-submit
+  brandBoxes.forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const id = e.target.value;
+      if(e.target.checked){
+        fetchModels(id);
+      }else{
+        e.target.closest('.form-check')?.querySelector('.model-list')?.remove();
+        mirrorModelsHidden();
+      }
+      debounceSubmit(0);
+    });
+  });
+
+  // Changement modèle => mirror + auto-submit
+  document.addEventListener('change', (e)=>{
+    if(e.target.matches('.model-list input[type="checkbox"]')){
+      mirrorModelsHidden();
+      debounceSubmit(0);
+    }
+  });
+});
+
+/* ===================================================
+   Prix : auto-submission (input & change)
+=================================================== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = getForm(); if(!form) return;
+  const minI = form.querySelector('input[name*="[minPrice]"]');
+  const maxI = form.querySelector('input[name*="[maxPrice]"]');
+  [minI,maxI].forEach(i=>{
+    if(!i) return;
+    i.addEventListener('input', ()=>debounceSubmit(350));
+    i.addEventListener('change', ()=>debounceSubmit(0));
+  });
+});
+</script>
 {% endblock %}

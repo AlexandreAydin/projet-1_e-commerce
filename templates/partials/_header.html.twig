@@ -1,15 +1,37 @@
-<header  class="header_wrap fixed-top header_with_topbar">
+<header  class="header_wrap fixed-top">
     <div  class="bottom_header dark_skin main_menu_uppercase">
-        <div  class="container mt-4">
+        <div  class="container">
             <nav  class="navbar navbar-expand-lg">
                 <a 
-                    routerlink="/" class="navbar-brand" ng-reflect-router-link="/" href="/">
-                    <h2 >Yilmi Market</h2>
+                    routerlink="/" 
+                    class="navbar-brand text-center header-logo " 
+                    ng-reflect-router-link="/" 
+                    href="/">
+                    <img 
+                        src="{{ asset('assets/images/logo_transparent_background.png') }}" 
+                        alt="logo_transparent_background.png" 
+                        class="mt-2">
+                    <span class="d-block logo-text">Yilmi Market</span>
                 </a>
+                <form action="{{ path('app_shop') }}" method="get" class="d-flex justify-content-center">
+                    <div class="input-group">
+                        <div class=" position-relative w-100">
+                            <input 
+                                type="text" 
+                                name="query" 
+                                class="form-control rounded-pill" 
+                                placeholder="Rechercher..." 
+                                value="{{ app.request.query.get('query') }}" 
+                                style="padding-left: 2rem; border: 0.5px solid gray; font-size: 0.8rem; height: 35px;" 
+                                required>
+                            <i  class="fa-solid  fa-magnifying-glass position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                        </div>
+                    </div>
+                </form>
                 <button id="menu-btns" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-expanded="false" class="navbar-toggler ">
                     <span class="ion-android-menu"></span>
                 </button>
-                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse" style="margin-left: 10rem;">
+                <div id="navbarSupportedContent" id="hamburger-menu" class="navbar-collapse collapse">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link" href="{{path("app_home")}}">Accueil
@@ -21,107 +43,172 @@
                             </a>
                         </li> 
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Nouveauté 
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="{{ path('app_contact')}}">Contact
                             </a>
                         </li>
                         {% if app.user %}
-                                <li class="nav-item dropdown user-name" style="">
-                                    <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                                        <i class="ti-user">  
-                                            {{ app.user.firstName }}
-                                        </i>  
-                                    </a>
-                                    <div class="dropdown-menu bg-light">
-                                        <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                        <li class="nav-item dropdown user-name app-user-icon1" style="">
+                            <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-user" style="font-size: 0.9rem;">  
+                                    {{ app.user.firstName }}
+                                </i>  
+                            </a>
+                            <div class="dropdown-menu bg-light">
+                                <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                                 {% if is_granted('ROLE_ADMIN') %}
+                                <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="/admin">Administration</a>
                                         <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="/admin">Administration</a>
-                                            <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
-                                    </div>
-                                </li>
-                            {% else %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{path("app_login")}}">Connexion
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ path('app_register')}}">Inscription
-                                    </a>
-                                </li>
-                            {% endif %}				
+                                    {% endif %}
+                                <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="nav-item dropdown app-user-icon1">
+                        <a 
+                            class="nav-link dropdown-toggle" 
+                            href="#" 
+                            id="userDropdown" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                            <i class="ti-user" style="font-size: 1rem;"></i>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_register') }}">Inscription</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_login') }}">Connexion</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% endif %}	
+                    
                     </ul>
                 </div> 
-                <ul class="navbar-nav attr-nav align-items-center">
-                    <li>
-                        <a href="javascript:void(0);" class="nav-link search_trigger">
-                            <i class="linearicons-magnifier"></i>
+                <ul class="navbar-nav attr-nav align-items-center two-icons">
+                        {% if app.user %}
+                        <li class="nav-item dropdown user-name app-user-icon2" style="">
+                            <a class="nav-link dropdown-toggle " data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti-user" style="font-size: 0.9rem;">  
+                                    {{ app.user.firstName }}
+                                </i>  
+                            </a>
+                            <div class="dropdown-menu bg-light app-user-icon2">
+                                <a class="dropdown-item" href="{{path('app_account')}}">Mon Compte</a>
+                                {% if is_granted('ROLE_ADMIN') %}
+                                <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="/admin">Administration</a>
+                                        <div class="dropdown-divider"></div>
+                                {% endif %}
+                                <a class="dropdown-item" href="{{path('app_logout')}}">Déconnexion</a>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="nav-item dropdown app-user-icon2">
+                        <a 
+                            class="nav-link dropdown-toggle" 
+                            href="#" 
+                            id="userDropdown" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                            <i class="ti-user" style="font-size: 1rem;"></i>
                         </a>
-                        <div class="search_wrap">
-                            <span class="close-search"><i class="ion-ios-close-empty"></i></span>
-                            <form>
-                                <input type="text" placeholder="Search" class="form-control" id="search_input">
-                                <button type="submit" class="search_icon"><i class="ion-ios-search-strong"></i></button>
-                            </form>
+                        <ul class="dropdown-menu app-user-icon2" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_register') }}">Inscription</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ path('app_login') }}">Connexion</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% endif %}	
+                    <li class="cart_dropdown">
+                    <a class="nav-link cart_trigger" id="cart-btn" href="#">
+                        <i class="linearicons-cart"></i>
+                        <span class="cart_count"></span>
+                    </a>
+                    {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' and app.request.pathinfo != '/caisse/confirmer' %}
+                    <div class="cart_box bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fs-4 fw-bold">Votre Panier</h2>
+                            <button class="btn text-secondary p-0">
+                            <i id="close-cart" class="ion-close fs-5"></i>
+                            </button>
                         </div>
-                        <div class="search_overlay"></div>
-                    </li>
-                    <li>
-                        <a class="text-decoration-none" href="{{ path('app_wishList')}}">
-                            <i class="icon-heart style-none"></i>
-                        </a>
-                    </li>
-                    <li class="dropdown cart_dropdown">
-                        <a class="nav-link cart_trigger" id="cart-btn" href="#" data-toggle="dropdown">
-                            <i class="linearicons-cart"></i>
-                            <span class="cart_count">
+                        <ul class="cart_list"></ul>
+                        <div class="coupon_section mt-4 mx-4">
+                        <input type="text" id="coupon_code_input" placeholder="Entrez votre code promo" required>
+                        <a href="#" id="apply_coupon_button" class="coupon_code mt-2 btn btn-fill-out rounded-0">Appliquer</a>
+                        </div>
+                        <div class="cart_footer">
+                        <p class="cart_total text-dark">
+                            <strong>Sous Total HT:</strong> 
+                            <span class="cart_price"> 
+                            <span class="price_symbole"></span>
                             </span>
-                        </a>
-                        {% if app.request.pathinfo != '/panier' and app.request.pathinfo != '/caisse' %}
-                        <div class="cart_box dropdown-menu dropdown-menu-right bg-light">
-                            <ul class="cart_list">
-                                <div id="cart-data" 
-                                    data-delete-path="{{ path('app_delete_to_cart', {'id': 'element.product.id'}) }}" 
-                                    data-add-path="{{ path('app_add_to_cart', {'id': 'element.product.id'}) }}" 
-                                    data-delete-all-path="{{ path('app_cart_delete_all', {'id': 'element.product.id'}) }}">
-                                </div>
-                            </ul>
-                                <div class="cart_footer">
-                                    <p class="cart_total text-dark">
-                                        <strong>Sous Total HT:</strong> 
-                                        <span class="cart_price"> 
-                                            <span class="price_symbole"></span>
-                                        </span>
-                                        <span class="cart_price_value"></span>
-                                    </p>
-                                    <p class="cart_total text-dark">
-                                        <strong>TVA:</strong> 
-                                        <span class="cart_price"> 
-                                            <span class="price_symbole"></span>
-                                        </span>
-                                        <span class="cart_price_taxe"></span>
-                                    </p>
-                                    <p class="cart_total text-dark">
-                                        <strong>Total TTC:</strong> 
-                                        <span class="cart_price"> 
-                                            <span class="price_symbole"></span>
-                                        </span>
-                                        <span class="cart_price_ttc"></span>
-                                    </p>
-                                    <p class="cart_buttons">
-                                        {# <a href="{{ path('app_cart')}}" class="btn btn-fill-line rounded-0 view-cart">View Cart</a> #}
-                                        <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
-                                    </p>
-                                </div>
+                            <span class="cart_price_value"></span>
+                        </p>
+                        <p class="cart_total text-dark">
+                            <strong>TVA:</strong> 
+                            <span class="cart_price"> 
+                            <span class="price_symbole"></span>
+                            </span>
+                            <span class="cart_price_taxe"></span>
+                        </p>
+                        <p class="cart_total text-dark">
+                            <strong>Total TTC:</strong> 
+                            <span class="cart_price"> 
+                            <span class="price_symbole"></span>
+                            </span>
+                            <span class="cart_price_ttc"></span>
+                        </p>
+                        <p class="cart_buttons">
+                            <a href="{{ path('app_checkout')}}" class="btn btn-fill-out rounded-0 checkout">JE VALIDE MON PANIER</a>
+                        </p>
                         </div>
-                    </li> 
+                    </div>
                     {% endif %}
+                    </li>
+
+                    <!-- Ajouter ceci à la fin de votre layout Twig, juste avant </body> -->
+                    <div class="cart-overlay"></div>            
                 </ul>
+                <div class="cart-overlay"></div>
                 </div>
             </nav>
         </div>
     </div>
 </header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const cartBtn = document.getElementById('cart-btn');
+    const cartBox = document.querySelector('.cart_box');
+    const cartOverlay = document.querySelector('.cart-overlay');
+    const closeCart = document.querySelector('#close-cart');
+
+    function toggleCart() {
+      cartBox.classList.toggle('active');
+      cartOverlay.classList.toggle('active');
+      // Bloquer ou restaurer le défilement
+      document.body.classList.toggle('no-scroll');
+    }
+
+    cartBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleCart();
+    });
+
+    if (closeCart) {
+      closeCart.addEventListener('click', toggleCart);
+    }
+
+    cartOverlay.addEventListener('click', toggleCart);
+  });
+</script>
